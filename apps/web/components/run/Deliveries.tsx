@@ -17,32 +17,32 @@ export function Deliveries({ orders, onChange }: { orders: OrderView[]; onChange
   }
 
   return (
-    <section className="card">
-      <div className="flex items-center justify-between border-b border-line px-4 py-3">
-        <h2 className="font-semibold">Webhook deliveries</h2>
-        <span className="text-xs text-muted">Standard Webhooks signing · retries 1, 2, 4, 8, 16, 32s then 5m to 10h · dead letter after 13 attempts</span>
+    <section>
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="section-title">Webhook Deliveries</h2>
+        <span className="text-[11.5px] text-muted">Standard Webhooks signing · retries 1, 2, 4, 8, 16, 32s then 5m to 10h · dead letter after 13 attempts</span>
       </div>
-      {!rows.length && <p className="p-4 text-sm text-muted">No deliveries for this run (delivery disabled, or no orders yet).</p>}
-      <div className="divide-y divide-line">
+      {!rows.length && <p className="py-3 text-muted">No deliveries for this run (delivery disabled, or no orders yet).</p>}
+      <div className="tracks">
         {rows.map(({ order, d }) => (
-          <div key={d.webhook_id} className="p-4">
+          <div key={d.webhook_id} className="px-3 py-2">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="font-mono text-xs">{d.webhook_id}</span>
               <Badge value={d.status} />
-              <span className="text-xs text-muted">{order.payload.event_type}</span>
-              <span className="text-xs text-muted">
+              <span className="font-mono text-[12px]">{d.webhook_id}</span>
+              <span className="text-[12px] text-muted">{order.payload.event_type}</span>
+              <span className="text-[12px] text-muted">
                 {d.attempt_count} attempt{d.attempt_count === 1 ? "" : "s"}
                 {d.next_attempt_at && d.status === "pending" && ` · next retry ${new Date(d.next_attempt_at).toLocaleTimeString()}`}
               </span>
-              <span className="truncate text-xs text-muted">{d.url}</span>
+              <span className="min-w-0 flex-1 truncate text-[12px] text-muted">{d.url}</span>
               {(d.status === "failed" || d.status === "dead" || d.status === "delivered") && (
-                <button type="button" className="btn ml-auto" disabled={busy === d.webhook_id} onClick={() => void resend(d)}>
+                <button type="button" className="btn py-1 text-[12px]" disabled={busy === d.webhook_id} onClick={() => void resend(d)}>
                   {busy === d.webhook_id ? "Sending..." : "Resend"}
                 </button>
               )}
             </div>
             {d.attempts.length > 0 && (
-              <table className="mt-2 w-full text-xs">
+              <table className="mt-2 w-full text-[11.5px]">
                 <thead className="text-left text-muted">
                   <tr>
                     <th className="py-1 font-medium">#</th>
@@ -59,7 +59,7 @@ export function Deliveries({ orders, onChange }: { orders: OrderView[]; onChange
                       <td className="py-1">{a.attempt}</td>
                       <td className="py-1">{new Date(a.started_at).toLocaleTimeString()}</td>
                       <td className="py-1">{a.phase}</td>
-                      <td className={`py-1 ${a.status_code && a.status_code < 300 ? "text-emerald-700" : "text-rose-700"}`}>{a.status_code ?? "-"}</td>
+                      <td className={`py-1 ${a.status_code && a.status_code < 300 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>{a.status_code ?? "-"}</td>
                       <td className="py-1">{a.latency_ms ?? "-"} ms</td>
                       <td className="max-w-md truncate py-1 text-muted" title={a.error ?? a.response_body ?? ""}>
                         {a.error ?? a.response_body}
@@ -70,7 +70,7 @@ export function Deliveries({ orders, onChange }: { orders: OrderView[]; onChange
                 </tbody>
               </table>
             )}
-            <div className="mt-2">
+            <div className="mt-1.5">
               <JsonView value={order.payload} summary="Payload" />
             </div>
           </div>

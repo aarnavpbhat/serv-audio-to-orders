@@ -6,7 +6,7 @@ import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 
 export interface WaveformHandle {
   seek: (t: number) => void;
-  play: () => void;
+  playPause: () => void;
 }
 
 export interface WaveSegment {
@@ -24,29 +24,35 @@ export interface LaneUtterance {
   nonCustomer: boolean;
 }
 
-const SEG_COLORS = ["rgba(79,70,229,0.10)", "rgba(15,118,110,0.10)", "rgba(217,119,6,0.10)", "rgba(190,24,93,0.10)"];
+/** Canvas can't read CSS variables, so resolve the theme tokens once at mount. */
+function token(name: string, fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
 
 export function Waveform({
   url,
   segments,
   utterances,
+  time,
   onTime,
-  onPlay,
+  onPlayState,
+  onReady,
   ref,
 }: {
   url: string;
   segments: WaveSegment[];
   utterances: LaneUtterance[];
+  time: number;
   onTime: (t: number) => void;
-  onPlay: () => void;
+  onPlayState: (playing: boolean) => void;
+  onReady: (duration: number) => void;
   ref?: Ref<WaveformHandle>;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const ws = useRef<WaveSurfer | null>(null);
   const regions = useRef<ReturnType<typeof RegionsPlugin.create> | null>(null);
   const [duration, setDuration] = useState(0);
-  const [time, setTime] = useState(0);
-  const [playing, setPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useImperativeHandle(ref, () => ({
@@ -54,7 +60,7 @@ export function Waveform({
       const w = ws.current;
       if (w && w.getDuration() > 0) w.setTime(Math.max(0, Math.min(t, w.getDuration())));
     },
-    play: () => void ws.current?.play(),
+    playPause: () => void ws.current?.playPause(),
   }));
 
   useEffect(() => {
@@ -63,29 +69,27 @@ export function Waveform({
     const w = WaveSurfer.create({
       container: container.current,
       url,
-      height: 88,
-      waveColor: "#cbd5e1",
-      progressColor: "#0f172a",
-      cursorColor: "#e11d48",
-      cursorWidth: 2,
+      height: 72,
+      waveColor: token("--c-faint", "#c7c7cc"),
+      progressColor: token("--c-accent", "#fa233b"),
+      cursorColor: token("--c-accent", "#fa233b"),
+      cursorWidth: 1,
       barWidth: 2,
-      barGap: 1,
+      barGap: 1.5,
       barRadius: 2,
       normalize: true,
       plugins: [plugin],
     });
     ws.current = w;
     regions.current = plugin;
-    w.on("ready", (d) => setDuration(d));
-    w.on("timeupdate", (t) => {
-      setTime(t);
-      onTime(t);
+    w.on("ready", (d) => {
+      setDuration(d);
+      onReady(d);
     });
-    w.on("play", () => {
-      setPlaying(true);
-      onPlay();
-    });
-    w.on("pause", () => setPlaying(false));
+    w.on("timeupdate", onTime);
+    w.on("play", () => onPlayState(true));
+    w.on("pause", () => onPlayState(false));
+    w.on("finish", () => onPlayState(false));
     w.on("error", (e) => setError(String(e)));
     return () => w.destroy();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -96,46 +100,51 @@ export function Waveform({
     if (!plugin || !duration) return;
     plugin.clearRegions();
     segments.forEach((s, i) => {
-      plugin.addRegion({ id: s.id, start: s.start, end: s.end, color: SEG_COLORS[i % SEG_COLORS.length], drag: false, resize: false, content: s.label });
+      plugin.addRegion({ id: s.id, start: s.start, end: s.end, color: i % 2 ? "rgba(120,120,128,0.10)" : "rgba(120,120,128,0.16)", drag: false, resize: false, content: s.label });
     });
   }, [segments, duration]);
 
-  const fmt = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
   const total = duration || Math.max(1, ...utterances.map((u) => u.end));
 
   return (
-    <div className="card p-4">
-      <div className="mb-3 flex items-center gap-3">
-        <button type="button" onClick={() => void ws.current?.playPause()} className="btn-primary w-20 justify-center" disabled={!duration}>
-          {playing ? "Pause" : "Play"}
-        </button>
-        <span className="font-mono text-sm tabular-nums text-muted">
-          {fmt(time)} / {fmt(duration)}
-        </span>
-        <div className="ml-auto flex items-center gap-3 text-xs text-muted">
-          <span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-crew" /> crew</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-customer" /> customer</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-slate-300" /> crew chatter</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-3 rounded-sm bg-indigo-100 ring-1 ring-indigo-200" /> order</span>
+    <div className="panel p-4">
+      <div className="mb-2 flex items-center justify-between text-[11px] text-muted">
+        <span className="label text-[10px]">Waveform · orders shaded</span>
+        <div className="flex items-center gap-3">
+          <Legend className="bg-customer" label="customer" />
+          <Legend className="bg-crew" label="crew" />
+          <Legend className="bg-faint" label="crew chatter" />
         </div>
       </div>
-      {error && <p className="mb-2 text-sm text-rose-700">Audio failed to load: {error}</p>}
+      {error && <p className="mb-2 text-[13px] text-rose-600">Audio failed to load: {error}</p>}
       <div ref={container} />
       {/* Speaker lane: who is talking when, aligned with the waveform. */}
-      <div className="relative mt-2 h-5 cursor-pointer rounded bg-slate-50" onClick={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        ws.current?.setTime(((e.clientX - r.left) / r.width) * total);
-      }}>
+      <div
+        className="relative mt-2 h-4 cursor-pointer rounded bg-fill"
+        onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          ws.current?.setTime(((e.clientX - r.left) / r.width) * total);
+        }}
+      >
         {utterances.map((u) => (
           <div
             key={u.id}
             title={`${u.id} ${u.speaker}`}
-            className={`absolute top-0.5 h-4 rounded-sm ${u.nonCustomer ? "bg-slate-300" : u.speaker === "crew" ? "bg-crew" : "bg-customer"}`}
+            className={`absolute top-0.5 h-3 rounded-sm ${u.nonCustomer ? "bg-faint" : u.speaker === "crew" ? "bg-crew" : "bg-customer"}`}
             style={{ left: `${(u.start / total) * 100}%`, width: `${Math.max(0.3, ((u.end - u.start) / total) * 100)}%` }}
           />
         ))}
-        <div className="pointer-events-none absolute top-0 h-5 w-0.5 bg-rose-600" style={{ left: `${(time / total) * 100}%` }} />
+        <div className="pointer-events-none absolute -top-0.5 h-5 w-px bg-accent" style={{ left: `${(time / total) * 100}%` }} />
       </div>
     </div>
+  );
+}
+
+function Legend({ className, label }: { className: string; label: string }) {
+  return (
+    <span className="flex items-center gap-1">
+      <span className={`h-2 w-2 rounded-full ${className}`} />
+      {label}
+    </span>
   );
 }

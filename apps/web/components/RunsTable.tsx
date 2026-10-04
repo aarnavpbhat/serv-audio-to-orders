@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Artwork } from "./Artwork";
 import { Badge } from "./Badge";
+import { ClockIcon, Equalizer, PlayIcon } from "./Icons";
 
 interface RunSummary {
   id: string;
@@ -19,7 +21,15 @@ interface RunSummary {
   undelivered: number;
 }
 
-export function RunsTable() {
+const dur = (s: number | null) => (s === null ? "" : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`);
+
+function when(ms: number): string {
+  const d = new Date(ms);
+  const today = new Date();
+  return d.toDateString() === today.toDateString() ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : d.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+export function RunsTable({ query }: { query: string }) {
   const [runs, setRuns] = useState<RunSummary[] | null>(null);
   useEffect(() => {
     let alive = true;
@@ -35,49 +45,80 @@ export function RunsTable() {
     };
   }, []);
 
-  if (!runs) return <div className="card p-6 text-sm text-muted">Loading runs...</div>;
-  if (!runs.length) return <div className="card p-6 text-sm text-muted">No runs yet. Start one above, or run <code className="font-mono">pnpm pipeline run &lt;file.mp3&gt;</code>.</div>;
+  const q = query.toLowerCase();
+  const shown = runs?.filter((r) => !q || `${r.source_file} ${r.status} ${r.transcriber} ${r.extractor} ${r.id}`.toLowerCase().includes(q));
 
   return (
-    <div className="card overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="border-b border-line bg-slate-50 text-left">
-          <tr>
-            <th className="label px-4 py-2">File</th>
-            <th className="label px-4 py-2">Status</th>
-            <th className="label px-4 py-2">Orders</th>
-            <th className="label px-4 py-2">Webhooks</th>
-            <th className="label px-4 py-2">Providers</th>
-            <th className="label px-4 py-2">Started</th>
-          </tr>
-        </thead>
-        <tbody>
-          {runs.map((r) => (
-            <tr key={r.id} className="border-b border-line last:border-0 hover:bg-slate-50">
-              <td className="px-4 py-2">
-                <Link href={`/runs/${r.id}`} className="font-medium hover:underline">
-                  {r.source_file}
+    <section>
+      <div className="mb-2 flex items-baseline justify-between">
+        <h2 className="section-title">Recent Runs</h2>
+        {shown && <span className="text-[12px] text-muted">{shown.length} runs{q && ` matching "${query}"`}</span>}
+      </div>
+      {!shown && <p className="py-6 text-muted">Loading runs...</p>}
+      {shown?.length === 0 && (
+        <p className="py-6 text-muted">
+          {q ? "No runs match." : <>No runs yet. Start one above, or run <code className="font-mono">pnpm pipeline run &lt;file.mp3&gt;</code>.</>}
+        </p>
+      )}
+      {shown && shown.length > 0 && (
+        <div className="text-[13px]">
+          <div className="grid grid-cols-[32px_minmax(0,2.4fr)_minmax(0,1fr)_70px_minmax(0,1.3fr)_minmax(0,1.2fr)_70px_48px] items-center gap-3 border-b border-line px-2 pb-1.5 text-[11px] font-medium text-muted">
+            <span className="text-center">#</span>
+            <span>Title</span>
+            <span>Status</span>
+            <span className="text-right">Orders</span>
+            <span>Webhooks</span>
+            <span>Providers</span>
+            <span>Started</span>
+            <span className="flex justify-end">
+              <ClockIcon className="h-3.5 w-3.5" />
+            </span>
+          </div>
+          <div className="tracks mt-1">
+            {shown.map((r, i) => {
+              const busy = r.status === "running" || r.status === "queued";
+              return (
+                <Link key={r.id} href={`/runs/${r.id}`} className="group grid grid-cols-[32px_minmax(0,2.4fr)_minmax(0,1fr)_70px_minmax(0,1.3fr)_minmax(0,1.2fr)_70px_48px] items-center gap-3 px-2 py-1.5">
+                  <span className="grid place-items-center text-[12px] tabular-nums text-muted">
+                    {busy ? (
+                      <Equalizer className="text-accent" />
+                    ) : (
+                      <>
+                        <span className="group-hover:hidden">{i + 1}</span>
+                        <PlayIcon className="hidden h-3.5 w-3.5 text-ink group-hover:block" />
+                      </>
+                    )}
+                  </span>
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <Artwork seed={r.source_file} size="sm" className="!h-9 !w-9" />
+                    <span className="min-w-0">
+                      <span className={`block truncate font-medium ${busy ? "text-accent" : ""}`}>{r.source_file.replace(/\.mp3$/, "")}</span>
+                      <span className="block truncate font-mono text-[11px] text-muted">{r.id}</span>
+                    </span>
+                  </span>
+                  <span className="min-w-0">
+                    <Badge value={r.status} label={r.status === "running" ? `${r.stage}...` : undefined} />
+                    {r.error && (
+                      <span className="mt-0.5 block truncate text-[11px] text-rose-600 dark:text-rose-400" title={r.error}>
+                        {r.error}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-right tabular-nums">{r.order_count}</span>
+                  <span className="truncate text-muted">
+                    {r.delivered} sent{r.undelivered > 0 && <span className="text-rose-600 dark:text-rose-400"> · {r.undelivered} pending</span>}
+                  </span>
+                  <span className="truncate text-muted">
+                    {r.transcriber ?? "-"} · {r.extractor ?? "-"}
+                  </span>
+                  <span className="text-muted">{when(r.created_at)}</span>
+                  <span className="text-right tabular-nums text-muted">{dur(r.duration_s)}</span>
                 </Link>
-                {r.duration_s !== null && <span className="ml-2 text-xs text-muted">{r.duration_s.toFixed(0)}s</span>}
-              </td>
-              <td className="px-4 py-2">
-                <Badge value={r.status} label={r.status === "running" ? `${r.stage}...` : r.status} />
-                {r.error && <div className="mt-1 max-w-xs truncate text-xs text-rose-700" title={r.error}>{r.error}</div>}
-              </td>
-              <td className="px-4 py-2 tabular-nums">{r.order_count}</td>
-              <td className="px-4 py-2 tabular-nums">
-                {r.delivered} sent{r.undelivered > 0 && <span className="text-rose-700">, {r.undelivered} pending/failed</span>}
-              </td>
-              <td className="px-4 py-2 text-xs text-muted">
-                {r.transcriber ?? "-"}
-                <br />
-                {r.extractor ?? "-"}
-              </td>
-              <td className="px-4 py-2 text-xs text-muted">{new Date(r.created_at).toLocaleString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

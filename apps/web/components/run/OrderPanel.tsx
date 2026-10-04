@@ -3,6 +3,7 @@
 import type { AppliedEvent } from "@serv/pipeline/build/replay";
 import type { ComboOpportunity, NeedsReviewItem, NotOrderedItem, OrderEvent, OrderItem } from "@serv/pipeline/schemas/index";
 import { Badge, Flag } from "../Badge";
+import { Equalizer } from "../Icons";
 import { JsonView } from "../JsonView";
 
 export interface PanelOrder {
@@ -21,126 +22,113 @@ export interface PanelOrder {
 const money = (n: number) => `$${n.toFixed(2)}`;
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
-function ItemRow({ item, name }: { item: OrderItem; name: (id: string | null) => string }) {
-  const mods = item.modifiers.map((m) => m.id);
+const ROW = "grid grid-cols-[28px_minmax(0,1fr)_auto_72px] items-center gap-3 px-2 py-1.5";
+
+function Confidence({ rec, com }: { rec: number; com: number }) {
   return (
-    <li className="rounded-lg border border-emerald-200 bg-white p-2 text-sm">
-      <div className="flex justify-between gap-2">
-        <span className="font-medium">
-          {item.quantity} x {item.name}
-          {item.size && <span className="ml-1 text-xs text-muted">({item.size})</span>}
-        </span>
-        <span className="tabular-nums text-muted">{money(item.unit_price * item.quantity)}</span>
-      </div>
-      {item.components && (
-        <div className="mt-1 space-y-0.5 text-xs text-muted">
-          {item.components.map((c) => (
-            <div key={c.slot}>
-              <span className="uppercase">{c.slot}</span>: {c.catalog_id ? name(c.catalog_id) : c.declined ? "none (declined)" : <span className="font-medium text-rose-700">not chosen</span>}
-              {c.modifiers?.length ? <span className="ml-1">· {c.modifiers.map((m) => m.id).join(", ")}</span> : null}
-            </div>
-          ))}
-        </div>
-      )}
-      {mods.length > 0 && <div className="mt-1 text-xs text-muted">{mods.join(", ")}</div>}
-      <div className="mt-1 flex gap-3 font-mono text-[10px] text-muted">
-        <span>rec {pct(item.recognition_confidence)}</span>
-        <span>com {pct(item.commitment_confidence)}</span>
-        <span>{item.source_utterance_ids.join(" ")}</span>
-      </div>
-    </li>
+    <span className="flex gap-2 font-mono text-[10.5px] text-muted" title="recognition / commitment confidence">
+      <span>rec {pct(rec)}</span>
+      <span>com {pct(com)}</span>
+    </span>
   );
 }
 
-export function OrderCard({
-  order,
-  phase,
-  name,
-}: {
-  order: PanelOrder;
-  phase: "final" | "live" | "waiting";
-  name: (id: string | null) => string;
-}) {
-  const flags = order.flags.filter((f) => f !== "placeholder_values");
+function ItemRow({ n, item, name }: { n: number; item: OrderItem; name: (id: string | null) => string }) {
+  const details = [
+    item.size,
+    ...(item.components ?? []).map((c) => `${c.slot}: ${c.catalog_id ? name(c.catalog_id) : c.declined ? "declined" : "NOT CHOSEN"}${c.modifiers?.length ? ` (${c.modifiers.map((m) => m.id).join(", ")})` : ""}`),
+    ...item.modifiers.map((m) => m.id.replace(/_/g, " ")),
+  ].filter(Boolean);
+  const missing = item.components?.some((c) => !c.catalog_id && !c.declined);
   return (
-    <div className={`rounded-xl border p-3 ${phase === "waiting" ? "border-dashed border-line opacity-60" : "border-line bg-slate-50/50"}`}>
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        <span className="font-mono text-xs text-muted">{order.order_id}</span>
-        {phase === "final" && order.status && <Badge value={order.status} />}
-        {phase === "live" && <Badge value="running" label="building..." />}
-        {phase === "waiting" && <Badge value="queued" label="not reached yet" />}
-        {order.group_id && <span className="rounded bg-sky-50 px-1.5 py-0.5 font-mono text-[10px] text-sky-700">group {order.group_id.slice(-6)}</span>}
-        <span className="ml-auto text-sm tabular-nums">
-          {money(order.totals.computed)}
-          {order.totals.spoken_by_crew !== null && (
-            <span className={`ml-1 text-xs ${Math.abs(order.totals.spoken_by_crew - order.totals.computed) > 0.05 ? "text-rose-700" : "text-muted"}`}>
-              (crew said {money(order.totals.spoken_by_crew)})
-            </span>
-          )}
+    <div className={ROW}>
+      <span className="text-center text-[12px] tabular-nums text-muted">{n}</span>
+      <span className="min-w-0">
+        <span className="block truncate font-medium">
+          {item.name}
+          {item.quantity > 1 && <span className="ml-1.5 text-muted">×{item.quantity}</span>}
         </span>
+        {details.length > 0 && <span className={`block truncate text-[11.5px] ${missing ? "text-rose-600 dark:text-rose-400" : "text-muted"}`}>{details.join(" · ")}</span>}
+      </span>
+      <Confidence rec={item.recognition_confidence} com={item.commitment_confidence} />
+      <span className="text-right tabular-nums">{money(item.unit_price * item.quantity)}</span>
+    </div>
+  );
+}
+
+export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "final" | "live" | "waiting"; name: (id: string | null) => string }) {
+  const flags = order.flags.filter((f) => f !== "placeholder_values");
+  const spoken = order.totals.spoken_by_crew;
+  const mismatch = spoken !== null && Math.abs(spoken - order.totals.computed) > 0.05;
+  return (
+    <div className={phase === "waiting" ? "opacity-45" : ""}>
+      <div className="flex flex-wrap items-center gap-2 px-2 pb-1.5">
+        <span className="font-mono text-[11px] text-muted">{order.order_id}</span>
+        {phase === "final" && order.status && <Badge value={order.status} />}
+        {phase === "live" && (
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-accent">
+            <Equalizer /> Building
+          </span>
+        )}
+        {phase === "waiting" && <Badge value="queued" label="Not reached yet" />}
+        {order.group_id && <span className="rounded bg-sky-500/12 px-1.5 py-0.5 font-mono text-[10px] text-sky-700 dark:text-sky-400">group {order.group_id.slice(-6)}</span>}
+        {flags.map((f) => (
+          <Flag key={f} value={f} />
+        ))}
+        {order.flags.includes("placeholder_values") && <Flag value="placeholder_values" />}
       </div>
-      {(flags.length > 0 || order.flags.includes("placeholder_values")) && (
-        <div className="mb-2 flex flex-wrap gap-1">
-          {flags.map((f) => (
-            <Flag key={f} value={f} />
-          ))}
-          {order.flags.includes("placeholder_values") && <Flag value="placeholder_values" />}
-        </div>
-      )}
-      <div className="grid gap-2 md:grid-cols-3">
-        <div>
-          <div className="label mb-1 text-emerald-700">Items ({order.items.length})</div>
-          <ul className="space-y-1.5">
-            {order.items.map((i) => (
-              <ItemRow key={i.line_id} item={i} name={name} />
-            ))}
-          </ul>
-        </div>
-        <div>
-          <div className="label mb-1 text-amber-700">Needs review ({order.needs_review.length})</div>
-          <ul className="space-y-1.5">
-            {order.needs_review.map((n) => (
-              <li key={n.line_id} className="rounded-lg border border-amber-200 bg-white p-2 text-sm">
-                <div className="font-medium">
-                  {n.quantity} x &ldquo;{n.raw_text ?? name(n.catalog_id)}&rdquo;
-                </div>
-                <div className="mt-1 space-y-0.5 text-xs">
-                  {n.candidates.map((c) => (
-                    <div key={c.catalog_id} className="flex justify-between">
-                      <span>{name(c.catalog_id)}</span>
-                      <span className="font-mono text-muted">{c.score.toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <div className="label mb-1 text-slate-600">Not ordered ({order.not_ordered.length})</div>
-          <ul className="space-y-1.5">
-            {order.not_ordered.map((n, k) => (
-              <li key={k} className="rounded-lg border border-line bg-white p-2 text-sm">
-                <div className="text-slate-500 line-through">{name(n.catalog_id) || n.raw_text}</div>
-                <div className="mt-0.5 text-xs text-muted">
-                  {n.reason.replace(/_/g, " ")}
-                  {n.replaced_by ? ` by ${name(n.replaced_by)}` : ""}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+
+      <div className="tracks text-[13px]">
+        {order.items.map((i, k) => (
+          <ItemRow key={i.line_id} n={k + 1} item={i} name={name} />
+        ))}
+        {order.needs_review.map((n) => (
+          <div key={n.line_id} className={ROW}>
+            <span className="grid place-items-center">
+              <span className="grid h-4 w-4 place-items-center rounded-full bg-amber-500 text-[10px] font-bold text-white">?</span>
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate font-medium">
+                &ldquo;{n.raw_text ?? name(n.catalog_id)}&rdquo;
+                {n.quantity > 1 && <span className="ml-1.5 text-muted">×{n.quantity}</span>}
+              </span>
+              <span className="block truncate text-[11.5px] text-amber-700 dark:text-amber-400">
+                Needs review{n.candidates.length > 0 && `: ${n.candidates.map((c) => `${name(c.catalog_id)} ${c.score.toFixed(2)}`).join(", ")}`}
+              </span>
+            </span>
+            <span />
+            <span className="text-right text-muted">-</span>
+          </div>
+        ))}
+        {order.not_ordered.map((n, k) => (
+          <div key={`no${k}`} className={ROW}>
+            <span className="text-center text-muted">-</span>
+            <span className="min-w-0">
+              <span className="block truncate text-muted line-through">{name(n.catalog_id) || n.raw_text}</span>
+              <span className="block truncate text-[11.5px] text-muted">
+                {n.reason.replace(/_/g, " ")}
+                {n.replaced_by ? ` by ${name(n.replaced_by)}` : ""}
+              </span>
+            </span>
+            <span />
+            <span />
+          </div>
+        ))}
+        {order.items.length + order.needs_review.length + order.not_ordered.length === 0 && <div className="px-2 py-2 text-muted">Nothing ordered yet.</div>}
       </div>
-      {order.combo_opportunities.length > 0 && (
-        <div className="mt-2 space-y-1">
-          {order.combo_opportunities.map((c, k) => (
-            <div key={k} className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs text-indigo-900">
-              Combo opportunity: {c.combo_name} would cost {money(c.combo_price)} instead of {money(c.separate_total)} (save {money(c.savings)})
-              {c.customer_declined_combo && <span className="ml-1 font-semibold">· customer declined the meal</span>}
-            </div>
-          ))}
+
+      {order.combo_opportunities.map((c, k) => (
+        <div key={k} className="mx-2 mt-2 rounded-lg bg-accent-soft px-3 py-1.5 text-[12px]">
+          <span className="font-semibold text-accent">Combo opportunity:</span> {c.combo_name} would cost {money(c.combo_price)} instead of {money(c.separate_total)}, saving {money(c.savings)}
+          {c.customer_declined_combo && <span className="font-semibold"> · customer declined the meal</span>}
         </div>
-      )}
+      ))}
+
+      <div className="mt-1 flex items-center justify-end gap-3 border-t border-line px-2 pt-2 text-[12px]">
+        <span className="text-muted">confidence {pct(order.overall_confidence)}</span>
+        {spoken !== null && <span className={mismatch ? "font-medium text-rose-600 dark:text-rose-400" : "text-muted"}>crew said {money(spoken)}</span>}
+        <span className="text-[14px] font-semibold tabular-nums">{money(order.totals.computed)}</span>
+      </div>
     </div>
   );
 }
@@ -148,14 +136,14 @@ export function OrderCard({
 export function EventLog({ events, log, time }: { events: OrderEvent[]; log: AppliedEvent[]; time: number | null }) {
   const notes = new Map(log.map((l) => [l.event_id, l]));
   return (
-    <details className="mt-2">
-      <summary className="cursor-pointer text-xs font-medium text-muted hover:text-ink">Events ({events.length}): the LLM proposes, code decides</summary>
-      <ol className="mt-2 space-y-1 font-mono text-[11px]">
+    <details className="mt-2 px-2">
+      <summary className="cursor-pointer text-[11px] font-medium text-muted hover:text-ink">Events ({events.length}): the LLM proposes, code decides</summary>
+      <ol className="tracks mt-2 font-mono text-[11px]">
         {events.map((e) => {
           const l = notes.get(e.event_id);
           const reached = time === null || e.t_s === null || e.t_s <= time;
           return (
-            <li key={e.event_id} className={`flex gap-2 rounded px-2 py-1 ${reached ? "bg-white" : "opacity-40"} ${l && !l.applied ? "text-rose-700" : ""}`}>
+            <li key={e.event_id} className={`flex gap-2 px-2 py-1 ${reached ? "" : "opacity-35"} ${l && !l.applied ? "text-rose-600 dark:text-rose-400" : ""}`}>
               <span className="w-8 text-muted">{e.event_id}</span>
               <span className="w-32 font-semibold">{e.type}</span>
               <span className="flex-1">
