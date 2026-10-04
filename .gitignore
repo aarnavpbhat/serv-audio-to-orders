@@ -1,0 +1,13 @@
+node_modules/
+.cache/
+.data/
+.next/
+.env
+.env.local
+*.tsbuildinfo
+fixtures/audio/*.aiff
+fixtures/audio/tmp/
+.DS_Store
+next-env.d.ts
+.playwright-mcp/
+.claude/

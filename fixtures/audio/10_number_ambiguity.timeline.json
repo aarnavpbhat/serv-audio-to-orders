@@ -1,0 +1,69 @@
+{
+  "fixture_ids": [
+    "10_number_ambiguity"
+  ],
+  "file": "10_number_ambiguity",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 28.664,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "10_number_ambiguity",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "10_number_ambiguity",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "I need a number two, three of them, all with Diet Coke. And one number six with a Sprite.",
+      "start_s": 5.502,
+      "end_s": 11.869
+    },
+    {
+      "id": "u3",
+      "fixture_id": "10_number_ambiguity",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Three number twos with Diet Coke and a number six with Sprite. Anything else?",
+      "start_s": 12.469,
+      "end_s": 17.86
+    },
+    {
+      "id": "u4",
+      "fixture_id": "10_number_ambiguity",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "No thanks.",
+      "start_s": 18.46,
+      "end_s": 19.69
+    },
+    {
+      "id": "u5",
+      "fixture_id": "10_number_ambiguity",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $37.46. Please pull forward.",
+      "start_s": 20.29,
+      "end_s": 25.664
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "10_number_ambiguity",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 25.664
+    }
+  ]
+}

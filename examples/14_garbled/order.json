@@ -1,0 +1,235 @@
+{
+  "segmentation": {
+    "segments": [
+      {
+        "segment_id": "seg_1",
+        "index": 0,
+        "start_s": 1.12,
+        "end_s": 19.205,
+        "utterance_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7"
+        ],
+        "non_customer_ids": [],
+        "has_greeting": true,
+        "has_closing": true,
+        "truncated_start": false,
+        "truncated_end": false,
+        "trailing_silence_s": 3.475,
+        "language": "en",
+        "non_english": false,
+        "mean_word_conf": 0.972,
+        "crosstalk_suspected": false
+      }
+    ],
+    "boundaries": [
+      {
+        "after_index": 0,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 1,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 2,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 3,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 4,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 5,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      }
+    ],
+    "llm_calls": 0
+  },
+  "orders": [
+    {
+      "order": {
+        "order_id": "ord_01M443TAMPKVZ6S5MAQ5NZFAK7",
+        "group_id": null,
+        "segment_id": "seg_1",
+        "status": "needs_review",
+        "started_s": 1.12,
+        "ended_s": 19.205,
+        "items": [
+          {
+            "line_id": "e1",
+            "catalog_id": "cheeseburger",
+            "name": "Cheeseburger",
+            "quantity": 1,
+            "size": null,
+            "modifiers": [],
+            "unit_price": 2.99,
+            "recognition_confidence": 0.91,
+            "commitment_confidence": 0.95,
+            "source_utterance_ids": [
+              "u2"
+            ]
+          }
+        ],
+        "needs_review": [
+          {
+            "line_id": "e2",
+            "catalog_id": null,
+            "raw_text": "medium, uh, flourblberry shake",
+            "quantity": 1,
+            "size": "medium",
+            "candidates": [
+              {
+                "catalog_id": "shake_choc",
+                "score": 0.79
+              },
+              {
+                "catalog_id": "shake_van",
+                "score": 0.79
+              },
+              {
+                "catalog_id": "shake_straw",
+                "score": 0.79
+              }
+            ],
+            "recognition_confidence": 0.1,
+            "commitment_confidence": 0.2,
+            "source_utterance_ids": [
+              "u2",
+              "u3"
+            ]
+          }
+        ],
+        "not_ordered": [],
+        "combo_opportunities": [],
+        "customer_declined_combo": false,
+        "flags": [
+          "needs_review_present",
+          "placeholder_values"
+        ],
+        "totals": {
+          "computed": 2.99,
+          "spoken_by_crew": null,
+          "currency": "USD"
+        },
+        "overall_confidence": 0.51,
+        "readback_diffs": [],
+        "utterance_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7"
+        ]
+      },
+      "events": [
+        {
+          "event_id": "e1",
+          "type": "ADD",
+          "target_line_ref": null,
+          "catalog_id": "cheeseburger",
+          "raw_text": "cheeseburger",
+          "quantity": 1,
+          "size": null,
+          "modifiers": [],
+          "slot": null,
+          "readback_items": null,
+          "amount": null,
+          "source_utterance_ids": [
+            "u2"
+          ],
+          "recognition_confidence": 0.91,
+          "commitment_confidence": 0.95,
+          "candidates": [],
+          "t_s": 5.52
+        },
+        {
+          "event_id": "e2",
+          "type": "ADD",
+          "target_line_ref": null,
+          "catalog_id": null,
+          "raw_text": "medium, uh, flourblberry shake",
+          "quantity": 1,
+          "size": "medium",
+          "modifiers": [],
+          "slot": null,
+          "readback_items": null,
+          "amount": null,
+          "source_utterance_ids": [
+            "u2",
+            "u3"
+          ],
+          "recognition_confidence": 0.1,
+          "commitment_confidence": 0.2,
+          "candidates": [
+            {
+              "catalog_id": "shake_choc",
+              "score": 0.79
+            },
+            {
+              "catalog_id": "shake_van",
+              "score": 0.79
+            },
+            {
+              "catalog_id": "shake_straw",
+              "score": 0.79
+            }
+          ],
+          "t_s": 9.12
+        }
+      ],
+      "build_log": [
+        {
+          "event_id": "e1",
+          "type": "ADD",
+          "t_s": 5.52,
+          "applied": true,
+          "note": "added Cheeseburger x1",
+          "line_ids": [
+            "e1"
+          ]
+        },
+        {
+          "event_id": "e2",
+          "type": "ADD",
+          "t_s": 9.12,
+          "applied": true,
+          "note": "added Unknown item x1",
+          "line_ids": [
+            "e2"
+          ]
+        }
+      ],
+      "warnings": []
+    }
+  ]
+}

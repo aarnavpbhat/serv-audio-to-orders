@@ -1,0 +1,229 @@
+#!/usr/bin/env tsx
+/**
+ * pnpm pipeline run <file.mp3>       transcribe, segment, extract, build, deliver
+ * pnpm pipeline eval                 score every fixture against ground truth
+ * pnpm pipeline resend <order_id>    resend a failed or dead-lettered delivery
+ * pnpm pipeline worker               run the slow-phase retry worker
+ * pnpm pipeline examples             write example orders to examples/
+ * pnpm pipeline settings             show Serv-dependent settings and placeholders
+ * pnpm pipeline secret               generate a whsec_ signing secret
+ */
+import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { parseArgs } from "node:util";
+import { parseChannelMap, servSettings } from "@serv/config";
+import { ConfigError, createEngine, type EngineOptions, type ExtractorKind, type TranscriberKind } from "./engine";
+import { formatReport, runEval } from "./eval/run-eval";
+import { IngestError } from "./ingest/probe";
+import { sleep } from "./lib/retry";
+import { runPipeline, type RunResult } from "./run";
+import { latestOrder, outboxForOrder } from "./store/db";
+import { generateSecret, signedHeaders } from "./webhook/signing";
+
+const HELP = `Usage: pnpm pipeline <command> [options]
+
+Commands
+  run <file>            Process one audio file and deliver each order to WEBHOOK_URL
+  eval                  Run all fixtures and report accuracy (writes eval/report.json)
+  resend <order_id>     Resend the latest delivery for an order
+  worker [--once]       Process scheduled slow-phase retries
+  examples              Write example orders (audio, transcript, order, payload) to examples/
+  settings              List Serv-dependent settings and which are placeholders
+  secret                Print a new whsec_ signing secret
+
+Options
+  --transcriber deepgram|script   Default: deepgram if DEEPGRAM_API_KEY is set, else script (fixtures only)
+  --extractor gemini|fuzzy|oracle Default: gemini if GEMINI_API_KEY is set, else fuzzy (oracle = fixture events, eval ceiling)
+  --channel-map 0=customer,1=crew Override CHANNEL_MAP for this run
+  --start-utc <iso>               Override AUDIO_START_UTC for this run
+  --no-deliver                    Build orders without sending webhooks
+  --no-judge                      Disable LLM tie-breakers for segmentation and roles
+  --refresh                       Ignore cached Deepgram responses
+  --json                          Print full JSON output
+  eval: --layout mono|stereo (default mono), --only id1,id2, --no-compilations, --deliver, --no-webhook-check
+`;
+
+function engineOpts(v: Record<string, unknown>): EngineOptions {
+  return {
+    ...(v.transcriber ? { transcriber: v.transcriber as TranscriberKind } : {}),
+    ...(v.extractor ? { extractor: v.extractor as ExtractorKind } : {}),
+    noJudge: v["no-judge"] === true,
+  };
+}
+
+function printRun(r: RunResult): void {
+  console.log(`\nRun ${r.run_id}`);
+  console.log(`  ${r.transcript.source_file}: ${r.transcript.audio.duration_s}s, ${r.transcript.audio.channels} ch, roles from ${r.transcript.role_source}, start ${r.transcript.audio_start_utc} (${r.transcript.timestamp_source})`);
+  for (const o of r.orders) {
+    const p = o.payload;
+    console.log(`\n  ${p.order_id}  ${p.status.toUpperCase()}  ${p.started_at.slice(11, 19)}-${p.ended_at.slice(11, 19)}  $${p.totals.computed.toFixed(2)}${p.totals.spoken_by_crew !== null ? ` (crew said $${p.totals.spoken_by_crew.toFixed(2)})` : ""}`);
+    for (const i of p.items) {
+      const comps = i.components?.map((c) => `${c.slot}: ${c.catalog_id ?? "none"}`).join(", ");
+      const mods = [...i.modifiers, ...(i.components ?? []).flatMap((c) => c.modifiers ?? [])].map((m) => m.id).join(", ");
+      console.log(`    + ${i.quantity} x ${i.name}${i.size ? ` (${i.size})` : ""}${comps ? ` [${comps}]` : ""}${mods ? ` {${mods}}` : ""}`);
+    }
+    for (const n of p.needs_review) console.log(`    ? ${n.quantity} x "${n.raw_text ?? n.catalog_id}" candidates: ${n.candidates.map((c) => `${c.catalog_id} ${c.score}`).join(", ")}`);
+    for (const n of p.not_ordered) console.log(`    - ${n.catalog_id ?? n.raw_text} (${n.reason}${n.replaced_by ? ` by ${n.replaced_by}` : ""})`);
+    for (const c of p.combo_opportunities) console.log(`    $ ${c.combo_name} would save $${c.savings.toFixed(2)}${c.customer_declined_combo ? " (customer declined the meal)" : ""}`);
+    if (p.flags.length) console.log(`    flags: ${p.flags.join(", ")}`);
+  }
+  if (r.deliveries.length) {
+    console.log("\n  Deliveries");
+    for (const d of r.deliveries) console.log(`    ${d.webhook_id}  ${d.status}  attempts=${d.attempt_count}  last=${d.last_status_code ?? d.last_error ?? "-"}`);
+  }
+  const u = r.usage;
+  console.log(`\n  Usage: STT ${u.stt.provider} ${u.stt.cached ? "cached (0 min)" : `${u.stt.audio_minutes} min`}; LLM ${u.llm.calls} calls (${u.llm.cached_calls} cached), ${u.llm.input_tokens} in / ${u.llm.output_tokens} out tokens; ${r.timings.total_ms} ms total`);
+  const g = u.gemini_today;
+  if (g) console.log(`  Gemini today (${g.day} PT): ${g.requests}/${g.cap} requests, tier ${g.tier}${g.exhausted ? ", daily quota used up" : ""}`);
+}
+
+async function main(): Promise<void> {
+  const { values, positionals } = parseArgs({
+    allowPositionals: true,
+    options: {
+      transcriber: { type: "string" },
+      extractor: { type: "string" },
+      "channel-map": { type: "string" },
+      "start-utc": { type: "string" },
+      "no-deliver": { type: "boolean" },
+      deliver: { type: "boolean" },
+      "no-judge": { type: "boolean" },
+      refresh: { type: "boolean" },
+      json: { type: "boolean" },
+      layout: { type: "string" },
+      only: { type: "string" },
+      "no-compilations": { type: "boolean" },
+      "no-webhook-check": { type: "boolean" },
+      once: { type: "boolean" },
+      help: { type: "boolean", short: "h" },
+    },
+  });
+  const [cmd, arg] = positionals;
+  if (!cmd || values.help) {
+    console.log(HELP);
+    return;
+  }
+
+  switch (cmd) {
+    case "run": {
+      if (!arg) throw new ConfigError("Usage: pnpm pipeline run <file.mp3>");
+      const engine = createEngine({ ...engineOpts(values), log: values.json ? () => {} : (m) => console.log(m) });
+      const result = await runPipeline(engine, path.resolve(process.env.INIT_CWD ?? process.cwd(), arg), {
+        ...(values["channel-map"] ? { channelMap: parseChannelMap(values["channel-map"]) } : {}),
+        ...(values["start-utc"] ? { audioStartUtc: values["start-utc"] } : {}),
+        deliver: !values["no-deliver"],
+        refresh: values.refresh ?? false,
+      });
+      if (values.json) console.log(JSON.stringify({ run_id: result.run_id, orders: result.orders.map((o) => o.payload), deliveries: result.deliveries, usage: result.usage }, null, 2));
+      else printRun(result);
+      const pending = result.deliveries.filter((d) => d.status === "pending");
+      if (pending.length) console.log(`\n  ${pending.length} delivery(ies) scheduled for slow-phase retry. Run "pnpm pipeline worker" or open the web app.`);
+      return;
+    }
+    case "eval": {
+      const engine = createEngine({ ...engineOpts(values), log: () => {} });
+      const report = await runEval(engine, {
+        layout: values.layout === "stereo" ? "stereo" : "mono",
+        ...(values.only ? { only: values.only.split(",") } : {}),
+        compilations: !values["no-compilations"],
+        deliver: values.deliver === true,
+        webhook: !values["no-webhook-check"],
+      });
+      console.log(formatReport(report));
+      return;
+    }
+    case "resend": {
+      if (!arg) throw new ConfigError("Usage: pnpm pipeline resend <order_id>");
+      const engine = createEngine({ transcriber: "script", extractor: "fuzzy" });
+      const row = outboxForOrder(engine.db, arg)[0];
+      if (!row) throw new ConfigError(`No delivery found for order ${arg}${latestOrder(engine.db, arg) ? " (order exists but was never queued)" : ""}`);
+      const out = await engine.deliverer.resend(row.webhook_id);
+      console.log(`${out.webhook_id}: ${out.status} (attempts ${out.attempt_count}, last ${out.last_status_code ?? out.last_error})`);
+      return;
+    }
+    case "worker": {
+      const engine = createEngine({ transcriber: "script", extractor: "fuzzy" });
+      const recovered = engine.deliverer.recoverStuck();
+      if (recovered) console.log(`recovered ${recovered} stuck delivery(ies)`);
+      for (;;) {
+        const done = await engine.deliverer.processDue();
+        for (const d of done) console.log(`${new Date().toISOString()} ${d.webhook_id}: ${d.status}`);
+        if (values.once) return;
+        await sleep(5000);
+      }
+    }
+    case "examples":
+      return writeExamples(engineOpts(values));
+    case "settings": {
+      for (const s of servSettings()) console.log(`${s.placeholder ? "PLACEHOLDER" : "set        "}  ${s.key.padEnd(46)} ${s.value}\n             ${s.note}`);
+      return;
+    }
+    case "secret":
+      console.log(generateSecret());
+      return;
+    default:
+      throw new ConfigError(`Unknown command "${cmd}"\n\n${HELP}`);
+  }
+}
+
+/** Fixture files used for the deliverable examples, one per interesting behaviour. */
+const EXAMPLE_FILES = [
+  ["01_simple", "Simple order"],
+  ["02_combo_slot", "Combo with drink choice and size"],
+  ["04_correction", "Correction: Coke replaced by Sprite"],
+  ["11_declined_upsell_out_of_stock", "Out of stock, declined meal, combo opportunity"],
+  ["14_garbled", "Garbled item routed to needs_review"],
+  ["15_split_payment", "Split payment: two orders, one group_id"],
+  ["16_crew_crosstalk", "Crew chatter excluded from the order"],
+] as const;
+
+async function writeExamples(opts: EngineOptions): Promise<void> {
+  const engine = createEngine({ ...opts, log: () => {} });
+  const dir = engine.cfg.paths.examplesDir;
+  const index: string[] = [
+    "# Example orders",
+    "",
+    `Generated by \`pnpm pipeline examples\` with ${engine.transcriber.name} and ${engine.extractor.name} from the mono (headset mix) fixture audio. Each folder has the audio, the normalized transcript, the built order with its events, and the signed webhook payload.`,
+    "",
+    "| Example | Status | Items | Needs review | Not ordered | Flags |",
+    "|---|---|---|---|---|---|",
+  ];
+  for (const [id, title] of EXAMPLE_FILES) {
+    const src = path.join(engine.cfg.paths.fixturesDir, "audio", `${id}.mono.clean.mp3`);
+    const result = await runPipeline(engine, src, { channelMap: null, audioStartUtc: "2026-10-03T18:40:00Z", deliver: true });
+    const out = path.join(dir, id);
+    mkdirSync(out, { recursive: true });
+    copyFileSync(src, path.join(out, "audio.mp3"));
+    writeFileSync(path.join(out, "transcript.json"), JSON.stringify(result.transcript, null, 2) + "\n");
+    writeFileSync(
+      path.join(out, "order.json"),
+      JSON.stringify(
+        { segmentation: result.segmentation, orders: result.orders.map((o) => ({ order: o.order, events: o.events, build_log: o.build_log, warnings: o.warnings })) },
+        null,
+        2,
+      ) + "\n",
+    );
+    const payloads = result.orders.map((o) => o.payload);
+    writeFileSync(path.join(out, "webhook-payload.json"), JSON.stringify(payloads.length === 1 ? payloads[0] : payloads, null, 2) + "\n");
+    const sample = payloads[0];
+    if (sample) {
+      const body = JSON.stringify(sample);
+      const headers = { "content-type": "application/json", "user-agent": engine.cfg.webhook.userAgent, "x-delivery-attempt": "1", ...signedHeaders("whsec_ZXhhbXBsZS1zZWNyZXQtZG8tbm90LXVzZQ==", `${sample.order_id}_v1`, body) };
+      writeFileSync(path.join(out, "webhook-headers.json"), JSON.stringify({ note: "Signed with a throwaway example secret, not the dev secret", headers }, null, 2) + "\n");
+    }
+    for (const p of payloads) {
+      index.push(`| [${title}](./${id}/) | ${p.status} | ${p.items.map((i) => `${i.quantity}x ${i.name}`).join(", ") || "-"} | ${p.needs_review.length} | ${p.not_ordered.map((n) => `${n.catalog_id} (${n.reason})`).join(", ") || "-"} | ${p.flags.filter((f) => f !== "placeholder_values").join(", ") || "-"} |`);
+    }
+    console.log(`examples/${id}: ${payloads.map((p) => p.status).join(", ")}`);
+  }
+  writeFileSync(path.join(dir, "README.md"), index.join("\n") + "\n");
+}
+
+main().catch((e: unknown) => {
+  if (e instanceof ConfigError || e instanceof IngestError) {
+    console.error(`Error: ${e.message}`);
+  } else {
+    console.error(e);
+  }
+  process.exit(1);
+});

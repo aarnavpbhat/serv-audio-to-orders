@@ -1,0 +1,293 @@
+[
+  {
+    "schema_version": "1.0",
+    "event_type": "order.completed",
+    "order_id": "ord_01M443TAR3EWR3Q9YRRW1MFVJM",
+    "order_version": 1,
+    "group_id": "grp_01M443TAR3WX870YNMGWM4HTV0",
+    "location_id": "store_demo_001",
+    "lane_id": "lane_1",
+    "status": "completed",
+    "started_at": "2026-10-03T18:40:01.120Z",
+    "ended_at": "2026-10-03T18:40:30.985Z",
+    "timestamp_source": "env",
+    "audio": {
+      "source_file": "15_split_payment.mono.clean.mp3",
+      "offset_start_s": 1.12,
+      "offset_end_s": 30.985
+    },
+    "items": [
+      {
+        "line_id": "e2",
+        "catalog_id": "combo_5",
+        "name": "#5 Spicy Chicken Meal",
+        "quantity": 1,
+        "size": "medium",
+        "components": [
+          {
+            "slot": "entree",
+            "catalog_id": "spicy_chicken"
+          },
+          {
+            "slot": "side",
+            "catalog_id": "fries"
+          },
+          {
+            "slot": "drink",
+            "catalog_id": "coke"
+          }
+        ],
+        "modifiers": [],
+        "unit_price": 8.99,
+        "recognition_confidence": 1,
+        "commitment_confidence": 1,
+        "source_utterance_ids": [
+          "u3"
+        ]
+      }
+    ],
+    "needs_review": [],
+    "not_ordered": [],
+    "combo_opportunities": [],
+    "customer_declined_combo": false,
+    "flags": [
+      "split_order",
+      "placeholder_values"
+    ],
+    "totals": {
+      "computed": 8.99,
+      "spoken_by_crew": 8.99,
+      "currency": "USD"
+    },
+    "overall_confidence": 1,
+    "transcript": [
+      {
+        "id": "u1",
+        "speaker": "crew",
+        "start_utc": "2026-10-03T18:40:01.120Z",
+        "end_utc": "2026-10-03T18:40:04.880Z",
+        "text": "Welcome to Sandbox Burger. What can I get for you today?",
+        "confidence": 0.999
+      },
+      {
+        "id": "u2",
+        "speaker": "customer",
+        "start_utc": "2026-10-03T18:40:05.520Z",
+        "end_utc": "2026-10-03T18:40:07.760Z",
+        "text": "Hi. Can we pay separately?",
+        "confidence": 1
+      },
+      {
+        "id": "u3",
+        "speaker": "customer",
+        "start_utc": "2026-10-03T18:40:07.840Z",
+        "end_utc": "2026-10-03T18:40:10.560Z",
+        "text": "First order is a number five with a Coke.",
+        "confidence": 0.997
+      },
+      {
+        "id": "u4",
+        "speaker": "crew",
+        "start_utc": "2026-10-03T18:40:11.200Z",
+        "end_utc": "2026-10-03T18:40:12.000Z",
+        "text": "Okay.",
+        "confidence": 1
+      },
+      {
+        "id": "u5",
+        "speaker": "crew",
+        "start_utc": "2026-10-03T18:40:12.080Z",
+        "end_utc": "2026-10-03T18:40:15.920Z",
+        "text": "Number five with a Coke. That's $8.99.",
+        "confidence": 0.998
+      },
+      {
+        "id": "u6",
+        "speaker": "customer",
+        "start_utc": "2026-10-03T18:40:16.295Z",
+        "end_utc": "2026-10-03T18:40:17.815Z",
+        "text": "And the second order?",
+        "confidence": 0.999
+      },
+      {
+        "id": "u7",
+        "speaker": "customer",
+        "start_utc": "2026-10-03T18:40:18.615Z",
+        "end_utc": "2026-10-03T18:40:22.855Z",
+        "text": "Second order is a six piece nuggets with barbecue sauce and a small fry.",
+        "confidence": 0.983
+      },
+      {
+        "id": "u8",
+        "speaker": "crew",
+        "start_utc": "2026-10-03T18:40:23.865Z",
+        "end_utc": "2026-10-03T18:40:29.625Z",
+        "text": "Six piece nuggets with barbecue and a small fry. That's $6.58.",
+        "confidence": 0.996
+      },
+      {
+        "id": "u9",
+        "speaker": "crew",
+        "start_utc": "2026-10-03T18:40:29.865Z",
+        "end_utc": "2026-10-03T18:40:30.985Z",
+        "text": "Pull forward, please.",
+        "confidence": 1
+      }
+    ],
+    "processing": {
+      "stt": "deepgram/nova-3",
+      "extractor": "gemini/gemini-3.5-flash-lite",
+      "menu_version": "sandbox-1",
+      "pipeline_version": "0.1.0",
+      "latency_ms": 101
+    }
+  },
+  {
+    "schema_version": "1.0",
+    "event_type": "order.completed",
+    "order_id": "ord_01M443TAR3XH0PW3PPWA54H3RG",
+    "order_version": 1,
+    "group_id": "grp_01M443TAR3WX870YNMGWM4HTV0",
+    "location_id": "store_demo_001",
+    "lane_id": "lane_1",
+    "status": "completed",
+    "started_at": "2026-10-03T18:40:01.120Z",
+    "ended_at": "2026-10-03T18:40:30.985Z",
+    "timestamp_source": "env",
+    "audio": {
+      "source_file": "15_split_payment.mono.clean.mp3",
+      "offset_start_s": 1.12,
+      "offset_end_s": 30.985
+    },
+    "items": [
+      {
+        "line_id": "e6",
+        "catalog_id": "nuggets_6",
+        "name": "6 Piece Nuggets",
+        "quantity": 1,
+        "size": null,
+        "modifiers": [
+          {
+            "id": "bbq_sauce",
+            "action": "add"
+          }
+        ],
+        "unit_price": 4.29,
+        "recognition_confidence": 0.98,
+        "commitment_confidence": 1,
+        "source_utterance_ids": [
+          "u7"
+        ]
+      },
+      {
+        "line_id": "e7",
+        "catalog_id": "fries",
+        "name": "Fries",
+        "quantity": 1,
+        "size": "small",
+        "modifiers": [],
+        "unit_price": 2.29,
+        "recognition_confidence": 0.98,
+        "commitment_confidence": 1,
+        "source_utterance_ids": [
+          "u7"
+        ]
+      }
+    ],
+    "needs_review": [],
+    "not_ordered": [],
+    "combo_opportunities": [],
+    "customer_declined_combo": false,
+    "flags": [
+      "split_order",
+      "placeholder_values"
+    ],
+    "totals": {
+      "computed": 6.58,
+      "spoken_by_crew": 6.58,
+      "currency": "USD"
+    },
+    "overall_confidence": 0.98,
+    "transcript": [
+      {
+        "id": "u1",
+        "speaker": "crew",
+        "start_utc": "2026-10-03T18:40:01.120Z",
+        "end_utc": "2026-10-03T18:40:04.880Z",
+        "text": "Welcome to Sandbox Burger. What can I get for you today?",
+        "confidence": 0.999
+      },
+      {
+        "id": "u2",
+        "speaker": "customer",
+        "start_utc": "2026-10-03T18:40:05.520Z",
+        "end_utc": "2026-10-03T18:40:07.760Z",
+        "text": "Hi. Can we pay separately?",
+        "confidence": 1
+      },
+      {
+        "id": "u3",
+        "speaker": "customer",
+        "start_utc": "2026-10-03T18:40:07.840Z",
+        "end_utc": "2026-10-03T18:40:10.560Z",
+        "text": "First order is a number five with a Coke.",
+        "confidence": 0.997
+      },
+      {
+        "id": "u4",
+        "speaker": "crew",
+        "start_utc": "2026-10-03T18:40:11.200Z",
+        "end_utc": "2026-10-03T18:40:12.000Z",
+        "text": "Okay.",
+        "confidence": 1
+      },
+      {
+        "id": "u5",
+        "speaker": "crew",
+        "start_utc": "2026-10-03T18:40:12.080Z",
+        "end_utc": "2026-10-03T18:40:15.920Z",
+        "text": "Number five with a Coke. That's $8.99.",
+        "confidence": 0.998
+      },
+      {
+        "id": "u6",
+        "speaker": "customer",
+        "start_utc": "2026-10-03T18:40:16.295Z",
+        "end_utc": "2026-10-03T18:40:17.815Z",
+        "text": "And the second order?",
+        "confidence": 0.999
+      },
+      {
+        "id": "u7",
+        "speaker": "customer",
+        "start_utc": "2026-10-03T18:40:18.615Z",
+        "end_utc": "2026-10-03T18:40:22.855Z",
+        "text": "Second order is a six piece nuggets with barbecue sauce and a small fry.",
+        "confidence": 0.983
+      },
+      {
+        "id": "u8",
+        "speaker": "crew",
+        "start_utc": "2026-10-03T18:40:23.865Z",
+        "end_utc": "2026-10-03T18:40:29.625Z",
+        "text": "Six piece nuggets with barbecue and a small fry. That's $6.58.",
+        "confidence": 0.996
+      },
+      {
+        "id": "u9",
+        "speaker": "crew",
+        "start_utc": "2026-10-03T18:40:29.865Z",
+        "end_utc": "2026-10-03T18:40:30.985Z",
+        "text": "Pull forward, please.",
+        "confidence": 1
+      }
+    ],
+    "processing": {
+      "stt": "deepgram/nova-3",
+      "extractor": "gemini/gemini-3.5-flash-lite",
+      "menu_version": "sandbox-1",
+      "pipeline_version": "0.1.0",
+      "latency_ms": 101
+    }
+  }
+]

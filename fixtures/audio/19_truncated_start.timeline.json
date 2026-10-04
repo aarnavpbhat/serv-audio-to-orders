@@ -1,0 +1,59 @@
+{
+  "fixture_ids": [
+    "19_truncated_start"
+  ],
+  "file": "19_truncated_start",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 13.141,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "19_truncated_start",
+      "turn_index": 0,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "and a large Sprite too.",
+      "start_s": 0,
+      "end_s": 1.871
+    },
+    {
+      "id": "u2",
+      "fixture_id": "19_truncated_start",
+      "turn_index": 1,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Okay, large Sprite. Anything else?",
+      "start_s": 2.471,
+      "end_s": 5.813
+    },
+    {
+      "id": "u3",
+      "fixture_id": "19_truncated_start",
+      "turn_index": 2,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Add a cheeseburger.",
+      "start_s": 6.413,
+      "end_s": 7.9
+    },
+    {
+      "id": "u4",
+      "fixture_id": "19_truncated_start",
+      "turn_index": 3,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Please pull forward.",
+      "start_s": 8.5,
+      "end_s": 10.141
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "19_truncated_start",
+      "order_index": 0,
+      "start_s": 0,
+      "end_s": 10.141
+    }
+  ]
+}

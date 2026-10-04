@@ -1,0 +1,89 @@
+{
+  "fixture_ids": [
+    "05_removed_and_upsell"
+  ],
+  "file": "05_removed_and_upsell",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 35.056,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "I'll have a bacon smash burger, a small fries, and a Dr Pepper.",
+      "start_s": 5.502,
+      "end_s": 10.253
+    },
+    {
+      "id": "u3",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Would you like to add an apple pie today? They're fresh.",
+      "start_s": 10.853,
+      "end_s": 14.611
+    },
+    {
+      "id": "u4",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Sure, add a pie. Oh, and scratch the fries.",
+      "start_s": 15.211,
+      "end_s": 18.89
+    },
+    {
+      "id": "u5",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Okay, bacon smash burger, Dr Pepper, and an apple pie. Your total is $9.77.",
+      "start_s": 19.49,
+      "end_s": 27.536
+    },
+    {
+      "id": "u6",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 5,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Thanks.",
+      "start_s": 28.136,
+      "end_s": 29.127
+    },
+    {
+      "id": "u7",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 6,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Pull forward to the window please.",
+      "start_s": 29.727,
+      "end_s": 32.056
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "05_removed_and_upsell",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 32.056
+    }
+  ]
+}

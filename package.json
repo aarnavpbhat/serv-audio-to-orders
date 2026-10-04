@@ -1,0 +1,16 @@
+{
+  "name": "serv-audio-orders",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.9",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "pipeline": "pnpm --silent --filter @serv/pipeline cli",
+    "eval": "pnpm --silent --filter @serv/pipeline cli eval",
+    "fixtures:build": "pnpm --silent --filter @serv/pipeline fixtures:build",
+    "test": "pnpm --filter @serv/pipeline test",
+    "typecheck": "pnpm -r typecheck",
+    "dev": "pnpm --filter @serv/web dev",
+    "build": "pnpm --filter @serv/web build"
+  }
+}

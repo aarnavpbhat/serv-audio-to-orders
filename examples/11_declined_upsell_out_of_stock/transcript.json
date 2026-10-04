@@ -1,0 +1,556 @@
+{
+  "transcript_id": "tr_01M443TAH2YQ7MFQAFJ0APJQV8",
+  "source_file": "11_declined_upsell_out_of_stock.mono.clean.mp3",
+  "audio": {
+    "codec": "mp3",
+    "sample_rate": 8000,
+    "channels": 1,
+    "duration_s": 33.84
+  },
+  "audio_start_utc": "2026-10-03T18:40:00.000Z",
+  "timestamp_source": "env",
+  "role_source": "diarization",
+  "stt": "deepgram/nova-3",
+  "language": "en",
+  "utterances": [
+    {
+      "id": "u1",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "start_s": 1.12,
+      "end_s": 4.88,
+      "start_utc": "2026-10-03T18:40:01.120Z",
+      "end_utc": "2026-10-03T18:40:04.880Z",
+      "text": "Welcome to Sandbox Burger. What can I get for you today?",
+      "confidence": 0.997,
+      "words": [
+        {
+          "w": "Welcome",
+          "start_s": 1.12,
+          "end_s": 1.52,
+          "conf": 1
+        },
+        {
+          "w": "to",
+          "start_s": 1.52,
+          "end_s": 1.76,
+          "conf": 0.975
+        },
+        {
+          "w": "Sandbox",
+          "start_s": 1.76,
+          "end_s": 2.48,
+          "conf": 0.998
+        },
+        {
+          "w": "Burger.",
+          "start_s": 2.48,
+          "end_s": 3.04,
+          "conf": 0.992
+        },
+        {
+          "w": "What",
+          "start_s": 3.04,
+          "end_s": 3.36,
+          "conf": 1
+        },
+        {
+          "w": "can",
+          "start_s": 3.36,
+          "end_s": 3.52,
+          "conf": 1
+        },
+        {
+          "w": "I",
+          "start_s": 3.52,
+          "end_s": 3.68,
+          "conf": 1
+        },
+        {
+          "w": "get",
+          "start_s": 3.68,
+          "end_s": 3.84,
+          "conf": 1
+        },
+        {
+          "w": "for",
+          "start_s": 3.84,
+          "end_s": 4.08,
+          "conf": 1
+        },
+        {
+          "w": "you",
+          "start_s": 4.08,
+          "end_s": 4.24,
+          "conf": 1
+        },
+        {
+          "w": "today?",
+          "start_s": 4.24,
+          "end_s": 4.88,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u2",
+      "speaker": "customer",
+      "speaker_label": "spk1",
+      "start_s": 5.52,
+      "end_s": 7.44,
+      "start_utc": "2026-10-03T18:40:05.520Z",
+      "end_utc": "2026-10-03T18:40:07.440Z",
+      "text": "Can I get a Big Sandbox,",
+      "confidence": 0.951,
+      "words": [
+        {
+          "w": "Can",
+          "start_s": 5.52,
+          "end_s": 5.84,
+          "conf": 1
+        },
+        {
+          "w": "I",
+          "start_s": 5.84,
+          "end_s": 6,
+          "conf": 1
+        },
+        {
+          "w": "get",
+          "start_s": 6,
+          "end_s": 6.24,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 6.24,
+          "end_s": 6.32,
+          "conf": 1
+        },
+        {
+          "w": "Big",
+          "start_s": 6.32,
+          "end_s": 6.56,
+          "conf": 0.712
+        },
+        {
+          "w": "Sandbox,",
+          "start_s": 6.56,
+          "end_s": 7.44,
+          "conf": 0.993
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u3",
+      "speaker": "customer",
+      "speaker_label": "spk1",
+      "start_s": 7.52,
+      "end_s": 10.16,
+      "start_utc": "2026-10-03T18:40:07.520Z",
+      "end_utc": "2026-10-03T18:40:10.160Z",
+      "text": "a large fries, and a chocolate shake?",
+      "confidence": 0.997,
+      "words": [
+        {
+          "w": "a",
+          "start_s": 7.52,
+          "end_s": 7.68,
+          "conf": 0.998
+        },
+        {
+          "w": "large",
+          "start_s": 7.68,
+          "end_s": 7.92,
+          "conf": 0.999
+        },
+        {
+          "w": "fries,",
+          "start_s": 7.92,
+          "end_s": 8.64,
+          "conf": 0.99
+        },
+        {
+          "w": "and",
+          "start_s": 8.64,
+          "end_s": 8.8,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 8.8,
+          "end_s": 8.96,
+          "conf": 0.998
+        },
+        {
+          "w": "chocolate",
+          "start_s": 8.96,
+          "end_s": 9.36,
+          "conf": 0.992
+        },
+        {
+          "w": "shake?",
+          "start_s": 9.36,
+          "end_s": 10.16,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u4",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "start_s": 10.32,
+      "end_s": 15.68,
+      "start_utc": "2026-10-03T18:40:10.320Z",
+      "end_utc": "2026-10-03T18:40:15.680Z",
+      "text": "Sorry. We're out of shakes right now. Would you like to make the Big Sandbox a meal?",
+      "confidence": 0.959,
+      "words": [
+        {
+          "w": "Sorry.",
+          "start_s": 10.32,
+          "end_s": 11.04,
+          "conf": 0.999
+        },
+        {
+          "w": "We're",
+          "start_s": 11.04,
+          "end_s": 11.28,
+          "conf": 0.783
+        },
+        {
+          "w": "out",
+          "start_s": 11.28,
+          "end_s": 11.52,
+          "conf": 1
+        },
+        {
+          "w": "of",
+          "start_s": 11.52,
+          "end_s": 11.6,
+          "conf": 1
+        },
+        {
+          "w": "shakes",
+          "start_s": 11.6,
+          "end_s": 12,
+          "conf": 0.992
+        },
+        {
+          "w": "right",
+          "start_s": 12,
+          "end_s": 12.24,
+          "conf": 1
+        },
+        {
+          "w": "now.",
+          "start_s": 12.24,
+          "end_s": 12.8,
+          "conf": 1
+        },
+        {
+          "w": "Would",
+          "start_s": 12.88,
+          "end_s": 13.12,
+          "conf": 0.999
+        },
+        {
+          "w": "you",
+          "start_s": 13.12,
+          "end_s": 13.36,
+          "conf": 1
+        },
+        {
+          "w": "like",
+          "start_s": 13.36,
+          "end_s": 13.6,
+          "conf": 1
+        },
+        {
+          "w": "to",
+          "start_s": 13.6,
+          "end_s": 13.84,
+          "conf": 1
+        },
+        {
+          "w": "make",
+          "start_s": 13.84,
+          "end_s": 14,
+          "conf": 1
+        },
+        {
+          "w": "the",
+          "start_s": 14,
+          "end_s": 14.24,
+          "conf": 0.553,
+          "low_conf": true
+        },
+        {
+          "w": "Big",
+          "start_s": 14.24,
+          "end_s": 14.48,
+          "conf": 0.993
+        },
+        {
+          "w": "Sandbox",
+          "start_s": 14.48,
+          "end_s": 15.12,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 15.12,
+          "end_s": 15.36,
+          "conf": 0.984
+        },
+        {
+          "w": "meal?",
+          "start_s": 15.36,
+          "end_s": 15.68,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u5",
+      "speaker": "customer",
+      "speaker_label": "spk1",
+      "start_s": 16.495,
+      "end_s": 21.455,
+      "start_utc": "2026-10-03T18:40:16.495Z",
+      "end_utc": "2026-10-03T18:40:21.455Z",
+      "text": "No. Not the meal. Just the burger and fries and a medium sweet tea.",
+      "confidence": 0.973,
+      "words": [
+        {
+          "w": "No.",
+          "start_s": 16.495,
+          "end_s": 17.215,
+          "conf": 0.995
+        },
+        {
+          "w": "Not",
+          "start_s": 17.215,
+          "end_s": 17.455,
+          "conf": 1
+        },
+        {
+          "w": "the",
+          "start_s": 17.455,
+          "end_s": 17.615,
+          "conf": 0.988
+        },
+        {
+          "w": "meal.",
+          "start_s": 17.615,
+          "end_s": 18.175,
+          "conf": 0.999
+        },
+        {
+          "w": "Just",
+          "start_s": 18.175,
+          "end_s": 18.415,
+          "conf": 1
+        },
+        {
+          "w": "the",
+          "start_s": 18.415,
+          "end_s": 18.575,
+          "conf": 0.968
+        },
+        {
+          "w": "burger",
+          "start_s": 18.575,
+          "end_s": 18.895,
+          "conf": 0.999
+        },
+        {
+          "w": "and",
+          "start_s": 18.895,
+          "end_s": 19.135,
+          "conf": 0.999
+        },
+        {
+          "w": "fries",
+          "start_s": 19.135,
+          "end_s": 19.615,
+          "conf": 1
+        },
+        {
+          "w": "and",
+          "start_s": 19.615,
+          "end_s": 19.935,
+          "conf": 0.72
+        },
+        {
+          "w": "a",
+          "start_s": 19.935,
+          "end_s": 20.175,
+          "conf": 0.955
+        },
+        {
+          "w": "medium",
+          "start_s": 20.175,
+          "end_s": 20.415,
+          "conf": 1
+        },
+        {
+          "w": "sweet",
+          "start_s": 20.415,
+          "end_s": 20.815,
+          "conf": 0.995
+        },
+        {
+          "w": "tea.",
+          "start_s": 20.815,
+          "end_s": 21.455,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u6",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "start_s": 21.775,
+      "end_s": 23.135,
+      "start_utc": "2026-10-03T18:40:21.775Z",
+      "end_utc": "2026-10-03T18:40:23.135Z",
+      "text": "Big Sandbox,",
+      "confidence": 0.942,
+      "words": [
+        {
+          "w": "Big",
+          "start_s": 21.775,
+          "end_s": 22.095,
+          "conf": 0.999
+        },
+        {
+          "w": "Sandbox,",
+          "start_s": 22.095,
+          "end_s": 23.135,
+          "conf": 0.886
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u7",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "start_s": 23.215,
+      "end_s": 28.975,
+      "start_utc": "2026-10-03T18:40:23.215Z",
+      "end_utc": "2026-10-03T18:40:28.975Z",
+      "text": "large fries, and a medium sweet tea. Your total is $11.27.",
+      "confidence": 0.992,
+      "words": [
+        {
+          "w": "large",
+          "start_s": 23.215,
+          "end_s": 23.535,
+          "conf": 1
+        },
+        {
+          "w": "fries,",
+          "start_s": 23.535,
+          "end_s": 24.015,
+          "conf": 0.975
+        },
+        {
+          "w": "and",
+          "start_s": 24.015,
+          "end_s": 24.095,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 24.095,
+          "end_s": 24.255,
+          "conf": 0.934
+        },
+        {
+          "w": "medium",
+          "start_s": 24.255,
+          "end_s": 24.575,
+          "conf": 1
+        },
+        {
+          "w": "sweet",
+          "start_s": 24.575,
+          "end_s": 24.975,
+          "conf": 0.999
+        },
+        {
+          "w": "tea.",
+          "start_s": 24.975,
+          "end_s": 25.615,
+          "conf": 1
+        },
+        {
+          "w": "Your",
+          "start_s": 25.615,
+          "end_s": 25.935,
+          "conf": 1
+        },
+        {
+          "w": "total",
+          "start_s": 25.935,
+          "end_s": 26.255,
+          "conf": 1
+        },
+        {
+          "w": "is",
+          "start_s": 26.255,
+          "end_s": 26.415,
+          "conf": 1
+        },
+        {
+          "w": "$11.27.",
+          "start_s": 26.415,
+          "end_s": 28.975,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u8",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "start_s": 29.135,
+      "end_s": 30.175,
+      "start_utc": "2026-10-03T18:40:29.135Z",
+      "end_utc": "2026-10-03T18:40:30.175Z",
+      "text": "Please pull around.",
+      "confidence": 0.985,
+      "words": [
+        {
+          "w": "Please",
+          "start_s": 29.135,
+          "end_s": 29.455,
+          "conf": 1
+        },
+        {
+          "w": "pull",
+          "start_s": 29.455,
+          "end_s": 29.775,
+          "conf": 0.983
+        },
+        {
+          "w": "around.",
+          "start_s": 29.775,
+          "end_s": 30.175,
+          "conf": 0.971
+        }
+      ],
+      "language": "en"
+    }
+  ]
+}

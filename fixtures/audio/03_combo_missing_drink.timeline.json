@@ -1,0 +1,69 @@
+{
+  "fixture_ids": [
+    "03_combo_missing_drink"
+  ],
+  "file": "03_combo_missing_drink",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 22.13,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "03_combo_missing_drink",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "03_combo_missing_drink",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a number four?",
+      "start_s": 5.502,
+      "end_s": 7.271
+    },
+    {
+      "id": "u3",
+      "fixture_id": "03_combo_missing_drink",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Number four. Anything else?",
+      "start_s": 7.871,
+      "end_s": 10.365
+    },
+    {
+      "id": "u4",
+      "fixture_id": "03_combo_missing_drink",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "And a chocolate chip cookie.",
+      "start_s": 10.965,
+      "end_s": 12.964
+    },
+    {
+      "id": "u5",
+      "fixture_id": "03_combo_missing_drink",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Okay, your total is $9.78. Pull forward please.",
+      "start_s": 13.564,
+      "end_s": 19.13
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "03_combo_missing_drink",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 19.13
+    }
+  ]
+}

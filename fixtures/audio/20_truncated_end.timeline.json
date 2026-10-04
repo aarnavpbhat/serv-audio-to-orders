@@ -1,0 +1,39 @@
+{
+  "fixture_ids": [
+    "20_truncated_end"
+  ],
+  "file": "20_truncated_end",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 9.055,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "20_truncated_end",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "20_truncated_end",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a number one with a lemonade, and",
+      "start_s": 5.502,
+      "end_s": 8.855
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "20_truncated_end",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 8.855
+    }
+  ]
+}

@@ -1,0 +1,374 @@
+{
+  "transcript_id": "tr_01M443TAA8JWHXY1A4D1JMJXXZ",
+  "source_file": "02_combo_slot.mono.clean.mp3",
+  "audio": {
+    "codec": "mp3",
+    "sample_rate": 8000,
+    "channels": 1,
+    "duration_s": 23.832
+  },
+  "audio_start_utc": "2026-10-03T18:40:00.000Z",
+  "timestamp_source": "env",
+  "role_source": "wording",
+  "stt": "deepgram/nova-3",
+  "language": "en",
+  "utterances": [
+    {
+      "id": "u1",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 1.12,
+      "end_s": 4.4,
+      "start_utc": "2026-10-03T18:40:01.120Z",
+      "end_utc": "2026-10-03T18:40:04.400Z",
+      "text": "Welcome to Sandbox Burger. Order when you're ready.",
+      "confidence": 0.996,
+      "words": [
+        {
+          "w": "Welcome",
+          "start_s": 1.12,
+          "end_s": 1.52,
+          "conf": 0.999
+        },
+        {
+          "w": "to",
+          "start_s": 1.52,
+          "end_s": 1.76,
+          "conf": 0.993
+        },
+        {
+          "w": "Sandbox",
+          "start_s": 1.76,
+          "end_s": 2.48,
+          "conf": 1
+        },
+        {
+          "w": "Burger.",
+          "start_s": 2.48,
+          "end_s": 3.12,
+          "conf": 0.98
+        },
+        {
+          "w": "Order",
+          "start_s": 3.12,
+          "end_s": 3.36,
+          "conf": 1
+        },
+        {
+          "w": "when",
+          "start_s": 3.36,
+          "end_s": 3.6,
+          "conf": 1
+        },
+        {
+          "w": "you're",
+          "start_s": 3.6,
+          "end_s": 3.84,
+          "conf": 1
+        },
+        {
+          "w": "ready.",
+          "start_s": 3.84,
+          "end_s": 4.4,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u2",
+      "speaker": "customer",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 5.04,
+      "end_s": 9.28,
+      "start_utc": "2026-10-03T18:40:05.040Z",
+      "end_utc": "2026-10-03T18:40:09.280Z",
+      "text": "Yeah. Let me get a number two with a Sprite and make it large.",
+      "confidence": 0.992,
+      "words": [
+        {
+          "w": "Yeah.",
+          "start_s": 5.04,
+          "end_s": 5.52,
+          "conf": 0.988
+        },
+        {
+          "w": "Let",
+          "start_s": 5.52,
+          "end_s": 5.84,
+          "conf": 1
+        },
+        {
+          "w": "me",
+          "start_s": 5.84,
+          "end_s": 5.92,
+          "conf": 1
+        },
+        {
+          "w": "get",
+          "start_s": 5.92,
+          "end_s": 6.16,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 6.16,
+          "end_s": 6.32,
+          "conf": 0.988
+        },
+        {
+          "w": "number",
+          "start_s": 6.32,
+          "end_s": 6.64,
+          "conf": 1
+        },
+        {
+          "w": "two",
+          "start_s": 6.64,
+          "end_s": 6.88,
+          "conf": 1
+        },
+        {
+          "w": "with",
+          "start_s": 6.88,
+          "end_s": 7.12,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 7.12,
+          "end_s": 7.28,
+          "conf": 0.958
+        },
+        {
+          "w": "Sprite",
+          "start_s": 7.28,
+          "end_s": 7.76,
+          "conf": 1
+        },
+        {
+          "w": "and",
+          "start_s": 7.76,
+          "end_s": 8.08,
+          "conf": 0.959
+        },
+        {
+          "w": "make",
+          "start_s": 8.08,
+          "end_s": 8.32,
+          "conf": 1
+        },
+        {
+          "w": "it",
+          "start_s": 8.32,
+          "end_s": 8.48,
+          "conf": 1
+        },
+        {
+          "w": "large.",
+          "start_s": 8.48,
+          "end_s": 9.28,
+          "conf": 0.999
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u3",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 10,
+      "end_s": 12.16,
+      "start_utc": "2026-10-03T18:40:10.000Z",
+      "end_utc": "2026-10-03T18:40:12.160Z",
+      "text": "Large number two with a Sprite.",
+      "confidence": 0.999,
+      "words": [
+        {
+          "w": "Large",
+          "start_s": 10,
+          "end_s": 10.32,
+          "conf": 1
+        },
+        {
+          "w": "number",
+          "start_s": 10.32,
+          "end_s": 10.8,
+          "conf": 0.997
+        },
+        {
+          "w": "two",
+          "start_s": 10.8,
+          "end_s": 11.04,
+          "conf": 1
+        },
+        {
+          "w": "with",
+          "start_s": 11.04,
+          "end_s": 11.28,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 11.28,
+          "end_s": 11.44,
+          "conf": 0.997
+        },
+        {
+          "w": "Sprite.",
+          "start_s": 11.44,
+          "end_s": 12.16,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u4",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 12.24,
+      "end_s": 13.44,
+      "start_utc": "2026-10-03T18:40:12.240Z",
+      "end_utc": "2026-10-03T18:40:13.440Z",
+      "text": "Anything else for you?",
+      "confidence": 1,
+      "words": [
+        {
+          "w": "Anything",
+          "start_s": 12.24,
+          "end_s": 12.72,
+          "conf": 1
+        },
+        {
+          "w": "else",
+          "start_s": 12.72,
+          "end_s": 13.04,
+          "conf": 1
+        },
+        {
+          "w": "for",
+          "start_s": 13.04,
+          "end_s": 13.2,
+          "conf": 1
+        },
+        {
+          "w": "you?",
+          "start_s": 13.2,
+          "end_s": 13.44,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u5",
+      "speaker": "customer",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 14.317,
+      "end_s": 15.357,
+      "start_utc": "2026-10-03T18:40:14.317Z",
+      "end_utc": "2026-10-03T18:40:15.357Z",
+      "text": "That's all.",
+      "confidence": 1,
+      "words": [
+        {
+          "w": "That's",
+          "start_s": 14.317,
+          "end_s": 14.797,
+          "conf": 1
+        },
+        {
+          "w": "all.",
+          "start_s": 14.797,
+          "end_s": 15.357,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u6",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 15.917,
+      "end_s": 18.477,
+      "start_utc": "2026-10-03T18:40:15.917Z",
+      "end_utc": "2026-10-03T18:40:18.477Z",
+      "text": "That'll be $10.39",
+      "confidence": 0.999,
+      "words": [
+        {
+          "w": "That'll",
+          "start_s": 15.917,
+          "end_s": 16.397,
+          "conf": 0.999
+        },
+        {
+          "w": "be",
+          "start_s": 16.397,
+          "end_s": 16.557,
+          "conf": 1
+        },
+        {
+          "w": "$10.39",
+          "start_s": 16.557,
+          "end_s": 18.477,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u7",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 18.477,
+      "end_s": 20.157,
+      "start_utc": "2026-10-03T18:40:18.477Z",
+      "end_utc": "2026-10-03T18:40:20.157Z",
+      "text": "at the window. Pull around.",
+      "confidence": 0.998,
+      "words": [
+        {
+          "w": "at",
+          "start_s": 18.477,
+          "end_s": 18.637,
+          "conf": 0.993
+        },
+        {
+          "w": "the",
+          "start_s": 18.637,
+          "end_s": 18.797,
+          "conf": 0.999
+        },
+        {
+          "w": "window.",
+          "start_s": 18.797,
+          "end_s": 19.437,
+          "conf": 1
+        },
+        {
+          "w": "Pull",
+          "start_s": 19.437,
+          "end_s": 19.757,
+          "conf": 1
+        },
+        {
+          "w": "around.",
+          "start_s": 19.757,
+          "end_s": 20.157,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    }
+  ]
+}

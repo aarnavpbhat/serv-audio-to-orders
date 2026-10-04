@@ -1,0 +1,359 @@
+{
+  "transcript_id": "tr_01M443TA5XXDXEYHSFHKGVNEKT",
+  "source_file": "01_simple.mono.clean.mp3",
+  "audio": {
+    "codec": "mp3",
+    "sample_rate": 8000,
+    "channels": 1,
+    "duration_s": 24.192
+  },
+  "audio_start_utc": "2026-10-03T18:40:00.000Z",
+  "timestamp_source": "env",
+  "role_source": "wording",
+  "stt": "deepgram/nova-3",
+  "language": "en",
+  "utterances": [
+    {
+      "id": "u1",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 1.12,
+      "end_s": 4.88,
+      "start_utc": "2026-10-03T18:40:01.120Z",
+      "end_utc": "2026-10-03T18:40:04.880Z",
+      "text": "Welcome to Sandbox Burger. What can I get for you today?",
+      "confidence": 0.998,
+      "words": [
+        {
+          "w": "Welcome",
+          "start_s": 1.12,
+          "end_s": 1.52,
+          "conf": 1
+        },
+        {
+          "w": "to",
+          "start_s": 1.52,
+          "end_s": 1.76,
+          "conf": 0.99
+        },
+        {
+          "w": "Sandbox",
+          "start_s": 1.76,
+          "end_s": 2.48,
+          "conf": 1
+        },
+        {
+          "w": "Burger.",
+          "start_s": 2.48,
+          "end_s": 3.04,
+          "conf": 0.99
+        },
+        {
+          "w": "What",
+          "start_s": 3.04,
+          "end_s": 3.36,
+          "conf": 1
+        },
+        {
+          "w": "can",
+          "start_s": 3.36,
+          "end_s": 3.52,
+          "conf": 1
+        },
+        {
+          "w": "I",
+          "start_s": 3.52,
+          "end_s": 3.68,
+          "conf": 1
+        },
+        {
+          "w": "get",
+          "start_s": 3.68,
+          "end_s": 3.92,
+          "conf": 1
+        },
+        {
+          "w": "for",
+          "start_s": 3.92,
+          "end_s": 4.08,
+          "conf": 1
+        },
+        {
+          "w": "you",
+          "start_s": 4.08,
+          "end_s": 4.24,
+          "conf": 1
+        },
+        {
+          "w": "today?",
+          "start_s": 4.24,
+          "end_s": 4.88,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u2",
+      "speaker": "customer",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 5.6,
+      "end_s": 9.2,
+      "start_utc": "2026-10-03T18:40:05.600Z",
+      "end_utc": "2026-10-03T18:40:09.200Z",
+      "text": "Hi. Can I get a double cheeseburger and a medium fries?",
+      "confidence": 0.989,
+      "words": [
+        {
+          "w": "Hi.",
+          "start_s": 5.6,
+          "end_s": 6.16,
+          "conf": 1
+        },
+        {
+          "w": "Can",
+          "start_s": 6.16,
+          "end_s": 6.48,
+          "conf": 1
+        },
+        {
+          "w": "I",
+          "start_s": 6.48,
+          "end_s": 6.64,
+          "conf": 1
+        },
+        {
+          "w": "get",
+          "start_s": 6.64,
+          "end_s": 6.8,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 6.8,
+          "end_s": 6.96,
+          "conf": 1
+        },
+        {
+          "w": "double",
+          "start_s": 6.96,
+          "end_s": 7.2,
+          "conf": 0.903
+        },
+        {
+          "w": "cheeseburger",
+          "start_s": 7.2,
+          "end_s": 7.76,
+          "conf": 0.999
+        },
+        {
+          "w": "and",
+          "start_s": 7.76,
+          "end_s": 8,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 8,
+          "end_s": 8.16,
+          "conf": 0.991
+        },
+        {
+          "w": "medium",
+          "start_s": 8.16,
+          "end_s": 8.48,
+          "conf": 1
+        },
+        {
+          "w": "fries?",
+          "start_s": 8.48,
+          "end_s": 9.2,
+          "conf": 0.99
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u3",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 9.6,
+      "end_s": 12.88,
+      "start_utc": "2026-10-03T18:40:09.600Z",
+      "end_utc": "2026-10-03T18:40:12.880Z",
+      "text": "Sure. A double cheeseburger and a medium fry.",
+      "confidence": 0.998,
+      "words": [
+        {
+          "w": "Sure.",
+          "start_s": 9.6,
+          "end_s": 10.16,
+          "conf": 1
+        },
+        {
+          "w": "A",
+          "start_s": 10.16,
+          "end_s": 10.4,
+          "conf": 0.999
+        },
+        {
+          "w": "double",
+          "start_s": 10.4,
+          "end_s": 10.72,
+          "conf": 1
+        },
+        {
+          "w": "cheeseburger",
+          "start_s": 10.72,
+          "end_s": 11.36,
+          "conf": 1
+        },
+        {
+          "w": "and",
+          "start_s": 11.36,
+          "end_s": 11.6,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 11.6,
+          "end_s": 11.76,
+          "conf": 0.992
+        },
+        {
+          "w": "medium",
+          "start_s": 11.76,
+          "end_s": 12.08,
+          "conf": 1
+        },
+        {
+          "w": "fry.",
+          "start_s": 12.08,
+          "end_s": 12.88,
+          "conf": 0.994
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u4",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 12.88,
+      "end_s": 13.76,
+      "start_utc": "2026-10-03T18:40:12.880Z",
+      "end_utc": "2026-10-03T18:40:13.760Z",
+      "text": "Anything else?",
+      "confidence": 1,
+      "words": [
+        {
+          "w": "Anything",
+          "start_s": 12.88,
+          "end_s": 13.36,
+          "conf": 1
+        },
+        {
+          "w": "else?",
+          "start_s": 13.36,
+          "end_s": 13.76,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u5",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 14.635,
+      "end_s": 19.355,
+      "start_utc": "2026-10-03T18:40:14.635Z",
+      "end_utc": "2026-10-03T18:40:19.355Z",
+      "text": "No. That's it. Your total is $8.28.",
+      "confidence": 1,
+      "words": [
+        {
+          "w": "No.",
+          "start_s": 14.635,
+          "end_s": 15.355,
+          "conf": 1
+        },
+        {
+          "w": "That's",
+          "start_s": 15.355,
+          "end_s": 15.755,
+          "conf": 1
+        },
+        {
+          "w": "it.",
+          "start_s": 15.755,
+          "end_s": 16.235,
+          "conf": 1
+        },
+        {
+          "w": "Your",
+          "start_s": 16.395,
+          "end_s": 16.715,
+          "conf": 1
+        },
+        {
+          "w": "total",
+          "start_s": 16.715,
+          "end_s": 17.035,
+          "conf": 1
+        },
+        {
+          "w": "is",
+          "start_s": 17.035,
+          "end_s": 17.195,
+          "conf": 1
+        },
+        {
+          "w": "$8.28.",
+          "start_s": 17.195,
+          "end_s": 19.355,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u6",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 19.435,
+      "end_s": 20.555,
+      "start_utc": "2026-10-03T18:40:19.435Z",
+      "end_utc": "2026-10-03T18:40:20.555Z",
+      "text": "Please pull forward.",
+      "confidence": 0.995,
+      "words": [
+        {
+          "w": "Please",
+          "start_s": 19.435,
+          "end_s": 19.835,
+          "conf": 1
+        },
+        {
+          "w": "pull",
+          "start_s": 19.835,
+          "end_s": 20.155,
+          "conf": 0.985
+        },
+        {
+          "w": "forward.",
+          "start_s": 20.155,
+          "end_s": 20.555,
+          "conf": 0.999
+        }
+      ],
+      "language": "en"
+    }
+  ]
+}

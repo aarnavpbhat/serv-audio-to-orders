@@ -1,0 +1,16 @@
+[
+  {
+    "id": "compilation_a",
+    "title": "Five cars in a row: simple, combo, removal, abandoned, separate items",
+    "scripts": ["01_simple", "02_combo_slot", "05_removed_and_upsell", "07_abandoned", "12_combo_separately"],
+    "gap_s": 10,
+    "noise": "moderate"
+  },
+  {
+    "id": "compilation_b",
+    "title": "Corrections, per-unit modifiers, out of stock, crew chatter, back-to-back",
+    "scripts": ["04_correction", "08_per_unit_and_hesitation", "11_declined_upsell_out_of_stock", "16_crew_crosstalk", "18_back_to_back"],
+    "gap_s": 11,
+    "noise": "moderate"
+  }
+]

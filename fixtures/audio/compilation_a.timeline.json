@@ -1,0 +1,297 @@
+{
+  "fixture_ids": [
+    "01_simple",
+    "02_combo_slot",
+    "05_removed_and_upsell",
+    "07_abandoned",
+    "12_combo_separately"
+  ],
+  "file": "compilation_a",
+  "layout": "stereo",
+  "noise": "moderate",
+  "duration_s": 178.246,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "01_simple",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "01_simple",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Hi, can I get a double cheeseburger and a medium fries?",
+      "start_s": 5.502,
+      "end_s": 8.91
+    },
+    {
+      "id": "u3",
+      "fixture_id": "01_simple",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Sure, a double cheeseburger and a medium fry. Anything else?",
+      "start_s": 9.51,
+      "end_s": 14.068
+    },
+    {
+      "id": "u4",
+      "fixture_id": "01_simple",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "No, that's it.",
+      "start_s": 14.668,
+      "end_s": 15.744
+    },
+    {
+      "id": "u5",
+      "fixture_id": "01_simple",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $8.28. Please pull forward.",
+      "start_s": 16.344,
+      "end_s": 20.982
+    },
+    {
+      "id": "u6",
+      "fixture_id": "02_combo_slot",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, order when you're ready.",
+      "start_s": 34.982,
+      "end_s": 38.34
+    },
+    {
+      "id": "u7",
+      "fixture_id": "02_combo_slot",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Yeah, let me get a number two with a Sprite, and make it large.",
+      "start_s": 38.94,
+      "end_s": 43.227
+    },
+    {
+      "id": "u8",
+      "fixture_id": "02_combo_slot",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Large number two with a Sprite. Anything else for you?",
+      "start_s": 43.827,
+      "end_s": 47.681
+    },
+    {
+      "id": "u9",
+      "fixture_id": "02_combo_slot",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "That's all.",
+      "start_s": 48.281,
+      "end_s": 49.288
+    },
+    {
+      "id": "u10",
+      "fixture_id": "02_combo_slot",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "That'll be $10.39 at the window, pull around.",
+      "start_s": 49.888,
+      "end_s": 54.606
+    },
+    {
+      "id": "u11",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 68.607,
+      "end_s": 72.509
+    },
+    {
+      "id": "u12",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "I'll have a bacon smash burger, a small fries, and a Dr Pepper.",
+      "start_s": 73.109,
+      "end_s": 77.86
+    },
+    {
+      "id": "u13",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Would you like to add an apple pie today? They're fresh.",
+      "start_s": 78.46,
+      "end_s": 82.218
+    },
+    {
+      "id": "u14",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Sure, add a pie. Oh, and scratch the fries.",
+      "start_s": 82.818,
+      "end_s": 86.497
+    },
+    {
+      "id": "u15",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Okay, bacon smash burger, Dr Pepper, and an apple pie. Your total is $9.77.",
+      "start_s": 87.097,
+      "end_s": 95.143
+    },
+    {
+      "id": "u16",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 5,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Thanks.",
+      "start_s": 95.743,
+      "end_s": 96.734
+    },
+    {
+      "id": "u17",
+      "fixture_id": "05_removed_and_upsell",
+      "turn_index": 6,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Pull forward to the window please.",
+      "start_s": 97.334,
+      "end_s": 99.663
+    },
+    {
+      "id": "u18",
+      "fixture_id": "07_abandoned",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 113.663,
+      "end_s": 117.565
+    },
+    {
+      "id": "u19",
+      "fixture_id": "07_abandoned",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Yeah, can I get a ten piece nuggets with ranch and a large lemonade?",
+      "start_s": 118.165,
+      "end_s": 122.66
+    },
+    {
+      "id": "u20",
+      "fixture_id": "07_abandoned",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Ten piece nuggets with ranch and a large lemonade. Anything else for you?",
+      "start_s": 123.26,
+      "end_s": 128.165
+    },
+    {
+      "id": "u21",
+      "fixture_id": "12_combo_separately",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 153.164,
+      "end_s": 157.066
+    },
+    {
+      "id": "u22",
+      "fixture_id": "12_combo_separately",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a double cheeseburger, a medium fries, and a medium Coke?",
+      "start_s": 157.666,
+      "end_s": 162.363
+    },
+    {
+      "id": "u23",
+      "fixture_id": "12_combo_separately",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Double cheeseburger, medium fries, medium Coke. Anything else?",
+      "start_s": 162.963,
+      "end_s": 168.112
+    },
+    {
+      "id": "u24",
+      "fixture_id": "12_combo_separately",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "That's it.",
+      "start_s": 168.712,
+      "end_s": 169.655
+    },
+    {
+      "id": "u25",
+      "fixture_id": "12_combo_separately",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $10.27. Pull forward please.",
+      "start_s": 170.255,
+      "end_s": 175.245
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "01_simple",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 20.982
+    },
+    {
+      "fixture_id": "02_combo_slot",
+      "order_index": 0,
+      "start_s": 34.982,
+      "end_s": 54.606
+    },
+    {
+      "fixture_id": "05_removed_and_upsell",
+      "order_index": 0,
+      "start_s": 68.607,
+      "end_s": 99.663
+    },
+    {
+      "fixture_id": "07_abandoned",
+      "order_index": 0,
+      "start_s": 113.663,
+      "end_s": 128.165
+    },
+    {
+      "fixture_id": "12_combo_separately",
+      "order_index": 0,
+      "start_s": 153.164,
+      "end_s": 175.245
+    }
+  ]
+}

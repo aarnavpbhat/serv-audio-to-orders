@@ -1,0 +1,116 @@
+{
+  "id": "12_combo_separately",
+  "title": "Combo items ordered separately",
+  "covers": [
+    12
+  ],
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Can I get a double cheeseburger, a medium fries, and a medium Coke?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Double cheeseburger, medium fries, medium Coke. Anything else?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "That's it.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Your total is $10.27. Pull forward please.",
+      "pause_after_s": 0.6
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "dbl_cheese"
+      },
+      {
+        "event_id": "e2",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "fries",
+        "size": "medium"
+      },
+      {
+        "event_id": "e3",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "coke",
+        "size": "medium"
+      },
+      {
+        "event_id": "e4",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u3",
+          "u5"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "dbl_cheese"
+          },
+          {
+            "catalog_id": "fries",
+            "size": "medium"
+          },
+          {
+            "catalog_id": "coke",
+            "size": "medium"
+          }
+        ],
+        "amount": 10.27
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "dbl_cheese",
+            "quantity": 1
+          },
+          {
+            "catalog_id": "fries",
+            "quantity": 1,
+            "size": "medium"
+          },
+          {
+            "catalog_id": "coke",
+            "quantity": 1,
+            "size": "medium"
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [
+          "combo_opportunity"
+        ],
+        "group": null,
+        "customer_declined_combo": false
+      }
+    ]
+  }
+}

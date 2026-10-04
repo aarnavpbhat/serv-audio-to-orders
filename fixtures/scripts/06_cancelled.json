@@ -1,0 +1,99 @@
+{
+  "id": "06_cancelled",
+  "title": "Whole order cancelled",
+  "covers": [
+    6
+  ],
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Hi, can I get two cheeseburgers and a vanilla shake?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Two cheeseburgers and a vanilla shake. Anything else?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Actually, never mind, we're good. Sorry about that.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "No problem, have a good one.",
+      "pause_after_s": 0.6
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "cheeseburger",
+        "quantity": 2
+      },
+      {
+        "event_id": "e2",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "shake_van"
+      },
+      {
+        "event_id": "e3",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u3"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "cheeseburger",
+            "quantity": 2
+          },
+          {
+            "catalog_id": "shake_van"
+          }
+        ]
+      },
+      {
+        "event_id": "e4",
+        "type": "CANCEL_ORDER",
+        "source_utterance_ids": [
+          "u4"
+        ]
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "cancelled",
+        "items": [],
+        "not_ordered": [
+          {
+            "catalog_id": "cheeseburger",
+            "reason": "cancelled"
+          },
+          {
+            "catalog_id": "shake_van",
+            "reason": "cancelled"
+          }
+        ],
+        "needs_review": [],
+        "flags": [],
+        "group": null
+      }
+    ]
+  }
+}

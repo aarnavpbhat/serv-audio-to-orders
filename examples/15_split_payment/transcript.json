@@ -1,0 +1,542 @@
+{
+  "transcript_id": "tr_01M443TAR2AM7C3KDRQJCFCFBY",
+  "source_file": "15_split_payment.mono.clean.mp3",
+  "audio": {
+    "codec": "mp3",
+    "sample_rate": 8000,
+    "channels": 1,
+    "duration_s": 34.56
+  },
+  "audio_start_utc": "2026-10-03T18:40:00.000Z",
+  "timestamp_source": "env",
+  "role_source": "wording",
+  "stt": "deepgram/nova-3",
+  "language": "en",
+  "utterances": [
+    {
+      "id": "u1",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 1.12,
+      "end_s": 4.88,
+      "start_utc": "2026-10-03T18:40:01.120Z",
+      "end_utc": "2026-10-03T18:40:04.880Z",
+      "text": "Welcome to Sandbox Burger. What can I get for you today?",
+      "confidence": 0.999,
+      "words": [
+        {
+          "w": "Welcome",
+          "start_s": 1.12,
+          "end_s": 1.52,
+          "conf": 1
+        },
+        {
+          "w": "to",
+          "start_s": 1.52,
+          "end_s": 1.76,
+          "conf": 0.995
+        },
+        {
+          "w": "Sandbox",
+          "start_s": 1.76,
+          "end_s": 2.4,
+          "conf": 1
+        },
+        {
+          "w": "Burger.",
+          "start_s": 2.4,
+          "end_s": 3.04,
+          "conf": 0.995
+        },
+        {
+          "w": "What",
+          "start_s": 3.04,
+          "end_s": 3.36,
+          "conf": 1
+        },
+        {
+          "w": "can",
+          "start_s": 3.36,
+          "end_s": 3.52,
+          "conf": 1
+        },
+        {
+          "w": "I",
+          "start_s": 3.52,
+          "end_s": 3.68,
+          "conf": 1
+        },
+        {
+          "w": "get",
+          "start_s": 3.68,
+          "end_s": 3.92,
+          "conf": 1
+        },
+        {
+          "w": "for",
+          "start_s": 3.92,
+          "end_s": 4.08,
+          "conf": 1
+        },
+        {
+          "w": "you",
+          "start_s": 4.08,
+          "end_s": 4.24,
+          "conf": 1
+        },
+        {
+          "w": "today?",
+          "start_s": 4.24,
+          "end_s": 4.88,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u2",
+      "speaker": "customer",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 5.52,
+      "end_s": 7.76,
+      "start_utc": "2026-10-03T18:40:05.520Z",
+      "end_utc": "2026-10-03T18:40:07.760Z",
+      "text": "Hi. Can we pay separately?",
+      "confidence": 1,
+      "words": [
+        {
+          "w": "Hi.",
+          "start_s": 5.52,
+          "end_s": 6.16,
+          "conf": 0.999
+        },
+        {
+          "w": "Can",
+          "start_s": 6.16,
+          "end_s": 6.4,
+          "conf": 1
+        },
+        {
+          "w": "we",
+          "start_s": 6.4,
+          "end_s": 6.56,
+          "conf": 1
+        },
+        {
+          "w": "pay",
+          "start_s": 6.56,
+          "end_s": 6.8,
+          "conf": 1
+        },
+        {
+          "w": "separately?",
+          "start_s": 6.8,
+          "end_s": 7.76,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u3",
+      "speaker": "customer",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 7.84,
+      "end_s": 10.56,
+      "start_utc": "2026-10-03T18:40:07.840Z",
+      "end_utc": "2026-10-03T18:40:10.560Z",
+      "text": "First order is a number five with a Coke.",
+      "confidence": 0.997,
+      "words": [
+        {
+          "w": "First",
+          "start_s": 7.84,
+          "end_s": 8.24,
+          "conf": 1
+        },
+        {
+          "w": "order",
+          "start_s": 8.24,
+          "end_s": 8.56,
+          "conf": 1
+        },
+        {
+          "w": "is",
+          "start_s": 8.56,
+          "end_s": 8.8,
+          "conf": 0.998
+        },
+        {
+          "w": "a",
+          "start_s": 8.8,
+          "end_s": 8.96,
+          "conf": 0.981
+        },
+        {
+          "w": "number",
+          "start_s": 8.96,
+          "end_s": 9.2,
+          "conf": 1
+        },
+        {
+          "w": "five",
+          "start_s": 9.2,
+          "end_s": 9.52,
+          "conf": 1
+        },
+        {
+          "w": "with",
+          "start_s": 9.52,
+          "end_s": 9.76,
+          "conf": 0.998
+        },
+        {
+          "w": "a",
+          "start_s": 9.76,
+          "end_s": 9.92,
+          "conf": 0.992
+        },
+        {
+          "w": "Coke.",
+          "start_s": 9.92,
+          "end_s": 10.56,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u4",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 11.2,
+      "end_s": 12,
+      "start_utc": "2026-10-03T18:40:11.200Z",
+      "end_utc": "2026-10-03T18:40:12.000Z",
+      "text": "Okay.",
+      "confidence": 1,
+      "words": [
+        {
+          "w": "Okay.",
+          "start_s": 11.2,
+          "end_s": 12,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u5",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 12.08,
+      "end_s": 15.92,
+      "start_utc": "2026-10-03T18:40:12.080Z",
+      "end_utc": "2026-10-03T18:40:15.920Z",
+      "text": "Number five with a Coke. That's $8.99.",
+      "confidence": 0.998,
+      "words": [
+        {
+          "w": "Number",
+          "start_s": 12.08,
+          "end_s": 12.4,
+          "conf": 1
+        },
+        {
+          "w": "five",
+          "start_s": 12.4,
+          "end_s": 12.72,
+          "conf": 1
+        },
+        {
+          "w": "with",
+          "start_s": 12.72,
+          "end_s": 12.96,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 12.96,
+          "end_s": 13.2,
+          "conf": 0.997
+        },
+        {
+          "w": "Coke.",
+          "start_s": 13.2,
+          "end_s": 13.68,
+          "conf": 0.987
+        },
+        {
+          "w": "That's",
+          "start_s": 13.68,
+          "end_s": 14,
+          "conf": 1
+        },
+        {
+          "w": "$8.99.",
+          "start_s": 14,
+          "end_s": 15.92,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u6",
+      "speaker": "customer",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 16.295,
+      "end_s": 17.815,
+      "start_utc": "2026-10-03T18:40:16.295Z",
+      "end_utc": "2026-10-03T18:40:17.815Z",
+      "text": "And the second order?",
+      "confidence": 0.999,
+      "words": [
+        {
+          "w": "And",
+          "start_s": 16.295,
+          "end_s": 16.615,
+          "conf": 1
+        },
+        {
+          "w": "the",
+          "start_s": 16.615,
+          "end_s": 16.855,
+          "conf": 1
+        },
+        {
+          "w": "second",
+          "start_s": 16.855,
+          "end_s": 17.175,
+          "conf": 1
+        },
+        {
+          "w": "order?",
+          "start_s": 17.175,
+          "end_s": 17.815,
+          "conf": 0.997
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u7",
+      "speaker": "customer",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 18.615,
+      "end_s": 22.855,
+      "start_utc": "2026-10-03T18:40:18.615Z",
+      "end_utc": "2026-10-03T18:40:22.855Z",
+      "text": "Second order is a six piece nuggets with barbecue sauce and a small fry.",
+      "confidence": 0.983,
+      "words": [
+        {
+          "w": "Second",
+          "start_s": 18.615,
+          "end_s": 19.015,
+          "conf": 0.999
+        },
+        {
+          "w": "order",
+          "start_s": 19.015,
+          "end_s": 19.255,
+          "conf": 0.998
+        },
+        {
+          "w": "is",
+          "start_s": 19.255,
+          "end_s": 19.495,
+          "conf": 0.99
+        },
+        {
+          "w": "a",
+          "start_s": 19.495,
+          "end_s": 19.655,
+          "conf": 0.908
+        },
+        {
+          "w": "six",
+          "start_s": 19.655,
+          "end_s": 19.895,
+          "conf": 0.949
+        },
+        {
+          "w": "piece",
+          "start_s": 19.895,
+          "end_s": 20.135,
+          "conf": 0.988
+        },
+        {
+          "w": "nuggets",
+          "start_s": 20.135,
+          "end_s": 20.615,
+          "conf": 0.967
+        },
+        {
+          "w": "with",
+          "start_s": 20.615,
+          "end_s": 20.935,
+          "conf": 0.998
+        },
+        {
+          "w": "barbecue",
+          "start_s": 20.935,
+          "end_s": 21.415,
+          "conf": 0.998
+        },
+        {
+          "w": "sauce",
+          "start_s": 21.415,
+          "end_s": 21.735,
+          "conf": 0.999
+        },
+        {
+          "w": "and",
+          "start_s": 21.735,
+          "end_s": 21.975,
+          "conf": 0.995
+        },
+        {
+          "w": "a",
+          "start_s": 21.975,
+          "end_s": 22.135,
+          "conf": 0.978
+        },
+        {
+          "w": "small",
+          "start_s": 22.135,
+          "end_s": 22.455,
+          "conf": 1
+        },
+        {
+          "w": "fry.",
+          "start_s": 22.455,
+          "end_s": 22.855,
+          "conf": 0.992
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u8",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 23.865,
+      "end_s": 29.625,
+      "start_utc": "2026-10-03T18:40:23.865Z",
+      "end_utc": "2026-10-03T18:40:29.625Z",
+      "text": "Six piece nuggets with barbecue and a small fry. That's $6.58.",
+      "confidence": 0.996,
+      "words": [
+        {
+          "w": "Six",
+          "start_s": 23.865,
+          "end_s": 24.265,
+          "conf": 0.999
+        },
+        {
+          "w": "piece",
+          "start_s": 24.265,
+          "end_s": 24.585,
+          "conf": 0.998
+        },
+        {
+          "w": "nuggets",
+          "start_s": 24.585,
+          "end_s": 25.065,
+          "conf": 1
+        },
+        {
+          "w": "with",
+          "start_s": 25.065,
+          "end_s": 25.305,
+          "conf": 1
+        },
+        {
+          "w": "barbecue",
+          "start_s": 25.305,
+          "end_s": 25.865,
+          "conf": 1
+        },
+        {
+          "w": "and",
+          "start_s": 25.865,
+          "end_s": 26.105,
+          "conf": 0.998
+        },
+        {
+          "w": "a",
+          "start_s": 26.105,
+          "end_s": 26.265,
+          "conf": 0.992
+        },
+        {
+          "w": "small",
+          "start_s": 26.265,
+          "end_s": 26.505,
+          "conf": 1
+        },
+        {
+          "w": "fry.",
+          "start_s": 26.505,
+          "end_s": 27.145,
+          "conf": 0.971
+        },
+        {
+          "w": "That's",
+          "start_s": 27.145,
+          "end_s": 27.465,
+          "conf": 1
+        },
+        {
+          "w": "$6.58.",
+          "start_s": 27.465,
+          "end_s": 29.625,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u9",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 29.865,
+      "end_s": 30.985,
+      "start_utc": "2026-10-03T18:40:29.865Z",
+      "end_utc": "2026-10-03T18:40:30.985Z",
+      "text": "Pull forward, please.",
+      "confidence": 1,
+      "words": [
+        {
+          "w": "Pull",
+          "start_s": 29.865,
+          "end_s": 30.105,
+          "conf": 1
+        },
+        {
+          "w": "forward,",
+          "start_s": 30.105,
+          "end_s": 30.745,
+          "conf": 1
+        },
+        {
+          "w": "please.",
+          "start_s": 30.745,
+          "end_s": 30.985,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    }
+  ]
+}

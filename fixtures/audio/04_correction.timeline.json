@@ -1,0 +1,69 @@
+{
+  "fixture_ids": [
+    "04_correction"
+  ],
+  "file": "04_correction",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 27.971,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "04_correction",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Hi, welcome to Sandbox Burger, go ahead whenever you're ready.",
+      "start_s": 1,
+      "end_s": 5.479
+    },
+    {
+      "id": "u2",
+      "fixture_id": "04_correction",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a spicy chicken sandwich and a large Coke. Actually, make that a Sprite instead of the Coke.",
+      "start_s": 6.079,
+      "end_s": 13.191
+    },
+    {
+      "id": "u3",
+      "fixture_id": "04_correction",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Spicy chicken sandwich and a large Sprite. Anything else?",
+      "start_s": 13.791,
+      "end_s": 18.254
+    },
+    {
+      "id": "u4",
+      "fixture_id": "04_correction",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Nope.",
+      "start_s": 18.854,
+      "end_s": 19.684
+    },
+    {
+      "id": "u5",
+      "fixture_id": "04_correction",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $7.88. See you at the window.",
+      "start_s": 20.284,
+      "end_s": 24.971
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "04_correction",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 24.971
+    }
+  ]
+}

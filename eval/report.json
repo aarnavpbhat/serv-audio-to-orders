@@ -1,0 +1,2148 @@
+{
+  "generated_at": "2026-10-04T18:45:56.795Z",
+  "config": {
+    "layout": "mono",
+    "transcriber": "deepgram/nova-3",
+    "extractor": "gemini/gemini-3.5-flash-lite",
+    "model": "gemini-3.5-flash-lite",
+    "menu_version": "sandbox-1"
+  },
+  "summary": {
+    "fixtures": 24,
+    "fixtures_passed": 24,
+    "item_precision": 1,
+    "item_recall": 1,
+    "bucket_accuracy": 1,
+    "status_accuracy": 1,
+    "flags_accuracy": 1,
+    "segmentation": {
+      "expected": 34,
+      "found": 34,
+      "missed": 0,
+      "extra": 0,
+      "mean_start_err_s": 0.13,
+      "mean_end_err_s": 0.38
+    }
+  },
+  "rows": [
+    {
+      "row": 1,
+      "title": "Simple order",
+      "fixtures": [
+        "01_simple"
+      ],
+      "pass": true
+    },
+    {
+      "row": 2,
+      "title": "Combo with slot fill",
+      "fixtures": [
+        "02_combo_slot"
+      ],
+      "pass": true
+    },
+    {
+      "row": 3,
+      "title": "Combo missing drink",
+      "fixtures": [
+        "03_combo_missing_drink"
+      ],
+      "pass": true
+    },
+    {
+      "row": 4,
+      "title": "Correction",
+      "fixtures": [
+        "04_correction"
+      ],
+      "pass": true
+    },
+    {
+      "row": 5,
+      "title": "Item removed",
+      "fixtures": [
+        "05_removed_and_upsell"
+      ],
+      "pass": true
+    },
+    {
+      "row": 6,
+      "title": "Whole order cancelled",
+      "fixtures": [
+        "06_cancelled"
+      ],
+      "pass": true
+    },
+    {
+      "row": 7,
+      "title": "Abandoned",
+      "fixtures": [
+        "07_abandoned"
+      ],
+      "pass": true
+    },
+    {
+      "row": 8,
+      "title": "Per-unit modifiers",
+      "fixtures": [
+        "08_per_unit_and_hesitation"
+      ],
+      "pass": true
+    },
+    {
+      "row": 9,
+      "title": "Reference back",
+      "fixtures": [
+        "09_reference_back"
+      ],
+      "pass": true
+    },
+    {
+      "row": 10,
+      "title": "Declined upsell",
+      "fixtures": [
+        "11_declined_upsell_out_of_stock"
+      ],
+      "pass": true
+    },
+    {
+      "row": 11,
+      "title": "Accepted upsell",
+      "fixtures": [
+        "05_removed_and_upsell"
+      ],
+      "pass": true
+    },
+    {
+      "row": 12,
+      "title": "Combo items ordered separately",
+      "fixtures": [
+        "12_combo_separately"
+      ],
+      "pass": true
+    },
+    {
+      "row": 13,
+      "title": "Out of stock",
+      "fixtures": [
+        "11_declined_upsell_out_of_stock"
+      ],
+      "pass": true
+    },
+    {
+      "row": 14,
+      "title": "Question only",
+      "fixtures": [
+        "13_inquiry_and_misheard"
+      ],
+      "pass": true
+    },
+    {
+      "row": 15,
+      "title": "Garbled item",
+      "fixtures": [
+        "14_garbled"
+      ],
+      "pass": true
+    },
+    {
+      "row": 16,
+      "title": "Hesitation",
+      "fixtures": [
+        "08_per_unit_and_hesitation"
+      ],
+      "pass": true
+    },
+    {
+      "row": 17,
+      "title": "Split payment",
+      "fixtures": [
+        "15_split_payment"
+      ],
+      "pass": true
+    },
+    {
+      "row": 18,
+      "title": "Crew crosstalk",
+      "fixtures": [
+        "16_crew_crosstalk"
+      ],
+      "pass": true
+    },
+    {
+      "row": 19,
+      "title": "Number ambiguity",
+      "fixtures": [
+        "09_reference_back",
+        "10_number_ambiguity"
+      ],
+      "pass": true
+    },
+    {
+      "row": 20,
+      "title": "Misheard menu word",
+      "fixtures": [
+        "13_inquiry_and_misheard"
+      ],
+      "pass": true
+    },
+    {
+      "row": 21,
+      "title": "Readback differs",
+      "fixtures": [
+        "17_readback_and_total_mismatch"
+      ],
+      "pass": true
+    },
+    {
+      "row": 22,
+      "title": "Spoken total differs",
+      "fixtures": [
+        "17_readback_and_total_mismatch"
+      ],
+      "pass": true
+    },
+    {
+      "row": 23,
+      "title": "Back-to-back orders",
+      "fixtures": [
+        "18_back_to_back",
+        "compilation_a",
+        "compilation_b"
+      ],
+      "pass": true
+    },
+    {
+      "row": 24,
+      "title": "Truncated audio",
+      "fixtures": [
+        "19_truncated_start",
+        "20_truncated_end"
+      ],
+      "pass": true
+    },
+    {
+      "row": 25,
+      "title": "Non-English or mixed",
+      "fixtures": [
+        "21_spanish"
+      ],
+      "pass": true
+    },
+    {
+      "row": 26,
+      "title": "Heavy noise",
+      "fixtures": [
+        "22_heavy_noise"
+      ],
+      "pass": true
+    },
+    {
+      "row": 27,
+      "title": "Webhook failure (500 then 200)",
+      "fixtures": [
+        "webhook self-check"
+      ],
+      "pass": true,
+      "detail": "attempts 500 -> 200, 1 recorded"
+    },
+    {
+      "row": 28,
+      "title": "Webhook rate limit (429 + Retry-After)",
+      "fixtures": [
+        "webhook self-check"
+      ],
+      "pass": true,
+      "detail": "429 then 200; waited 2.0s for Retry-After 2"
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "01_simple",
+      "title": "Simple order",
+      "file": "fixtures/audio/01_simple.mono.clean.mp3",
+      "covers": [
+        1
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.427
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443K5V4Z8JWVHRJ500J034P",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.403,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2340,
+          "output_tokens": 534,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 103,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "02_combo_slot",
+      "title": "Combo with slot fill and size",
+      "file": "fixtures/audio/02_combo_slot.mono.clean.mp3",
+      "covers": [
+        2
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.467
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443K7QPCCAYHV5RX0PSMXB6",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.397,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2347,
+          "output_tokens": 543,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 104,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "03_combo_missing_drink",
+      "title": "Combo with no drink chosen",
+      "file": "fixtures/audio/03_combo_missing_drink.mono.clean.mp3",
+      "covers": [
+        3
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.315
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443KE57KFVFMBWCTDRYPMN3",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.372,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2327,
+          "output_tokens": 503,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 105,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "04_correction",
+      "title": "Correction: Coke to Sprite",
+      "file": "fixtures/audio/04_correction.mono.clean.mp3",
+      "covers": [
+        4
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.376
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443KKDMYEFD6ZPHBXS35ST7",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.469,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2370,
+          "output_tokens": 658,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 106,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "05_removed_and_upsell",
+      "title": "Item removed, upsell accepted",
+      "file": "fixtures/audio/05_removed_and_upsell.mono.clean.mp3",
+      "covers": [
+        5,
+        11
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.363
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443KSH8AAYVQ3CK04H0NYP9",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.587,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2402,
+          "output_tokens": 979,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 107,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "06_cancelled",
+      "title": "Whole order cancelled",
+      "file": "fixtures/audio/06_cancelled.mono.clean.mp3",
+      "covers": [
+        6
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.379
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 0,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443M02ZQ3C17RQE2S1RZ2JF",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.394,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2342,
+          "output_tokens": 272,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 108,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "07_abandoned",
+      "title": "Abandoned: no closing, car leaves",
+      "file": "fixtures/audio/07_abandoned.mono.clean.mp3",
+      "covers": [
+        7
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.302
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443M4DJ9H0RS81ESG0RKESE",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.494,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2315,
+          "output_tokens": 542,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 109,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "08_per_unit_and_hesitation",
+      "title": "Per-unit modifiers and a hesitation",
+      "file": "fixtures/audio/08_per_unit_and_hesitation.mono.clean.mp3",
+      "covers": [
+        8,
+        16
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.308
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443MAZZYWR5JCJP91ZM4HTS",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.468,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2370,
+          "output_tokens": 762,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 110,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "09_reference_back",
+      "title": "Make that two, same thing for her",
+      "file": "fixtures/audio/09_reference_back.mono.clean.mp3",
+      "covers": [
+        9,
+        19
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.2
+        ],
+        "end_err_s": [
+          0.377
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 4,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443MH9764RAXNQABYZFDS35",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.539,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2382,
+          "output_tokens": 1243,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 111,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "10_number_ambiguity",
+      "title": "Number two, three of them",
+      "file": "fixtures/audio/10_number_ambiguity.mono.clean.mp3",
+      "covers": [
+        19
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.457
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443MR7SV1XCBR3TZ0867BGS",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.481,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2368,
+          "output_tokens": 843,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 112,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "11_declined_upsell_out_of_stock",
+      "title": "Out of stock and declined meal",
+      "file": "fixtures/audio/11_declined_upsell_out_of_stock.mono.clean.mp3",
+      "covers": [
+        10,
+        13
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.505
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 5,
+            "bucket_total": 5,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443MX4CK25WP3TN3RC1F5TG",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.564,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2392,
+          "output_tokens": 1262,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 113,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "12_combo_separately",
+      "title": "Combo items ordered separately",
+      "file": "fixtures/audio/12_combo_separately.mono.clean.mp3",
+      "covers": [
+        12
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.346
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443N3SE3RYFWWD1PRWR9YGD",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.438,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2360,
+          "output_tokens": 721,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 114,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "13_inquiry_and_misheard",
+      "title": "Question only, plus a hard menu name",
+      "file": "fixtures/audio/13_inquiry_and_misheard.mono.clean.mp3",
+      "covers": [
+        14,
+        20
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.389
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443N8MNM6X303Q48FQPZ4TY",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.484,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2360,
+          "output_tokens": 684,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 115,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "14_garbled",
+      "title": "Garbled item needs review",
+      "file": "fixtures/audio/14_garbled.mono.clean.mp3",
+      "covers": [
+        15
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.278
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443NE75XYGK7HKJRB8FKEG7",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.378,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2347,
+          "output_tokens": 328,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 116,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "15_split_payment",
+      "title": "Two orders paid separately",
+      "file": "fixtures/audio/15_split_payment.mono.clean.mp3",
+      "covers": [
+        17
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.36
+        ]
+      },
+      "orders": {
+        "expected": 2,
+        "produced": 2,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443NKJ0JHE653DNB7S42S4J",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.576,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2388,
+          "output_tokens": 1358,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 117,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "16_crew_crosstalk",
+      "title": "Crew chatter mid-order",
+      "file": "fixtures/audio/16_crew_crosstalk.mono.clean.mp3",
+      "covers": [
+        18
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.353
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443NVHYQFHC4SXVJ409GVAV",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.479,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2335,
+          "output_tokens": 521,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 118,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "17_readback_and_total_mismatch",
+      "title": "Crew reads back the wrong size and total",
+      "file": "fixtures/audio/17_readback_and_total_mismatch.mono.clean.mp3",
+      "covers": [
+        21,
+        22
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.443
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443NZMPBD2F4RCSP4P0D1S8",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.392,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2340,
+          "output_tokens": 517,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 119,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "18_back_to_back",
+      "title": "Back-to-back orders, no greeting for the second car",
+      "file": "fixtures/audio/18_back_to_back.mono.clean.mp3",
+      "covers": [
+        23
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 2,
+        "found": 2,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12,
+          0.1
+        ],
+        "end_err_s": [
+          0.435,
+          0.306
+        ]
+      },
+      "orders": {
+        "expected": 2,
+        "produced": 2,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443P5Q0JS3E6YDYREC15EEP",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.661,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 2,
+          "input_tokens": 4622,
+          "output_tokens": 808,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 121,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "19_truncated_start",
+      "title": "Audio starts mid-order",
+      "file": "fixtures/audio/19_truncated_start.mono.clean.mp3",
+      "covers": [
+        24
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.08
+        ],
+        "end_err_s": [
+          0.461
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443PGX3KMK0V1HP6P4SZXRM",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.222,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2296,
+          "output_tokens": 304,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 122,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "20_truncated_end",
+      "title": "Audio ends mid-order",
+      "file": "fixtures/audio/20_truncated_end.mono.clean.mp3",
+      "covers": [
+        24
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.455
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443PPJMW17X3J92D5SFB4SS",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.154,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2285,
+          "output_tokens": 323,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 123,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "21_spanish",
+      "title": "Spanish-speaking customer",
+      "file": "fixtures/audio/21_spanish.mono.clean.mp3",
+      "covers": [
+        25
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.318
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443PWG9XJM67EWCP9VBPFYB",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.449,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2357,
+          "output_tokens": 670,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 124,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "22_heavy_noise",
+      "title": "Heavy engine and wind noise",
+      "file": "fixtures/audio/22_heavy_noise.mono.heavy.mp3",
+      "covers": [
+        26
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.2
+        ],
+        "end_err_s": [
+          0.368
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443Q2ZDG3AWEHGX20PTHB8W",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 0.427,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 1,
+          "input_tokens": 2344,
+          "output_tokens": 522,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 125,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "compilation_a",
+      "title": "Five cars in a row: simple, combo, removal, abandoned, separate items",
+      "file": "fixtures/audio/compilation_a.mono.moderate.mp3",
+      "covers": [
+        23
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 5,
+        "found": 5,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.2,
+          0.178,
+          0.163,
+          0.117,
+          0.136
+        ],
+        "end_err_s": [
+          0.437,
+          0.471,
+          0.343,
+          0.305,
+          0.314
+        ]
+      },
+      "orders": {
+        "expected": 5,
+        "produced": 5,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443Q8KGS5FZFMQW0CQGRVYG",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 2.974,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 5,
+          "input_tokens": 11755,
+          "output_tokens": 3306,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 130,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    },
+    {
+      "id": "compilation_b",
+      "title": "Corrections, per-unit modifiers, out of stock, crew chatter, back-to-back",
+      "file": "fixtures/audio/compilation_b.mono.moderate.mp3",
+      "covers": [
+        23
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 6,
+        "found": 6,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.04,
+          0.194,
+          0.126,
+          0.191,
+          0.148,
+          0.152
+        ],
+        "end_err_s": [
+          0.426,
+          0.314,
+          0.539,
+          0.342,
+          0.407,
+          0.338
+        ]
+      },
+      "orders": {
+        "expected": 6,
+        "produced": 6,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 5,
+            "bucket_total": 5,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M443R6A054VTP7VX9747SA35",
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3",
+          "audio_minutes": 3.362,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 6,
+          "input_tokens": 14126,
+          "output_tokens": 4126,
+          "cached_calls": 0,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-04",
+          "requests": 136,
+          "exhausted": false,
+          "tier": "unknown",
+          "cap": 200
+        }
+      }
+    }
+  ],
+  "usage": {
+    "deepgram_minutes": 0,
+    "llm_calls": 34,
+    "llm_cached_calls": 0,
+    "input_tokens": 79870,
+    "output_tokens": 22329
+  }
+}

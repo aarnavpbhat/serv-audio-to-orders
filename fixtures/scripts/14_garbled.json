@@ -1,0 +1,100 @@
+{
+  "id": "14_garbled",
+  "title": "Garbled item needs review",
+  "covers": [
+    15
+  ],
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Can I get a cheeseburger and a medium, uh, flurbleberry shake?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Sorry, what kind of shake was that?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Yeah, that one. Thanks.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Okay. Pull forward please.",
+      "pause_after_s": 0.6
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "cheeseburger"
+      },
+      {
+        "event_id": "e2",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2",
+          "u4"
+        ],
+        "catalog_id": null,
+        "raw_text": "flurbleberry shake",
+        "size": "medium",
+        "recognition_confidence": 0.3,
+        "candidates": [
+          {
+            "catalog_id": "shake_straw",
+            "score": 0.41
+          },
+          {
+            "catalog_id": "shake_choc",
+            "score": 0.38
+          },
+          {
+            "catalog_id": "shake_van",
+            "score": 0.35
+          }
+        ]
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "needs_review",
+        "items": [
+          {
+            "catalog_id": "cheeseburger",
+            "quantity": 1
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [
+          {
+            "quantity": 1,
+            "candidates_include": [
+              "shake_choc",
+              "shake_van",
+              "shake_straw"
+            ]
+          }
+        ],
+        "flags": [
+          "needs_review_present"
+        ],
+        "group": null
+      }
+    ]
+  }
+}

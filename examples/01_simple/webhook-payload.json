@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "event_type": "order.completed",
+  "order_id": "ord_01M443TA6569Q8K4QWVHEGFZHC",
+  "order_version": 1,
+  "group_id": null,
+  "location_id": "store_demo_001",
+  "lane_id": "lane_1",
+  "status": "completed",
+  "started_at": "2026-10-03T18:40:01.120Z",
+  "ended_at": "2026-10-03T18:40:20.555Z",
+  "timestamp_source": "env",
+  "audio": {
+    "source_file": "01_simple.mono.clean.mp3",
+    "offset_start_s": 1.12,
+    "offset_end_s": 20.555
+  },
+  "items": [
+    {
+      "line_id": "e1",
+      "catalog_id": "dbl_cheese",
+      "name": "Double Cheeseburger",
+      "quantity": 1,
+      "size": null,
+      "modifiers": [],
+      "unit_price": 5.49,
+      "recognition_confidence": 0.99,
+      "commitment_confidence": 1,
+      "source_utterance_ids": [
+        "u2"
+      ]
+    },
+    {
+      "line_id": "e2",
+      "catalog_id": "fries",
+      "name": "Fries",
+      "quantity": 1,
+      "size": "medium",
+      "modifiers": [],
+      "unit_price": 2.79,
+      "recognition_confidence": 0.99,
+      "commitment_confidence": 1,
+      "source_utterance_ids": [
+        "u2"
+      ]
+    }
+  ],
+  "needs_review": [],
+  "not_ordered": [],
+  "combo_opportunities": [],
+  "customer_declined_combo": false,
+  "flags": [
+    "placeholder_values"
+  ],
+  "totals": {
+    "computed": 8.28,
+    "spoken_by_crew": 8.28,
+    "currency": "USD"
+  },
+  "overall_confidence": 0.99,
+  "transcript": [
+    {
+      "id": "u1",
+      "speaker": "crew",
+      "start_utc": "2026-10-03T18:40:01.120Z",
+      "end_utc": "2026-10-03T18:40:04.880Z",
+      "text": "Welcome to Sandbox Burger. What can I get for you today?",
+      "confidence": 0.998
+    },
+    {
+      "id": "u2",
+      "speaker": "customer",
+      "start_utc": "2026-10-03T18:40:05.600Z",
+      "end_utc": "2026-10-03T18:40:09.200Z",
+      "text": "Hi. Can I get a double cheeseburger and a medium fries?",
+      "confidence": 0.989
+    },
+    {
+      "id": "u3",
+      "speaker": "crew",
+      "start_utc": "2026-10-03T18:40:09.600Z",
+      "end_utc": "2026-10-03T18:40:12.880Z",
+      "text": "Sure. A double cheeseburger and a medium fry.",
+      "confidence": 0.998
+    },
+    {
+      "id": "u4",
+      "speaker": "crew",
+      "start_utc": "2026-10-03T18:40:12.880Z",
+      "end_utc": "2026-10-03T18:40:13.760Z",
+      "text": "Anything else?",
+      "confidence": 1
+    },
+    {
+      "id": "u5",
+      "speaker": "crew",
+      "start_utc": "2026-10-03T18:40:14.635Z",
+      "end_utc": "2026-10-03T18:40:19.355Z",
+      "text": "No. That's it. Your total is $8.28.",
+      "confidence": 1
+    },
+    {
+      "id": "u6",
+      "speaker": "crew",
+      "start_utc": "2026-10-03T18:40:19.435Z",
+      "end_utc": "2026-10-03T18:40:20.555Z",
+      "text": "Please pull forward.",
+      "confidence": 0.995
+    }
+  ],
+  "processing": {
+    "stt": "deepgram/nova-3",
+    "extractor": "gemini/gemini-3.5-flash-lite",
+    "menu_version": "sandbox-1",
+    "pipeline_version": "0.1.0",
+    "latency_ms": 104
+  }
+}

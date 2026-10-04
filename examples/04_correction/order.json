@@ -1,0 +1,313 @@
+{
+  "segmentation": {
+    "segments": [
+      {
+        "segment_id": "seg_1",
+        "index": 0,
+        "start_s": 0.88,
+        "end_s": 24.595,
+        "utterance_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7",
+          "u8",
+          "u9"
+        ],
+        "non_customer_ids": [],
+        "has_greeting": true,
+        "has_closing": true,
+        "truncated_start": false,
+        "truncated_end": false,
+        "trailing_silence_s": 3.557,
+        "language": "en",
+        "non_english": false,
+        "mean_word_conf": 0.975,
+        "crosstalk_suspected": false
+      }
+    ],
+    "boundaries": [
+      {
+        "after_index": 0,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 1,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 2,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 3,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 4,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 5,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 6,
+        "score": 0,
+        "signals": [],
+        "decided_by": "rules",
+        "is_boundary": false
+      },
+      {
+        "after_index": 7,
+        "score": 0.25,
+        "signals": [
+          "end_cue"
+        ],
+        "decided_by": "rules",
+        "is_boundary": false
+      }
+    ],
+    "llm_calls": 0
+  },
+  "orders": [
+    {
+      "order": {
+        "order_id": "ord_01M443TADNRGY39TYRPRVV8ZH9",
+        "group_id": null,
+        "segment_id": "seg_1",
+        "status": "completed",
+        "started_s": 0.88,
+        "ended_s": 24.595,
+        "items": [
+          {
+            "line_id": "e1",
+            "catalog_id": "spicy_chicken",
+            "name": "Spicy Chicken Sandwich",
+            "quantity": 1,
+            "size": null,
+            "modifiers": [],
+            "unit_price": 5.49,
+            "recognition_confidence": 0.99,
+            "commitment_confidence": 1,
+            "source_utterance_ids": [
+              "u2"
+            ]
+          },
+          {
+            "line_id": "e3",
+            "catalog_id": "sprite",
+            "name": "Sprite",
+            "quantity": 1,
+            "size": "large",
+            "modifiers": [],
+            "unit_price": 2.39,
+            "recognition_confidence": 0.9,
+            "commitment_confidence": 1,
+            "source_utterance_ids": [
+              "u2",
+              "u4"
+            ]
+          }
+        ],
+        "needs_review": [],
+        "not_ordered": [
+          {
+            "catalog_id": "coke",
+            "raw_text": "Coke",
+            "ordered": false,
+            "reason": "replaced",
+            "replaced_by": "sprite",
+            "quantity": 1,
+            "size": "large",
+            "line_id": "e2",
+            "source_utterance_ids": [
+              "u2",
+              "u4"
+            ]
+          }
+        ],
+        "combo_opportunities": [],
+        "customer_declined_combo": false,
+        "flags": [
+          "placeholder_values"
+        ],
+        "totals": {
+          "computed": 7.88,
+          "spoken_by_crew": 7.88,
+          "currency": "USD"
+        },
+        "overall_confidence": 0.95,
+        "readback_diffs": [],
+        "utterance_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7",
+          "u8",
+          "u9"
+        ]
+      },
+      "events": [
+        {
+          "event_id": "e1",
+          "type": "ADD",
+          "target_line_ref": null,
+          "catalog_id": "spicy_chicken",
+          "raw_text": "spicy chicken sandwich",
+          "quantity": 1,
+          "size": null,
+          "modifiers": [],
+          "slot": null,
+          "readback_items": null,
+          "amount": null,
+          "source_utterance_ids": [
+            "u2"
+          ],
+          "recognition_confidence": 0.99,
+          "commitment_confidence": 1,
+          "candidates": [],
+          "t_s": 6.16
+        },
+        {
+          "event_id": "e2",
+          "type": "ADD",
+          "target_line_ref": null,
+          "catalog_id": "coke",
+          "raw_text": "Coke",
+          "quantity": 1,
+          "size": "large",
+          "modifiers": [],
+          "slot": null,
+          "readback_items": null,
+          "amount": null,
+          "source_utterance_ids": [
+            "u2"
+          ],
+          "recognition_confidence": 0.99,
+          "commitment_confidence": 1,
+          "candidates": [],
+          "t_s": 6.16
+        },
+        {
+          "event_id": "e3",
+          "type": "REPLACE",
+          "target_line_ref": "e2",
+          "catalog_id": "sprite",
+          "raw_text": "Sprite",
+          "quantity": null,
+          "size": null,
+          "modifiers": [],
+          "slot": null,
+          "readback_items": null,
+          "amount": null,
+          "source_utterance_ids": [
+            "u4"
+          ],
+          "recognition_confidence": 0.9,
+          "commitment_confidence": 1,
+          "candidates": [],
+          "t_s": 10.72
+        },
+        {
+          "event_id": "e4",
+          "type": "READBACK",
+          "target_line_ref": null,
+          "catalog_id": null,
+          "raw_text": null,
+          "quantity": null,
+          "size": null,
+          "modifiers": [],
+          "slot": null,
+          "readback_items": [
+            {
+              "catalog_id": "spicy_chicken",
+              "quantity": 1,
+              "size": null
+            },
+            {
+              "catalog_id": "sprite",
+              "quantity": 1,
+              "size": "large"
+            }
+          ],
+          "amount": 7.88,
+          "source_utterance_ids": [
+            "u5",
+            "u8"
+          ],
+          "recognition_confidence": 0.98,
+          "commitment_confidence": 1,
+          "candidates": [],
+          "t_s": 20.195
+        }
+      ],
+      "build_log": [
+        {
+          "event_id": "e1",
+          "type": "ADD",
+          "t_s": 6.16,
+          "applied": true,
+          "note": "added Spicy Chicken Sandwich x1",
+          "line_ids": [
+            "e1"
+          ]
+        },
+        {
+          "event_id": "e2",
+          "type": "ADD",
+          "t_s": 6.16,
+          "applied": true,
+          "note": "added Coke x1",
+          "line_ids": [
+            "e2"
+          ]
+        },
+        {
+          "event_id": "e3",
+          "type": "REPLACE",
+          "t_s": 10.72,
+          "applied": true,
+          "note": "e2 replaced by e3",
+          "line_ids": [
+            "e2",
+            "e3"
+          ]
+        },
+        {
+          "event_id": "e4",
+          "type": "READBACK",
+          "t_s": 20.195,
+          "applied": true,
+          "note": "readback matches",
+          "line_ids": []
+        }
+      ],
+      "warnings": []
+    }
+  ]
+}

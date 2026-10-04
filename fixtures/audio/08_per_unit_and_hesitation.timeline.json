@@ -1,0 +1,69 @@
+{
+  "fixture_ids": [
+    "08_per_unit_and_hesitation"
+  ],
+  "file": "08_per_unit_and_hesitation",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 27.933,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "08_per_unit_and_hesitation",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "08_per_unit_and_hesitation",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get two hamburgers, one with no pickles?",
+      "start_s": 5.502,
+      "end_s": 8.967
+    },
+    {
+      "id": "u3",
+      "fixture_id": "08_per_unit_and_hesitation",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Two hamburgers, one no pickles. Anything else?",
+      "start_s": 9.567,
+      "end_s": 13.512
+    },
+    {
+      "id": "u4",
+      "fixture_id": "08_per_unit_and_hesitation",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Maybe a cookie... nah, I'm good. Just a medium Coke.",
+      "start_s": 14.112,
+      "end_s": 18.638
+    },
+    {
+      "id": "u5",
+      "fixture_id": "08_per_unit_and_hesitation",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Okay, your total is $6.97. Pull forward please.",
+      "start_s": 19.238,
+      "end_s": 24.933
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "08_per_unit_and_hesitation",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 24.933
+    }
+  ]
+}

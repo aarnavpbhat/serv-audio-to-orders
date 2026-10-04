@@ -1,0 +1,69 @@
+{
+  "fixture_ids": [
+    "11_declined_upsell_out_of_stock"
+  ],
+  "file": "11_declined_upsell_out_of_stock",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 33.68,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a Big Sandbox, a large fries, and a chocolate shake?",
+      "start_s": 5.502,
+      "end_s": 9.693
+    },
+    {
+      "id": "u3",
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Sorry, we're out of shakes right now. Would you like to make the Big Sandbox a meal?",
+      "start_s": 10.293,
+      "end_s": 15.908
+    },
+    {
+      "id": "u4",
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "No, not the meal. Just the burger and fries. And a medium sweet tea.",
+      "start_s": 16.508,
+      "end_s": 21.043
+    },
+    {
+      "id": "u5",
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Big Sandbox, large fries and a medium sweet tea. Your total is $11.27. Please pull around.",
+      "start_s": 21.643,
+      "end_s": 30.68
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 30.68
+    }
+  ]
+}

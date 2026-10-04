@@ -1,0 +1,79 @@
+{
+  "id": "20_truncated_end",
+  "title": "Audio ends mid-order",
+  "covers": [
+    24
+  ],
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Can I get a number one with a lemonade, and",
+      "pause_after_s": 0
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "combo_1"
+      },
+      {
+        "event_id": "e2",
+        "type": "SET_COMBO_SLOT",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "target_line_ref": "e1",
+        "slot": "drink",
+        "catalog_id": "lemonade"
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "incomplete",
+        "items": [
+          {
+            "catalog_id": "combo_1",
+            "quantity": 1,
+            "size": "medium",
+            "components": [
+              {
+                "slot": "entree",
+                "catalog_id": "big_sandbox"
+              },
+              {
+                "slot": "side",
+                "catalog_id": "fries"
+              },
+              {
+                "slot": "drink",
+                "catalog_id": "lemonade"
+              }
+            ]
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [
+          "truncated_end"
+        ],
+        "group": null
+      }
+    ]
+  },
+  "render": {
+    "lead_silence_s": 1,
+    "tail_silence_s": 0.2
+  }
+}

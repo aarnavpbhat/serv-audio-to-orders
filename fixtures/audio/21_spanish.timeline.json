@@ -1,0 +1,71 @@
+{
+  "fixture_ids": [
+    "21_spanish"
+  ],
+  "file": "21_spanish",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 26.743,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "21_spanish",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "21_spanish",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Hola, quiero una hamburguesa con queso doble y unas papas grandes, por favor.",
+      "language": "es",
+      "start_s": 5.502,
+      "end_s": 10.655
+    },
+    {
+      "id": "u3",
+      "fixture_id": "21_spanish",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Okay, a double cheeseburger and large fries. Anything else?",
+      "start_s": 11.255,
+      "end_s": 15.925
+    },
+    {
+      "id": "u4",
+      "fixture_id": "21_spanish",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Y una Coca-Cola mediana.",
+      "language": "es",
+      "start_s": 16.525,
+      "end_s": 18.088
+    },
+    {
+      "id": "u5",
+      "fixture_id": "21_spanish",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $10.77. Pull forward please.",
+      "start_s": 18.688,
+      "end_s": 23.743
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "21_spanish",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 23.743
+    }
+  ]
+}

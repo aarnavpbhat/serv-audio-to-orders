@@ -1,0 +1,92 @@
+{
+  "id": "07_abandoned",
+  "title": "Abandoned: no closing, car leaves",
+  "covers": [
+    7
+  ],
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Yeah, can I get a ten piece nuggets with ranch and a large lemonade?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Ten piece nuggets with ranch and a large lemonade. Anything else for you?",
+      "pause_after_s": 0.5
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "nuggets_10",
+        "modifiers": [
+          "ranch"
+        ]
+      },
+      {
+        "event_id": "e2",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "lemonade",
+        "size": "large"
+      },
+      {
+        "event_id": "e3",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u3"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "nuggets_10"
+          },
+          {
+            "catalog_id": "lemonade",
+            "size": "large"
+          }
+        ]
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "abandoned",
+        "items": [
+          {
+            "catalog_id": "nuggets_10",
+            "quantity": 1,
+            "modifiers": [
+              "ranch"
+            ]
+          },
+          {
+            "catalog_id": "lemonade",
+            "quantity": 1,
+            "size": "large"
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [],
+        "group": null
+      }
+    ]
+  },
+  "render": {
+    "tail_silence_s": 14
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "fixture_ids": [
+    "02_combo_slot"
+  ],
+  "file": "02_combo_slot",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 23.624,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "02_combo_slot",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, order when you're ready.",
+      "start_s": 1,
+      "end_s": 4.358
+    },
+    {
+      "id": "u2",
+      "fixture_id": "02_combo_slot",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Yeah, let me get a number two with a Sprite, and make it large.",
+      "start_s": 4.958,
+      "end_s": 9.245
+    },
+    {
+      "id": "u3",
+      "fixture_id": "02_combo_slot",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Large number two with a Sprite. Anything else for you?",
+      "start_s": 9.845,
+      "end_s": 13.699
+    },
+    {
+      "id": "u4",
+      "fixture_id": "02_combo_slot",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "That's all.",
+      "start_s": 14.299,
+      "end_s": 15.306
+    },
+    {
+      "id": "u5",
+      "fixture_id": "02_combo_slot",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "That'll be $10.39 at the window, pull around.",
+      "start_s": 15.906,
+      "end_s": 20.624
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "02_combo_slot",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 20.624
+    }
+  ]
+}
