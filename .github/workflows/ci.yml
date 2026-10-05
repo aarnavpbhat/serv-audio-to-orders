@@ -1,0 +1,62 @@
+# Gone standard CI gate (gone-standards patterns/testing/ci.yml @1.0.0), adapted
+# for a pnpm workspace. Runs on PRs into dev/main. Mark "Typecheck",
+# "Lint + unit/route tests" and "Playwright e2e" as required status checks in
+# branch protection on main (and dev if it is added).
+#
+# No secrets are needed: unit tests make no API calls, and the e2e golden path
+# uses the free ground-truth transcriber and keyword extractor on fixture audio.
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+
+jobs:
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck # tsc --noEmit; lint, vitest and playwright do not check types
+
+  lint-and-test:
+    name: Lint + unit/route tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+
+  e2e:
+    name: Playwright e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @serv/web exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7
