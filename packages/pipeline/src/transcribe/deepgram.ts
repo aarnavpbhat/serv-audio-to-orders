@@ -2,7 +2,7 @@ import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } 
 import path from "node:path";
 import { DeepgramClient } from "@deepgram/sdk";
 import type { IngestResult } from "../ingest/ingest";
-import { isTransient, withRetry } from "../lib/retry";
+import { isRetryableError, withRetry } from "../lib/retry";
 import { assignRoles, diarizationCollapsed } from "./roles";
 import { diarizedSamples, normalizeDeepgram, type DgResponse } from "./normalize";
 import type { RoleJudge, TranscribeOptions, TranscribeResult, Transcriber } from "./types";
@@ -37,11 +37,11 @@ export class DeepgramTranscriber implements Transcriber {
       cached = true;
     } else {
       raw = await withRetry(() => this.request(input.file, multichannel, opts), {
-        attempts: 5,
-        baseMs: 1000,
-        maxMs: 16_000,
-        retryable: isTransient,
-        onRetry: (err, n, ms) => console.warn(`deepgram retry ${n} in ${ms}ms: ${(err as Error).message}`),
+        maxRetries: 4,
+        initialDelay: 1000,
+        maxDelay: 16_000,
+        retryOn: isRetryableError,
+        operationName: "deepgram transcribe",
       });
       mkdirSync(dir, { recursive: true });
       writeFileSync(cacheFile, JSON.stringify(raw));

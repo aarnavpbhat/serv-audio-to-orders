@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { replay } from "../src/build/replay";
-import { compareOrder } from "../src/eval/compare";
-import { postprocess } from "../src/postprocess/postprocess";
-import { ExpectedOrder } from "../src/schemas";
-import { catalog, events, matcher, ppOptions, seg } from "./helpers";
+import { replay } from "../build/replay";
+import { compareOrder } from "../eval/compare";
+import { postprocess } from "../postprocess/postprocess";
+import { ExpectedOrder } from "../schemas";
+import { catalog, events, matcher, ppOptions, seg } from "../test-helpers";
 
 const build = (list: Parameters<typeof events>[0]) => replay(events(list), catalog);
 const order = (list: Parameters<typeof events>[0], ctx = seg()) => postprocess(build(list), ctx, ppOptions())[0]!;
