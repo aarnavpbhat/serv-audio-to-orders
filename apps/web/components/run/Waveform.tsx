@@ -3,6 +3,7 @@
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
+import { Card } from "@/components/ui/Card";
 
 export interface WaveformHandle {
   seek: (t: number) => void;
@@ -107,8 +108,8 @@ export function Waveform({
   const total = duration || Math.max(1, ...utterances.map((u) => u.end));
 
   return (
-    <div className="panel p-4">
-      <div className="mb-2 flex items-center justify-between text-[11px] text-muted">
+    <Card className="gap-0 p-4">
+      <div className="mb-2 flex items-center justify-between text-[11px] text-muted-foreground">
         <span className="label text-[10px]">Waveform · orders shaded</span>
         <div className="flex items-center gap-3">
           <Legend className="bg-customer" label="customer" />
@@ -116,7 +117,7 @@ export function Waveform({
           <Legend className="bg-faint" label="crew chatter" />
         </div>
       </div>
-      {error && <p className="mb-2 text-[13px] text-rose-600">Audio failed to load: {error}</p>}
+      {error && <p className="mb-2 text-[13px] text-destructive">Audio failed to load: {error}</p>}
       <div ref={container} />
       {/* Speaker lane: who is talking when, aligned with the waveform. */}
       <div
@@ -134,9 +135,9 @@ export function Waveform({
             style={{ left: `${(u.start / total) * 100}%`, width: `${Math.max(0.3, ((u.end - u.start) / total) * 100)}%` }}
           />
         ))}
-        <div className="pointer-events-none absolute -top-0.5 h-5 w-px bg-accent" style={{ left: `${(time / total) * 100}%` }} />
+        <div className="pointer-events-none absolute -top-0.5 h-5 w-px bg-brand" style={{ left: `${(time / total) * 100}%` }} />
       </div>
-    </div>
+    </Card>
   );
 }
 

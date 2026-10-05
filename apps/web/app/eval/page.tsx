@@ -1,5 +1,7 @@
 import { Artwork } from "@/components/Artwork";
 import { Badge } from "@/components/Badge";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Progress } from "@/components/ui/Progress";
 import { CheckIcon, XIcon } from "@/components/Icons";
 import { readEvalReport } from "@/lib/data";
 
@@ -13,7 +15,7 @@ export default function EvalPage() {
     return (
       <div className="mx-auto max-w-[1180px] px-8 pt-8">
         <h1 className="title-xl">Eval</h1>
-        <p className="mt-2 text-muted">
+        <p className="mt-2 text-muted-foreground">
           No report yet. Run <code className="font-mono">pnpm eval</code> (or <code className="font-mono">pnpm eval --transcriber script</code> without a Deepgram key) and refresh.
         </p>
       </div>
@@ -34,7 +36,7 @@ export default function EvalPage() {
     <div className="mx-auto max-w-[1180px] space-y-10 px-8 pb-16 pt-8">
       <header>
         <h1 className="title-xl">Eval</h1>
-        <p className="mt-0.5 text-[13px] text-muted">
+        <p className="mt-0.5 text-[13px] text-muted-foreground">
           {r.config.transcriber} + {r.config.extractor} on {r.config.layout} fixtures · {new Date(r.generated_at).toLocaleString()} · {r.usage.deepgram_minutes} Deepgram min · {r.usage.llm_calls} LLM calls (
           {r.usage.llm_cached_calls} cached)
         </p>
@@ -42,15 +44,13 @@ export default function EvalPage() {
 
       <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {metrics.map(([k, v, ratio]) => (
-          <div key={k} className="panel p-4">
-            <div className="label text-[10.5px]">{k}</div>
-            <div className="mt-1 text-[26px] font-bold tabular-nums tracking-tight">{v}</div>
-            {ratio !== null && (
-              <div className="mt-2 h-1 overflow-hidden rounded-full bg-fill">
-                <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(1, ratio) * 100}%` }} />
-              </div>
-            )}
-          </div>
+          <Card key={k} size="sm">
+            <CardContent>
+              <div className="label text-[10.5px]">{k}</div>
+              <div className="mt-1 font-heading text-[26px] font-bold tabular-nums tracking-tight">{v}</div>
+              {ratio !== null && <Progress value={Math.min(1, ratio) * 100} className="mt-2 h-1" />}
+            </CardContent>
+          </Card>
         ))}
       </section>
 
@@ -58,17 +58,17 @@ export default function EvalPage() {
         <section>
           <div className="mb-2 flex items-baseline justify-between">
             <h2 className="section-title">Edge Case Checklist</h2>
-            <span className="text-[12px] text-muted">
+            <span className="text-[12px] text-muted-foreground">
               {r.rows.filter((x) => x.pass).length}/{r.rows.length} pass
             </span>
           </div>
           <div className="tracks">
             {r.rows.map((row) => (
               <div key={row.row} className="grid grid-cols-[32px_minmax(0,1fr)_20px] items-center gap-3 px-2 py-1.5">
-                <span className="text-center text-[12px] tabular-nums text-muted">{row.row}</span>
+                <span className="text-center text-[12px] tabular-nums text-muted-foreground">{row.row}</span>
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{row.title}</span>
-                  <span className="block truncate text-[11.5px] text-muted">{row.detail ?? row.fixtures.join(", ")}</span>
+                  <span className="block truncate text-[11.5px] text-muted-foreground">{row.detail ?? row.fixtures.join(", ")}</span>
                 </span>
                 {row.pass ? <CheckIcon className="h-4 w-4 text-emerald-500" /> : <XIcon className="h-4 w-4 text-rose-500" />}
               </div>
@@ -79,7 +79,7 @@ export default function EvalPage() {
         <section>
           <div className="mb-2 flex items-baseline justify-between">
             <h2 className="section-title">Fixtures</h2>
-            <span className="text-[12px] text-muted">click to open the run</span>
+            <span className="text-[12px] text-muted-foreground">click to open the run</span>
           </div>
           <div className="tracks">
             {r.fixtures.map((f) => {
@@ -90,14 +90,14 @@ export default function EvalPage() {
                     <Artwork seed={f.id} size="sm" className="!h-9 !w-9" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{f.title}</span>
-                      <span className="block truncate text-[11.5px] text-muted">
+                      <span className="block truncate text-[11.5px] text-muted-foreground">
                         {f.id} · {f.segmentation.found}/{f.segmentation.expected} seg · {f.orders.produced}/{f.orders.expected} orders
                       </span>
                     </span>
                     <Badge value={f.pass ? "pass" : "fail"} />
                   </div>
                   {diffs.length > 0 && (
-                    <ul className="mt-1 list-disc pl-[60px] font-mono text-[11px] text-rose-600 dark:text-rose-400">
+                    <ul className="mt-1 list-disc pl-[60px] font-mono text-[11px] text-destructive">
                       {diffs.slice(0, 8).map((d, i) => (
                         <li key={i}>{d}</li>
                       ))}

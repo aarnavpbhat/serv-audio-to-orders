@@ -13,7 +13,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
     <div className="mx-auto max-w-[1180px] space-y-10 px-8 pb-16 pt-8">
       <header>
         <h1 className="title-xl">{q ? `Results for "${q}"` : "Runs"}</h1>
-        <p className="mt-0.5 text-[13px] text-muted">Drive-thru audio in, structured orders out, every step visible.</p>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">Drive-thru audio in, structured orders out, every step visible.</p>
       </header>
       <NewRunForm fixtures={listFixtureAudio()} keys={s.keys} query={q} />
       <RunsTable query={q} />

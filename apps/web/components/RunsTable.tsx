@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import { cn } from "@/lib/utils";
 import { Artwork } from "./Artwork";
 import { Badge } from "./Badge";
 import { ClockIcon, Equalizer, PlayIcon } from "./Icons";
@@ -29,7 +32,11 @@ function when(ms: number): string {
   return d.toDateString() === today.toDateString() ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : d.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
+/** Zebra rows with rounded ends, like an Apple Music song list. */
+const ROW = "group cursor-pointer border-0 odd:bg-stripe hover:bg-muted [&>td:first-child]:rounded-l-md [&>td:last-child]:rounded-r-md";
+
 export function RunsTable({ query }: { query: string }) {
+  const router = useRouter();
   const [runs, setRuns] = useState<RunSummary[] | null>(null);
   useEffect(() => {
     let alive = true;
@@ -52,72 +59,76 @@ export function RunsTable({ query }: { query: string }) {
     <section>
       <div className="mb-2 flex items-baseline justify-between">
         <h2 className="section-title">Recent Runs</h2>
-        {shown && <span className="text-[12px] text-muted">{shown.length} runs{q && ` matching "${query}"`}</span>}
+        {shown && <span className="text-[12px] text-muted-foreground">{shown.length} runs{q && ` matching "${query}"`}</span>}
       </div>
-      {!shown && <p className="py-6 text-muted">Loading runs...</p>}
+      {!shown && <p className="py-6 text-muted-foreground">Loading runs...</p>}
       {shown?.length === 0 && (
-        <p className="py-6 text-muted">
+        <p className="py-6 text-muted-foreground">
           {q ? "No runs match." : <>No runs yet. Start one above, or run <code className="font-mono">pnpm pipeline run &lt;file.mp3&gt;</code>.</>}
         </p>
       )}
       {shown && shown.length > 0 && (
-        <div className="text-[13px]">
-          <div className="grid grid-cols-[32px_minmax(0,2.4fr)_minmax(0,1fr)_70px_minmax(0,1.3fr)_minmax(0,1.2fr)_70px_48px] items-center gap-3 border-b border-line px-2 pb-1.5 text-[11px] font-medium text-muted">
-            <span className="text-center">#</span>
-            <span>Title</span>
-            <span>Status</span>
-            <span className="text-right">Orders</span>
-            <span>Webhooks</span>
-            <span>Providers</span>
-            <span>Started</span>
-            <span className="flex justify-end">
-              <ClockIcon className="h-3.5 w-3.5" />
-            </span>
-          </div>
-          <div className="tracks mt-1">
+        <Table className="table-fixed text-[13px]">
+          <TableHeader className="[&_tr]:border-line">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="h-7 w-10 text-center text-[11px] text-muted-foreground">#</TableHead>
+              <TableHead className="h-7 w-[32%] text-[11px] text-muted-foreground">Title</TableHead>
+              <TableHead className="h-7 w-[13%] text-[11px] text-muted-foreground">Status</TableHead>
+              <TableHead className="h-7 w-16 text-right text-[11px] text-muted-foreground">Orders</TableHead>
+              <TableHead className="h-7 text-[11px] text-muted-foreground">Webhooks</TableHead>
+              <TableHead className="h-7 text-[11px] text-muted-foreground">Providers</TableHead>
+              <TableHead className="h-7 w-20 text-[11px] text-muted-foreground">Started</TableHead>
+              <TableHead className="h-7 w-14 text-[11px] text-muted-foreground">
+                <ClockIcon className="ml-auto size-3.5" />
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="before:block before:h-1">
             {shown.map((r, i) => {
               const busy = r.status === "running" || r.status === "queued";
               return (
-                <Link key={r.id} href={`/runs/${r.id}`} className="group grid grid-cols-[32px_minmax(0,2.4fr)_minmax(0,1fr)_70px_minmax(0,1.3fr)_minmax(0,1.2fr)_70px_48px] items-center gap-3 px-2 py-1.5">
-                  <span className="grid place-items-center text-[12px] tabular-nums text-muted">
+                <TableRow key={r.id} className={ROW} onClick={() => router.push(`/runs/${r.id}`)}>
+                  <TableCell className="py-1.5 text-center text-[12px] tabular-nums text-muted-foreground">
                     {busy ? (
-                      <Equalizer className="text-accent" />
+                      <Equalizer className="mx-auto text-brand" />
                     ) : (
                       <>
                         <span className="group-hover:hidden">{i + 1}</span>
-                        <PlayIcon className="hidden h-3.5 w-3.5 text-ink group-hover:block" />
+                        <PlayIcon className="mx-auto hidden size-3.5 text-foreground group-hover:block" />
                       </>
                     )}
-                  </span>
-                  <span className="flex min-w-0 items-center gap-2.5">
-                    <Artwork seed={r.source_file} size="sm" className="!h-9 !w-9" />
-                    <span className="min-w-0">
-                      <span className={`block truncate font-medium ${busy ? "text-accent" : ""}`}>{r.source_file.replace(/\.mp3$/, "")}</span>
-                      <span className="block truncate font-mono text-[11px] text-muted">{r.id}</span>
-                    </span>
-                  </span>
-                  <span className="min-w-0">
+                  </TableCell>
+                  <TableCell className="py-1.5">
+                    <Link href={`/runs/${r.id}`} className="flex min-w-0 items-center gap-2.5" onClick={(e) => e.stopPropagation()}>
+                      <Artwork seed={r.source_file} size="sm" className="!h-9 !w-9" />
+                      <span className="min-w-0">
+                        <span className={cn("block truncate font-medium", busy && "text-brand")}>{r.source_file.replace(/\.mp3$/, "")}</span>
+                        <span className="block truncate font-mono text-[11px] text-muted-foreground">{r.id}</span>
+                      </span>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="py-1.5">
                     <Badge value={r.status} label={r.status === "running" ? `${r.stage}...` : undefined} />
                     {r.error && (
-                      <span className="mt-0.5 block truncate text-[11px] text-rose-600 dark:text-rose-400" title={r.error}>
+                      <span className="mt-0.5 block truncate text-[11px] text-destructive" title={r.error}>
                         {r.error}
                       </span>
                     )}
-                  </span>
-                  <span className="text-right tabular-nums">{r.order_count}</span>
-                  <span className="truncate text-muted">
-                    {r.delivered} sent{r.undelivered > 0 && <span className="text-rose-600 dark:text-rose-400"> · {r.undelivered} pending</span>}
-                  </span>
-                  <span className="truncate text-muted">
+                  </TableCell>
+                  <TableCell className="py-1.5 text-right tabular-nums">{r.order_count}</TableCell>
+                  <TableCell className="truncate py-1.5 text-muted-foreground">
+                    {r.delivered} sent{r.undelivered > 0 && <span className="text-destructive"> · {r.undelivered} pending</span>}
+                  </TableCell>
+                  <TableCell className="truncate py-1.5 text-muted-foreground">
                     {r.transcriber ?? "-"} · {r.extractor ?? "-"}
-                  </span>
-                  <span className="text-muted">{when(r.created_at)}</span>
-                  <span className="text-right tabular-nums text-muted">{dur(r.duration_s)}</span>
-                </Link>
+                  </TableCell>
+                  <TableCell className="py-1.5 text-muted-foreground">{when(r.created_at)}</TableCell>
+                  <TableCell className="py-1.5 text-right tabular-nums text-muted-foreground">{dur(r.duration_s)}</TableCell>
+                </TableRow>
               );
             })}
-          </div>
-        </div>
+          </TableBody>
+        </Table>
       )}
     </section>
   );

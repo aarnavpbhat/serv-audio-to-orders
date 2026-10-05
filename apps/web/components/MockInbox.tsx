@@ -1,6 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
+import { cn } from "@/lib/utils";
 import { Badge } from "./Badge";
 import { JsonView } from "./JsonView";
 
@@ -36,13 +42,18 @@ export function MockInbox() {
   const [draft, setDraft] = useState<Settings>({ mode: "fail_500", remaining: 1, retry_after_s: 3 });
   const [inbox, setInbox] = useState<InboxRow[]>([]);
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/mock-webhook", { cache: "no-store" });
-    if (!res.ok) return;
-    const json = (await res.json()) as { settings: Settings; inbox: InboxRow[] };
-    setSettings(json.settings);
-    setInbox(json.inbox);
-  }, []);
+  // State is set in the promise callback, never synchronously inside the polling effect.
+  const load = useCallback(
+    () =>
+      fetch("/api/mock-webhook", { cache: "no-store" })
+        .then((res) => (res.ok ? (res.json() as Promise<{ settings: Settings; inbox: InboxRow[] }>) : null))
+        .then((json) => {
+          if (!json) return;
+          setSettings(json.settings);
+          setInbox(json.inbox);
+        }),
+    [],
+  );
 
   useEffect(() => {
     void load();
@@ -59,61 +70,69 @@ export function MockInbox() {
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[300px_1fr]">
-      <section className="panel space-y-3 p-4">
-        <h2 className="text-[15px] font-bold">Failure Mode</h2>
-        <div className="rounded-lg bg-fill px-3 py-2">
-          Now: <span className="font-semibold">{MODES.find((m) => m.value === settings?.mode)?.label ?? "..."}</span>
-          {settings && settings.mode !== "ok" && <span className="text-muted"> · {settings.remaining < 0 ? "every request" : `next ${settings.remaining} request(s)`}</span>}
-        </div>
-        <div className="space-y-1">
-          {MODES.map((m) => (
-            <label key={m.value} className="flex cursor-pointer items-start gap-2 rounded-md p-1.5 hover:bg-fill">
-              <input type="radio" name="mode" className="mt-0.5 accent-[var(--c-accent)]" checked={draft.mode === m.value} onChange={() => setDraft({ ...draft, mode: m.value })} />
-              <span>
-                {m.label}
-                <span className="block text-[11.5px] text-muted">{m.help}</span>
-              </span>
-            </label>
-          ))}
-        </div>
-        {draft.mode !== "ok" && (
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-xs">
-              <span className="label">Fail next N</span>
-              <input type="number" min={-1} value={draft.remaining} onChange={(e) => setDraft({ ...draft, remaining: Number(e.target.value) })} className="field mt-1" />
-              <span className="text-[10.5px] text-muted">-1 = always</span>
-            </label>
-            {draft.mode === "rate_limit_429" && (
-              <label className="text-xs">
-                <span className="label">Retry-After (s)</span>
-                <input type="number" min={0} value={draft.retry_after_s} onChange={(e) => setDraft({ ...draft, retry_after_s: Number(e.target.value) })} className="field mt-1" />
-              </label>
-            )}
+      <Card size="sm">
+        <CardHeader>
+          <CardTitle className="text-[15px] font-bold">Failure Mode</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="rounded-lg bg-muted px-3 py-2">
+            Now: <span className="font-semibold">{MODES.find((m) => m.value === settings?.mode)?.label ?? "..."}</span>
+            {settings && settings.mode !== "ok" && <span className="text-muted-foreground"> · {settings.remaining < 0 ? "every request" : `next ${settings.remaining} request(s)`}</span>}
           </div>
-        )}
-        <div className="flex gap-2">
-          <button type="button" className="btn-accent" onClick={() => void apply(draft)}>
-            Apply
-          </button>
-          <button type="button" className="btn" onClick={() => void apply({ mode: "ok", remaining: 0, retry_after_s: 3 })}>
-            Reset to 200
-          </button>
-        </div>
-      </section>
+          <RadioGroup value={draft.mode} onValueChange={(v) => setDraft({ ...draft, mode: v as Settings["mode"] })} className="gap-1">
+            {MODES.map((m) => (
+              <Label key={m.value} htmlFor={`mode-${m.value}`} className="flex cursor-pointer items-start gap-2 rounded-md p-1.5 text-[13px] font-normal hover:bg-muted">
+                <RadioGroupItem id={`mode-${m.value}`} value={m.value} className="mt-0.5" />
+                <span>
+                  {m.label}
+                  <span className="block text-[11.5px] text-muted-foreground">{m.help}</span>
+                </span>
+              </Label>
+            ))}
+          </RadioGroup>
+          {draft.mode !== "ok" && (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="fail-next" className="label">
+                  Fail next N
+                </Label>
+                <Input id="fail-next" type="number" min={-1} value={draft.remaining} onChange={(e) => setDraft({ ...draft, remaining: Number(e.target.value) })} className="h-7 md:text-[13px]" />
+                <span className="text-[10.5px] text-muted-foreground">-1 = always</span>
+              </div>
+              {draft.mode === "rate_limit_429" && (
+                <div className="space-y-1">
+                  <Label htmlFor="retry-after" className="label">
+                    Retry-After (s)
+                  </Label>
+                  <Input id="retry-after" type="number" min={0} value={draft.retry_after_s} onChange={(e) => setDraft({ ...draft, retry_after_s: Number(e.target.value) })} className="h-7 md:text-[13px]" />
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Button size="sm" className="font-semibold" onClick={() => void apply(draft)}>
+              Apply
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => void apply({ mode: "ok", remaining: 0, retry_after_s: 3 })}>
+              Reset to 200
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <section className="min-w-0">
         <div className="mb-2 flex items-baseline justify-between">
           <h2 className="section-title">Inbox</h2>
-          <div className="flex items-center gap-3 text-[12px] text-muted">
+          <div className="flex items-center gap-3 text-[12px] text-muted-foreground">
             <span>
               {inbox.length} requests · {accepted} accepted
             </span>
-            <button type="button" className="btn" onClick={() => void fetch("/api/mock-webhook", { method: "DELETE" }).then(load)}>
+            <Button size="sm" variant="secondary" onClick={() => void fetch("/api/mock-webhook", { method: "DELETE" }).then(load)}>
               Clear
-            </button>
+            </Button>
           </div>
         </div>
-        {!inbox.length && <p className="py-3 text-muted">Nothing received yet. Start a run with delivery enabled.</p>}
+        {!inbox.length && <p className="py-3 text-muted-foreground">Nothing received yet. Start a run with delivery enabled.</p>}
         <div className="tracks">
           {inbox.map((r) => {
             const body = (() => {
@@ -126,13 +145,13 @@ export function MockInbox() {
             return (
               <div key={r.id} className="px-3 py-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-xs text-muted">{new Date(r.received_at).toLocaleTimeString()}</span>
-                  <span className={`rounded px-1.5 py-0.5 font-mono text-xs ${r.status_returned < 300 ? "bg-emerald-500/12 text-emerald-700 dark:text-emerald-400" : "bg-rose-500/12 text-rose-700 dark:text-rose-400"}`}>{r.status_returned}</span>
+                  <span className="font-mono text-xs text-muted-foreground">{new Date(r.received_at).toLocaleTimeString()}</span>
+                  <span className={cn("rounded px-1.5 py-0.5 font-mono text-xs", r.status_returned < 300 ? "bg-emerald-500/12 text-emerald-700 dark:text-emerald-400" : "bg-destructive/12 text-destructive")}>{r.status_returned}</span>
                   <span className="font-mono text-xs">{r.webhook_id}</span>
-                  <span className="text-xs text-muted">attempt {r.attempt ?? "?"}</span>
+                  <span className="text-xs text-muted-foreground">attempt {r.attempt ?? "?"}</span>
                   {r.signature_ok ? <span className="text-xs text-emerald-600 dark:text-emerald-400">signature ok</span> : <span className="text-xs text-rose-600 dark:text-rose-400">signature {r.verify_reason}</span>}
                   {r.duplicate === 1 && <Badge value="pending" label="duplicate (deduped)" />}
-                  {r.mode !== "ok" && <span className="text-xs text-muted">simulated {r.mode}</span>}
+                  {r.mode !== "ok" && <span className="text-xs text-muted-foreground">simulated {r.mode}</span>}
                   {body?.status && <Badge value={body.status} />}
                 </div>
                 <div className="mt-1 flex gap-4">

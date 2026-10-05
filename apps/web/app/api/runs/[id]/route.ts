@@ -1,7 +1,7 @@
 import { getRunDetail } from "@/lib/data";
+import { assertFound, wrapAsync } from "@/lib/error-handler";
 
-export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+export const GET = wrapAsync(async (_req: Request, ctx: { params: Promise<{ id: string }> }) => {
   const { id } = await ctx.params;
-  const run = getRunDetail(id);
-  return run ? Response.json(run) : Response.json({ error: "not found" }, { status: 404 });
-}
+  return Response.json(assertFound(getRunDetail(id), "Run"));
+});

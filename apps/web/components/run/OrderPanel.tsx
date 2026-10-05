@@ -2,6 +2,9 @@
 
 import type { AppliedEvent } from "@serv/pipeline/build/replay";
 import type { ComboOpportunity, NeedsReviewItem, NotOrderedItem, OrderEvent, OrderItem } from "@serv/pipeline/schemas/index";
+import { ChevronRightIcon } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/Collapsible";
+import { cn } from "@/lib/utils";
 import { Badge, Flag } from "../Badge";
 import { Equalizer } from "../Icons";
 import { JsonView } from "../JsonView";
@@ -26,7 +29,7 @@ const ROW = "grid grid-cols-[28px_minmax(0,1fr)_auto_72px] items-center gap-3 px
 
 function Confidence({ rec, com }: { rec: number; com: number }) {
   return (
-    <span className="flex gap-2 font-mono text-[10.5px] text-muted" title="recognition / commitment confidence">
+    <span className="flex gap-2 font-mono text-[10.5px] text-muted-foreground" title="recognition / commitment confidence">
       <span>rec {pct(rec)}</span>
       <span>com {pct(com)}</span>
     </span>
@@ -42,13 +45,13 @@ function ItemRow({ n, item, name }: { n: number; item: OrderItem; name: (id: str
   const missing = item.components?.some((c) => !c.catalog_id && !c.declined);
   return (
     <div className={ROW}>
-      <span className="text-center text-[12px] tabular-nums text-muted">{n}</span>
+      <span className="text-center text-[12px] tabular-nums text-muted-foreground">{n}</span>
       <span className="min-w-0">
         <span className="block truncate font-medium">
           {item.name}
-          {item.quantity > 1 && <span className="ml-1.5 text-muted">×{item.quantity}</span>}
+          {item.quantity > 1 && <span className="ml-1.5 text-muted-foreground">×{item.quantity}</span>}
         </span>
-        {details.length > 0 && <span className={`block truncate text-[11.5px] ${missing ? "text-rose-600 dark:text-rose-400" : "text-muted"}`}>{details.join(" · ")}</span>}
+        {details.length > 0 && <span className={`block truncate text-[11.5px] ${missing ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"}`}>{details.join(" · ")}</span>}
       </span>
       <Confidence rec={item.recognition_confidence} com={item.commitment_confidence} />
       <span className="text-right tabular-nums">{money(item.unit_price * item.quantity)}</span>
@@ -63,10 +66,10 @@ export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "f
   return (
     <div className={phase === "waiting" ? "opacity-45" : ""}>
       <div className="flex flex-wrap items-center gap-2 px-2 pb-1.5">
-        <span className="font-mono text-[11px] text-muted">{order.order_id}</span>
+        <span className="font-mono text-[11px] text-muted-foreground">{order.order_id}</span>
         {phase === "final" && order.status && <Badge value={order.status} />}
         {phase === "live" && (
-          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-accent">
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-brand">
             <Equalizer /> Building
           </span>
         )}
@@ -90,22 +93,22 @@ export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "f
             <span className="min-w-0">
               <span className="block truncate font-medium">
                 &ldquo;{n.raw_text ?? name(n.catalog_id)}&rdquo;
-                {n.quantity > 1 && <span className="ml-1.5 text-muted">×{n.quantity}</span>}
+                {n.quantity > 1 && <span className="ml-1.5 text-muted-foreground">×{n.quantity}</span>}
               </span>
               <span className="block truncate text-[11.5px] text-amber-700 dark:text-amber-400">
                 Needs review{n.candidates.length > 0 && `: ${n.candidates.map((c) => `${name(c.catalog_id)} ${c.score.toFixed(2)}`).join(", ")}`}
               </span>
             </span>
             <span />
-            <span className="text-right text-muted">-</span>
+            <span className="text-right text-muted-foreground">-</span>
           </div>
         ))}
         {order.not_ordered.map((n, k) => (
           <div key={`no${k}`} className={ROW}>
-            <span className="text-center text-muted">-</span>
+            <span className="text-center text-muted-foreground">-</span>
             <span className="min-w-0">
-              <span className="block truncate text-muted line-through">{name(n.catalog_id) || n.raw_text}</span>
-              <span className="block truncate text-[11.5px] text-muted">
+              <span className="block truncate text-muted-foreground line-through">{name(n.catalog_id) || n.raw_text}</span>
+              <span className="block truncate text-[11.5px] text-muted-foreground">
                 {n.reason.replace(/_/g, " ")}
                 {n.replaced_by ? ` by ${name(n.replaced_by)}` : ""}
               </span>
@@ -114,19 +117,19 @@ export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "f
             <span />
           </div>
         ))}
-        {order.items.length + order.needs_review.length + order.not_ordered.length === 0 && <div className="px-2 py-2 text-muted">Nothing ordered yet.</div>}
+        {order.items.length + order.needs_review.length + order.not_ordered.length === 0 && <div className="px-2 py-2 text-muted-foreground">Nothing ordered yet.</div>}
       </div>
 
       {order.combo_opportunities.map((c, k) => (
-        <div key={k} className="mx-2 mt-2 rounded-lg bg-accent-soft px-3 py-1.5 text-[12px]">
-          <span className="font-semibold text-accent">Combo opportunity:</span> {c.combo_name} would cost {money(c.combo_price)} instead of {money(c.separate_total)}, saving {money(c.savings)}
+        <div key={k} className="mx-2 mt-2 rounded-lg bg-brand-soft px-3 py-1.5 text-[12px]">
+          <span className="font-semibold text-brand">Combo opportunity:</span> {c.combo_name} would cost {money(c.combo_price)} instead of {money(c.separate_total)}, saving {money(c.savings)}
           {c.customer_declined_combo && <span className="font-semibold"> · customer declined the meal</span>}
         </div>
       ))}
 
       <div className="mt-1 flex items-center justify-end gap-3 border-t border-line px-2 pt-2 text-[12px]">
-        <span className="text-muted">confidence {pct(order.overall_confidence)}</span>
-        {spoken !== null && <span className={mismatch ? "font-medium text-rose-600 dark:text-rose-400" : "text-muted"}>crew said {money(spoken)}</span>}
+        <span className="text-muted-foreground">confidence {pct(order.overall_confidence)}</span>
+        {spoken !== null && <span className={mismatch ? "font-medium text-rose-600 dark:text-rose-400" : "text-muted-foreground"}>crew said {money(spoken)}</span>}
         <span className="text-[14px] font-semibold tabular-nums">{money(order.totals.computed)}</span>
       </div>
     </div>
@@ -136,30 +139,35 @@ export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "f
 export function EventLog({ events, log, time }: { events: OrderEvent[]; log: AppliedEvent[]; time: number | null }) {
   const notes = new Map(log.map((l) => [l.event_id, l]));
   return (
-    <details className="mt-2 px-2">
-      <summary className="cursor-pointer text-[11px] font-medium text-muted hover:text-ink">Events ({events.length}): the LLM proposes, code decides</summary>
-      <ol className="tracks mt-2 font-mono text-[11px]">
-        {events.map((e) => {
-          const l = notes.get(e.event_id);
-          const reached = time === null || e.t_s === null || e.t_s <= time;
-          return (
-            <li key={e.event_id} className={`flex gap-2 px-2 py-1 ${reached ? "" : "opacity-35"} ${l && !l.applied ? "text-rose-600 dark:text-rose-400" : ""}`}>
-              <span className="w-8 text-muted">{e.event_id}</span>
-              <span className="w-32 font-semibold">{e.type}</span>
-              <span className="flex-1">
-                {[e.catalog_id ?? (e.raw_text ? `"${e.raw_text}"` : null), e.quantity ? `x${e.quantity}` : null, e.size, e.slot && `slot=${e.slot}`, e.target_line_ref && `-> ${e.target_line_ref}`, e.modifiers.length ? e.modifiers.join(",") : null, e.amount !== null ? `$${e.amount}` : null]
-                  .filter(Boolean)
-                  .join(" ")}
-                {l && <span className="ml-2 text-muted">· {l.note}</span>}
-              </span>
-              <span className="text-muted">
-                r{Math.round(e.recognition_confidence * 100)} c{Math.round(e.commitment_confidence * 100)}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-    </details>
+    <Collapsible className="group/events mt-2 px-2">
+      <CollapsibleTrigger className="flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground hover:text-foreground">
+        <ChevronRightIcon className="size-3 transition-transform group-data-[state=open]/events:rotate-90" />
+        Events ({events.length}): the LLM proposes, code decides
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <ol className="tracks mt-2 font-mono text-[11px]">
+          {events.map((e) => {
+            const l = notes.get(e.event_id);
+            const reached = time === null || e.t_s === null || e.t_s <= time;
+            return (
+              <li key={e.event_id} className={cn("flex gap-2 px-2 py-1", !reached && "opacity-35", l && !l.applied && "text-destructive")}>
+                <span className="w-8 text-muted-foreground">{e.event_id}</span>
+                <span className="w-32 font-semibold">{e.type}</span>
+                <span className="flex-1">
+                  {[e.catalog_id ?? (e.raw_text ? `"${e.raw_text}"` : null), e.quantity ? `x${e.quantity}` : null, e.size, e.slot && `slot=${e.slot}`, e.target_line_ref && `-> ${e.target_line_ref}`, e.modifiers.length ? e.modifiers.join(",") : null, e.amount !== null ? `$${e.amount}` : null]
+                    .filter(Boolean)
+                    .join(" ")}
+                  {l && <span className="ml-2 text-muted-foreground">· {l.note}</span>}
+                </span>
+                <span className="text-muted-foreground">
+                  r{Math.round(e.recognition_confidence * 100)} c{Math.round(e.commitment_confidence * 100)}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 

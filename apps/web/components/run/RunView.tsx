@@ -6,7 +6,11 @@ import { Catalog } from "@serv/pipeline/menu/catalog";
 import { FuzzyMatcher } from "@serv/pipeline/menu/fuzzy";
 import { postprocess } from "@serv/pipeline/postprocess/postprocess";
 import type { Segment } from "@serv/pipeline/schemas/index";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Toggle } from "@/components/ui/Toggle";
 import type { OrderView, RunDetail } from "@/lib/data";
+import { cn } from "@/lib/utils";
 import { Artwork } from "../Artwork";
 import { Badge, Placeholder } from "../Badge";
 import { CheckIcon, Equalizer, LyricsIcon, PauseIcon, PlayIcon } from "../Icons";
@@ -149,25 +153,25 @@ export function RunView({
           <Artwork seed={run.source_file} size="xl" label={run.status} />
           <div className="min-w-0 flex-1 pb-1">
             <div className="label text-[10.5px]">Run</div>
-            <h1 className="mt-1 break-words text-[30px] font-bold leading-tight tracking-[-0.02em]">{title}</h1>
-            <div className="mt-0.5 text-[19px] font-medium text-accent">
+            <h1 className="mt-1 break-words font-heading text-[30px] font-bold leading-tight tracking-[-0.02em]">{title}</h1>
+            <div className="mt-0.5 text-[19px] font-medium text-brand">
               {run.transcriber ?? "?"} · {run.extractor ?? "?"}
             </div>
-            <div className="mt-1 text-[12px] text-muted">
+            <div className="mt-1 text-[12px] text-muted-foreground">
               {new Date(run.created_at).toLocaleString()}
               {run.transcript && ` · ${run.transcript.audio.duration_s.toFixed(1)}s · ${run.transcript.audio.channels} ch · ${run.transcript.audio.sample_rate} Hz ${run.transcript.audio.codec}`}
               {` · ${run.orders.length} order${run.orders.length === 1 ? "" : "s"} · $${total.toFixed(2)}`}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2.5">
-              <button type="button" className="btn-accent w-28 rounded-lg py-2" disabled={!duration} onClick={() => wave.current?.playPause()}>
-                {playing ? <PauseIcon className="h-3.5 w-3.5" /> : <PlayIcon className="h-3.5 w-3.5" />}
+              <Button size="lg" className="w-28 font-semibold" disabled={!duration} onClick={() => wave.current?.playPause()}>
+                {playing ? <PauseIcon className="size-3.5" /> : <PlayIcon className="size-3.5" />}
                 {playing ? "Pause" : "Play"}
-              </button>
-              <button type="button" className={`btn w-36 rounded-lg py-2 ${sync ? "!text-accent" : ""}`} onClick={() => setSync(!sync)} aria-pressed={sync}>
-                <LyricsIcon className="h-4 w-4" />
+              </Button>
+              <Toggle size="lg" pressed={sync} onPressedChange={setSync} className="w-36 bg-secondary font-medium hover:bg-fill-strong data-[state=on]:bg-secondary data-[state=on]:text-brand">
+                <LyricsIcon className="size-4" />
                 {sync ? "Replaying live" : "Live replay"}
-              </button>
+              </Toggle>
               <Badge value={run.status} />
               <ol className="ml-auto flex items-center gap-1 text-[11px]">
                 {STAGES.slice(0, -1).map((s, i) => {
@@ -175,7 +179,7 @@ export function RunView({
                   const now = i === stageIdx && run.status === "running";
                   const failed = run.status === "failed" && i === stageIdx;
                   return (
-                    <li key={s} className={`flex items-center gap-1 rounded-full px-2.5 py-1 font-medium ${done ? "bg-fill text-ink" : now ? "bg-accent-soft text-accent" : failed ? "bg-rose-500/12 text-rose-600" : "text-faint"}`}>
+                    <li key={s} className={cn("flex items-center gap-1 rounded-full px-2.5 py-1 font-medium", done ? "bg-muted text-foreground" : now ? "bg-brand-soft text-brand" : failed ? "bg-destructive/12 text-destructive" : "text-faint")}>
                       {done && <CheckIcon className="h-3 w-3 text-emerald-500" />}
                       {now && <Equalizer />}
                       {s}
@@ -187,8 +191,8 @@ export function RunView({
           </div>
         </header>
 
-        {run.error && <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-rose-600 dark:text-rose-400">{run.error}</p>}
-        {run.status === "queued" && run.queue_position >= 0 && <p className="text-muted">Queued (position {run.queue_position + 1})</p>}
+        {run.error && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">{run.error}</p>}
+        {run.status === "queued" && run.queue_position >= 0 && <p className="text-muted-foreground">Queued (position {run.queue_position + 1})</p>}
 
         <Waveform
           ref={wave}
@@ -209,9 +213,9 @@ export function RunView({
           <section className="min-w-0 space-y-7">
             <div className="flex items-baseline justify-between">
               <h2 className="section-title">Orders</h2>
-              <span className="text-[12px] text-muted">{segments.length} conversations</span>
+              <span className="text-[12px] text-muted-foreground">{segments.length} conversations</span>
             </div>
-            {!segments.length && <p className="text-muted">Orders appear after segmentation and extraction.</p>}
+            {!segments.length && <p className="text-muted-foreground">Orders appear after segmentation and extraction.</p>}
             {segments.map((seg, si) => {
               const finals = ordersBySeg.get(seg.segment_id) ?? [];
               const phase: "final" | "live" | "waiting" = !sync || time >= seg.end_s ? "final" : time < seg.start_s ? "waiting" : "live";
@@ -221,19 +225,19 @@ export function RunView({
               return (
                 <div key={seg.segment_id}>
                   <button type="button" onClick={() => seek(seg.start_s)} className="group mb-2 flex w-full items-baseline gap-2 border-b border-line px-2 pb-1.5 text-left">
-                    <span className={`text-[14px] font-semibold ${current ? "text-accent" : "group-hover:text-accent"}`}>Conversation {si + 1}</span>
-                    {current && <Equalizer className="text-accent" />}
-                    <span className="text-[12px] text-muted">
+                    <span className={cn("text-[14px] font-semibold", current ? "text-brand" : "group-hover:text-brand")}>Conversation {si + 1}</span>
+                    {current && <Equalizer className="text-brand" />}
+                    <span className="text-[12px] text-muted-foreground">
                       {fmt(seg.start_s)} to {fmt(seg.end_s)}
                       {seg.has_greeting && " · greeting"}
                       {seg.has_closing ? " · closing" : ""}
                       {seg.non_customer_ids.length > 0 && ` · ${seg.non_customer_ids.length} chatter excluded`}
                     </span>
                     {!seg.has_closing && <span className="text-[12px] text-orange-600 dark:text-orange-400">no closing</span>}
-                    <span className="ml-auto font-mono text-[11px] text-muted">word conf {seg.mean_word_conf.toFixed(2)}</span>
+                    <span className="ml-auto font-mono text-[11px] text-muted-foreground">word conf {seg.mean_word_conf.toFixed(2)}</span>
                   </button>
                   <div className="space-y-5">
-                    {shown.length === 0 && <div className="px-2 py-2 text-muted">{run.status === "running" ? "Extracting..." : "No order"}</div>}
+                    {shown.length === 0 && <div className="px-2 py-2 text-muted-foreground">{run.status === "running" ? "Extracting..." : "No order"}</div>}
                     {shown.map((o) => (
                       <OrderCard key={o.order_id} order={o} phase={phase} name={name} />
                     ))}
@@ -263,7 +267,7 @@ export function RunView({
             {run.transcript ? (
               <Transcript seed={run.source_file} transcript={run.transcript} segments={segments} time={time} follow={sync} onSeek={seek} />
             ) : (
-              <div className="panel p-6 text-muted">Transcript appears after the transcribe stage.</div>
+              <Card className="p-6 text-muted-foreground">Transcript appears after the transcribe stage.</Card>
             )}
           </div>
         </div>
@@ -307,7 +311,7 @@ export function RunView({
 function Note({ k, v, placeholder }: { k: string; v: React.ReactNode; placeholder?: string | null }) {
   return (
     <div>
-      <dt className="flex items-center gap-1.5 text-muted">
+      <dt className="flex items-center gap-1.5 text-muted-foreground">
         {k}
         {placeholder && <Placeholder note={placeholder} />}
       </dt>
