@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-06T07:05:45.180Z",
+  "generated_at": "2026-10-06T16:33:54.539Z",
   "config": {
     "layout": "mono",
     "scenario": null,
@@ -38,13 +38,13 @@
     "source": "synthetic"
   },
   "live": {
-    "close_latency_p50_ms": 3001,
-    "close_latency_p95_ms": 45001,
+    "close_latency_p50_ms": 3000,
+    "close_latency_p95_ms": 45000,
     "close_latency_by_trigger": {
       "settled": {
         "orders": 63,
-        "p50_ms": 3001,
-        "p95_ms": 3002
+        "p50_ms": 3000,
+        "p95_ms": 3001
       },
       "end_of_input": {
         "orders": 2,
@@ -53,12 +53,12 @@
       },
       "idle_timeout": {
         "orders": 7,
-        "p50_ms": 45001,
+        "p50_ms": 45000,
         "p95_ms": 45002
       },
       "next_car": {
         "orders": 5,
-        "p50_ms": 33506,
+        "p50_ms": 33505,
         "p95_ms": 42517
       }
     },
@@ -316,7 +316,7 @@
         "live check"
       ],
       "pass": true,
-      "detail": "undetermined; review outcome_undetermined"
+      "detail": "undetermined; review "
     },
     {
       "row": 31,
@@ -461,10 +461,10 @@
           }
         ]
       },
-      "run_id": "run_01M480G830YKMSJ6VRYJADJSV4",
+      "run_id": "run_01M4910KP4AZ2X865YQZBPED7T",
       "layer_b": [
         {
-          "order_id": "ord_01M480G8ZD9Z8BD674QEQWZR4R",
+          "order_id": "ord_01M4910KV70QTJZ4NTA6Z9DJR0",
           "ticket_id": "pos_01_simple_0",
           "exact": false,
           "diffs": [
@@ -509,7 +509,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -561,10 +561,10 @@
           }
         ]
       },
-      "run_id": "run_01M480G90562QE1KWYNX5RC8PB",
+      "run_id": "run_01M4910KVX2ESV2HKBK5KTF10X",
       "layer_b": [
         {
-          "order_id": "ord_01M480G953PA6BX49396FGPNZ7",
+          "order_id": "ord_01M4910M0JJ03WE1DXY2X45NW7",
           "ticket_id": "pos_02_combo_slot_0",
           "exact": true,
           "diffs": []
@@ -600,7 +600,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -652,10 +652,10 @@
           }
         ]
       },
-      "run_id": "run_01M480G957DT98K6A9SQJ6YX68",
+      "run_id": "run_01M4910M0PHPBFA2PR9VGDKNAY",
       "layer_b": [
         {
-          "order_id": "ord_01M480G99Y7XG2DP3ERC5WH58A",
+          "order_id": "ord_01M4910M58GYFGXAZ5FWF99AM4",
           "ticket_id": "pos_03_combo_missing_drink_0",
           "exact": true,
           "diffs": []
@@ -663,11 +663,11 @@
       ],
       "live": {
         "close_ms": [
-          3002
+          3001
         ],
         "close_by": {
           "settled": [
-            3002
+            3001
           ]
         },
         "reopens": 0,
@@ -691,7 +691,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -743,10 +743,10 @@
           }
         ]
       },
-      "run_id": "run_01M480G9A1DKVT6VA07DS2ZD37",
+      "run_id": "run_01M4910M5BCCME5DFETKRY0KVA",
       "layer_b": [
         {
-          "order_id": "ord_01M480G9F1KZEDXH2WBX1X76JW",
+          "order_id": "ord_01M4910MA4GQ5S74TSMX1A445Y",
           "ticket_id": "pos_04_correction_0",
           "exact": true,
           "diffs": []
@@ -782,7 +782,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -835,10 +835,10 @@
           }
         ]
       },
-      "run_id": "run_01M480G9F504PQ4WBR2M3QWZBY",
+      "run_id": "run_01M4910MA74T1YFNJWQ6W72FCR",
       "layer_b": [
         {
-          "order_id": "ord_01M480G9MA5572BDA8R5S4QS14",
+          "order_id": "ord_01M4910MFBR99RMHY18DA0Z2A5",
           "ticket_id": "pos_05_removed_and_upsell_0",
           "exact": true,
           "diffs": []
@@ -874,7 +874,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -926,7 +926,7 @@
           }
         ]
       },
-      "run_id": "run_01M480G9MEZ4KWXF1W46P8DKAG",
+      "run_id": "run_01M4910MFFGCFPCDEVDQPY8QN9",
       "layer_b": [],
       "live": {
         "close_ms": [
@@ -958,7 +958,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1010,7 +1010,7 @@
           }
         ]
       },
-      "run_id": "run_01M480G9S9MWMNXFC5961N68PF",
+      "run_id": "run_01M4910MM5C2KW6PZQ33P88K8M",
       "layer_b": [],
       "live": {
         "close_ms": [
@@ -1042,7 +1042,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1095,10 +1095,10 @@
           }
         ]
       },
-      "run_id": "run_01M480G9Y7SJEYPAJWD7CHJ1HJ",
+      "run_id": "run_01M4910MS4PSTXRETZ9PQSTEGD",
       "layer_b": [
         {
-          "order_id": "ord_01M480GA33Z6KK5KHB9M4B1MPT",
+          "order_id": "ord_01M4910MXXHCWJ1RA5EC2DD5QD",
           "ticket_id": "pos_08_per_unit_and_hesitation_0",
           "exact": true,
           "diffs": []
@@ -1134,7 +1134,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1187,10 +1187,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GA370T91RN42FVQQDNFM",
+      "run_id": "run_01M4910MY06315TZYQW69TGNG6",
       "layer_b": [
         {
-          "order_id": "ord_01M480GA88JB4NV7TARVHDA0J2",
+          "order_id": "ord_01M4910N2Z9ZJN07FBZ9DEK20C",
           "ticket_id": "pos_09_reference_back_0",
           "exact": true,
           "diffs": []
@@ -1226,7 +1226,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1278,10 +1278,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GA8EZDFJ1GJGCW3PB52V",
+      "run_id": "run_01M4910N33J3TCJZAXSYW8RQJF",
       "layer_b": [
         {
-          "order_id": "ord_01M480GADBG8969W5AZWBVV762",
+          "order_id": "ord_01M4910N7Y3VQVZ1T5CMJ4ZVMY",
           "ticket_id": "pos_10_number_ambiguity_0",
           "exact": true,
           "diffs": []
@@ -1317,7 +1317,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1370,10 +1370,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GADFHPSG053QZA4THSR4",
+      "run_id": "run_01M4910N81BRK4S7JBPMW6Y1NQ",
       "layer_b": [
         {
-          "order_id": "ord_01M480GAJJZ6P0QCZ4867BXP2D",
+          "order_id": "ord_01M4910ND2696DWKD0X45ZACHJ",
           "ticket_id": "pos_11_declined_upsell_out_of_stock_0",
           "exact": true,
           "diffs": []
@@ -1381,11 +1381,11 @@
       ],
       "live": {
         "close_ms": [
-          3002
+          3001
         ],
         "close_by": {
           "settled": [
-            3002
+            3001
           ]
         },
         "reopens": 0,
@@ -1409,7 +1409,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1461,10 +1461,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GAJPYPMCMV7CWD93NVGY",
+      "run_id": "run_01M4910ND5MWMFTWJJSPM6C1SE",
       "layer_b": [
         {
-          "order_id": "ord_01M480GAQGMWXTG0BRN3DEQ1CX",
+          "order_id": "ord_01M4910NHYN6ZERDHKYA0VC94J",
           "ticket_id": "pos_12_combo_separately_0",
           "exact": true,
           "diffs": []
@@ -1500,7 +1500,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1553,10 +1553,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GAQM8GGMN9VVNJ2JWQPA",
+      "run_id": "run_01M4910NJ0ETXHTNKCV1BB0M8H",
       "layer_b": [
         {
-          "order_id": "ord_01M480GAWJV9KBB2JKWKK2J6XN",
+          "order_id": "ord_01M4910NPRJ1XP7BZXP3K1ZXER",
           "ticket_id": "pos_13_inquiry_and_misheard_0",
           "exact": true,
           "diffs": []
@@ -1592,7 +1592,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1644,10 +1644,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GAWRSQGRFER72QTVTVAN",
+      "run_id": "run_01M4910NPTBRCDZKBP0XM42QR9",
       "layer_b": [
         {
-          "order_id": "ord_01M480GB1DH4M1M2V4DWMGZAMW",
+          "order_id": "ord_01M4910NVDK3WD18RWQGW0A926",
           "ticket_id": "pos_14_garbled_0",
           "exact": true,
           "diffs": []
@@ -1683,7 +1683,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1754,16 +1754,16 @@
           }
         ]
       },
-      "run_id": "run_01M480GB1R75ZW9SYR4EEJ3EM9",
+      "run_id": "run_01M4910NVQJTHPF37B3PY601RH",
       "layer_b": [
         {
-          "order_id": "ord_01M480GB6ZFXADRD7M1MPSGGE7",
+          "order_id": "ord_01M4910P0TR811SD75RE0AFVB2",
           "ticket_id": "pos_15_split_payment_1",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GB6X58BWQAW9XCH1BT3P",
+          "order_id": "ord_01M4910P0ST1KA8YTQWZN27ZXV",
           "ticket_id": "pos_15_split_payment_0",
           "exact": true,
           "diffs": []
@@ -1801,7 +1801,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1853,10 +1853,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GB717ACZA0EWDZKFNVSK",
+      "run_id": "run_01M4910P0WZ39G2S974NTAP6TG",
       "layer_b": [
         {
-          "order_id": "ord_01M480GBBX5T82V3GZ40H1WFTT",
+          "order_id": "ord_01M4910P5KFENGK1P05NWN037A",
           "ticket_id": "pos_16_crew_crosstalk_0",
           "exact": true,
           "diffs": []
@@ -1864,11 +1864,11 @@
       ],
       "live": {
         "close_ms": [
-          3001
+          3000
         ],
         "close_by": {
           "settled": [
-            3001
+            3000
           ]
         },
         "reopens": 0,
@@ -1892,7 +1892,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -1945,10 +1945,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GBC0M96WXR8VP0FFKTFP",
+      "run_id": "run_01M4910P5NBWMZPB85N8VQ2AQS",
       "layer_b": [
         {
-          "order_id": "ord_01M480GBGPKSSYRYSJWJ5YAWJP",
+          "order_id": "ord_01M4910PA7MK94BB0FD1ETHNY5",
           "ticket_id": "pos_17_readback_and_total_mismatch_0",
           "exact": true,
           "diffs": []
@@ -1956,11 +1956,11 @@
       ],
       "live": {
         "close_ms": [
-          3001
+          3000
         ],
         "close_by": {
           "settled": [
-            3001
+            3000
           ]
         },
         "reopens": 0,
@@ -1984,7 +1984,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -2057,16 +2057,16 @@
           }
         ]
       },
-      "run_id": "run_01M480GBGS248D6VEGKWRQKMNV",
+      "run_id": "run_01M4910PA9Z1GRT2HY250KB91T",
       "layer_b": [
         {
-          "order_id": "ord_01M480GBP13G8B5DSMEPRCGV91",
+          "order_id": "ord_01M4910PFK9BKHE0K7M3F51XD4",
           "ticket_id": "pos_18_back_to_back_0",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GBP1KRPN4M4XNSWTXQ71",
+          "order_id": "ord_01M4910PFK745KP9F4DQN7Q9GS",
           "ticket_id": "pos_18_back_to_back_1",
           "exact": true,
           "diffs": []
@@ -2104,7 +2104,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -2156,10 +2156,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GBP444KE7T0EY1E6EKXE",
+      "run_id": "run_01M4910PFPSMZP8F8EZ64QGBHG",
       "layer_b": [
         {
-          "order_id": "ord_01M480GBTDA5050DH1E17CWZNA",
+          "order_id": "ord_01M4910PKS52QJAEC81N6NT2BF",
           "ticket_id": "pos_19_truncated_start_0",
           "exact": true,
           "diffs": []
@@ -2167,11 +2167,11 @@
       ],
       "live": {
         "close_ms": [
-          3001
+          3000
         ],
         "close_by": {
           "settled": [
-            3001
+            3000
           ]
         },
         "reopens": 0,
@@ -2195,7 +2195,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -2247,7 +2247,7 @@
           }
         ]
       },
-      "run_id": "run_01M480GBTGWHVYQNZ1GZQRRVKB",
+      "run_id": "run_01M4910PKVJ3ACSRZBMD94JYZA",
       "layer_b": [],
       "live": {
         "close_ms": [
@@ -2279,7 +2279,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -2331,10 +2331,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GBYNJ5SX3C1N9T912A5A",
+      "run_id": "run_01M4910PQW51ES28CH4XDJEWWM",
       "layer_b": [
         {
-          "order_id": "ord_01M480GC3GSTEF06Y4HYJPB7NG",
+          "order_id": "ord_01M4910PWMDQ18QMYBKSCC5M27",
           "ticket_id": "pos_21_spanish_0",
           "exact": true,
           "diffs": []
@@ -2342,11 +2342,11 @@
       ],
       "live": {
         "close_ms": [
-          3001
+          3000
         ],
         "close_by": {
           "settled": [
-            3001
+            3000
           ]
         },
         "reopens": 0,
@@ -2370,7 +2370,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -2422,10 +2422,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GC3KYZY5S8B0J8P97G87",
+      "run_id": "run_01M4910PWP74BAF7W70QVYX5XB",
       "layer_b": [
         {
-          "order_id": "ord_01M480GC8B8X2QZE5VSW430JJC",
+          "order_id": "ord_01M4910Q1DS0P7BN3KNMM94SP9",
           "ticket_id": "pos_22_heavy_noise_0",
           "exact": true,
           "diffs": []
@@ -2433,11 +2433,11 @@
       ],
       "live": {
         "close_ms": [
-          3001
+          3000
         ],
         "close_by": {
           "settled": [
-            3001
+            3000
           ]
         },
         "reopens": 0,
@@ -2461,7 +2461,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -2513,10 +2513,10 @@
           }
         ]
       },
-      "run_id": "run_01M480GC8EZS29S4SS3NBF63BB",
+      "run_id": "run_01M4910Q1FDYTK7Z32FCG1BBQB",
       "layer_b": [
         {
-          "order_id": "ord_01M480GCDRERQ73CTBQR2CAEBK",
+          "order_id": "ord_01M4910Q6PKM80N021WXPKHX7S",
           "ticket_id": "pos_23_late_addition_0",
           "exact": true,
           "diffs": []
@@ -2524,11 +2524,11 @@
       ],
       "live": {
         "close_ms": [
-          3001
+          3000
         ],
         "close_by": {
           "settled": [
-            3001
+            3000
           ]
         },
         "reopens": 0,
@@ -2552,7 +2552,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -2604,15 +2604,15 @@
           }
         ]
       },
-      "run_id": "run_01M480GCDV33037BZAYGA80KEN",
+      "run_id": "run_01M4910Q6SGX21EXWXVSY40T4A",
       "layer_b": [],
       "live": {
         "close_ms": [
-          45001
+          45000
         ],
         "close_by": {
           "idle_timeout": [
-            45001
+            45000
           ]
         },
         "reopens": 0,
@@ -2636,7 +2636,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -2772,28 +2772,28 @@
           }
         ]
       },
-      "run_id": "run_01M480GCMM93QTYTZ37PZ8M97N",
+      "run_id": "run_01M4910QDFR94VDDGV26YTPV2J",
       "layer_b": [
         {
-          "order_id": "ord_01M480GD0748H3KMR5KSWZG98K",
+          "order_id": "ord_01M4910QS2AX189PD6PKH1PSDT",
           "ticket_id": "pos_compilation_a_2",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GD0A45VBS3YN8V22X6JK",
+          "order_id": "ord_01M4910QS4C1AT0VN3KX57NH9N",
           "ticket_id": "pos_compilation_a_4",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GD057AXR41G5W6S8VAEJ",
+          "order_id": "ord_01M4910QS03QV6E0KVQH82SV6Z",
           "ticket_id": "pos_compilation_a_0",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GD05B82X0MPPQ2R9CFVQ",
+          "order_id": "ord_01M4910QS04A6F1GZD34Y7C3ZM",
           "ticket_id": "pos_compilation_a_1",
           "exact": true,
           "diffs": []
@@ -2802,16 +2802,16 @@
       "live": {
         "close_ms": [
           3001,
-          3001,
-          3001,
+          3000,
+          3000,
           25440,
           3000
         ],
         "close_by": {
           "settled": [
             3001,
-            3001,
-            3001,
+            3000,
+            3000,
             3000
           ],
           "next_car": [
@@ -2839,7 +2839,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -2996,40 +2996,40 @@
           }
         ]
       },
-      "run_id": "run_01M480GD0E6NJ8CW384TC8QW1C",
+      "run_id": "run_01M4910QS7W26D1GS41JPQT79W",
       "layer_b": [
         {
-          "order_id": "ord_01M480GDCX19H4B2RDRHJ4CMF2",
+          "order_id": "ord_01M4910R5MQED3Y2ADY8577WBZ",
           "ticket_id": "pos_compilation_b_1",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GDD0TCP4M255QPE0N1YD",
+          "order_id": "ord_01M4910R5PT2MGEMXXT8PK4JQV",
           "ticket_id": "pos_compilation_b_2",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GDD1TTD3JX9A0YVTHYK4",
+          "order_id": "ord_01M4910R5QJQHR67TB8KMF8ESS",
           "ticket_id": "pos_compilation_b_3",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GDD380NBTFAF5N40T9JN",
+          "order_id": "ord_01M4910R5S1T23NW32A8STV7ZR",
           "ticket_id": "pos_compilation_b_4",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GDCXXBKT05DX9BC3VPGC",
+          "order_id": "ord_01M4910R5M2MP28S0KE8T8S39N",
           "ticket_id": "pos_compilation_b_0",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GDD4P2TB8MRN4Q3ACPES",
+          "order_id": "ord_01M4910R5SHCSFRYPS421RW4MK",
           "ticket_id": "pos_compilation_b_5",
           "exact": true,
           "diffs": []
@@ -3037,20 +3037,20 @@
       ],
       "live": {
         "close_ms": [
-          15621,
-          3001,
-          3001,
+          15620,
+          3000,
+          3000,
           3000,
           3000,
           3000
         ],
         "close_by": {
           "next_car": [
-            15621
+            15620
           ],
           "settled": [
-            3001,
-            3001,
+            3000,
+            3000,
             3000,
             3000,
             3000
@@ -3077,7 +3077,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -3528,112 +3528,112 @@
           }
         ]
       },
-      "run_id": "run_01M480GDD7XATNWWMSAFTFFH92",
+      "run_id": "run_01M4910R5X5KH8EPKH57Q7X280",
       "layer_b": [
         {
-          "order_id": "ord_01M480GFENKKFRDXTGDM809Q16",
+          "order_id": "ord_01M4910T727TTQRPG14KH9GVCW",
           "ticket_id": "pos_lane_stream_a_8",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFESQQKVRH543J5RRNB7",
+          "order_id": "ord_01M4910T76NXEDHS5T5N255A2K",
           "ticket_id": "pos_lane_stream_a_10",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFEB7W2EF7QSC7RNE39W",
+          "order_id": "ord_01M4910T6Q9HAK6WG432RWM4YX",
           "ticket_id": "pos_lane_stream_a_4",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFEKKBSRQ1HXMMXZE234",
+          "order_id": "ord_01M4910T70PNSJSB4FNQV7ZXBS",
           "ticket_id": "pos_lane_stream_a_7",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFEWR5AH2FSGAX0119WV",
+          "order_id": "ord_01M4910T79KSR8N0X17H6TAGRS",
           "ticket_id": "pos_lane_stream_a_11",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFFEG5ZZ15Y4EJMVS6NT",
+          "order_id": "ord_01M4910T7VGRY24DEB3ZF0E5KH",
           "ticket_id": "pos_lane_stream_a_17",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFFC0G63FKX25NWJ1F19",
+          "order_id": "ord_01M4910T7SGP49BXY5MN4YMMS9",
           "ticket_id": "pos_lane_stream_a_16",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFE50DDDFWMSQFBJK28P",
+          "order_id": "ord_01M4910T6MZNRKBV04HJT6YVPF",
           "ticket_id": "pos_lane_stream_a_2",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFFE1CM5BTV73Q714MAD",
+          "order_id": "ord_01M4910T7TX34JD8QRKVY8Z4Y2",
           "ticket_id": "pos_lane_stream_a_15",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFEQJV5D06ESNM0FXCDX",
+          "order_id": "ord_01M4910T74JNEM3K6T5FCZ0A83",
           "ticket_id": "pos_lane_stream_a_9",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFEYZHMXHK25D5Y19SZY",
+          "order_id": "ord_01M4910T7B9TM588T3QJYCHP9W",
           "ticket_id": "pos_lane_stream_a_12",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFFHCE3VXBNDS1AFMHFG",
+          "order_id": "ord_01M4910T7XTSCW6S0S1SQ729HP",
           "ticket_id": "pos_lane_stream_a_18",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFE2A52RC8YKFD7BPYCA",
+          "order_id": "ord_01M4910T6H6RB8PWQCPYBCHR5F",
           "ticket_id": "pos_lane_stream_a_0",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFE805VPMRMNSNWXY5PC",
+          "order_id": "ord_01M4910T6PDB76WTGPKFS92DQ1",
           "ticket_id": "pos_lane_stream_a_3",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFE30STBYBMPDD259R07",
+          "order_id": "ord_01M4910T6HZDSB3BNB6AMC7M8E",
           "ticket_id": "pos_lane_stream_a_1",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFF07PQRK88JJAYF8QAH",
+          "order_id": "ord_01M4910T7DA947RQ7V4435EG0G",
           "ticket_id": "pos_lane_stream_a_13",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFF2EG81FXV5M2ZKRJ7V",
+          "order_id": "ord_01M4910T7FYFJ945RXVCWREQFV",
           "ticket_id": "pos_lane_stream_a_14",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GFFKG9P07MF0CAN46616",
+          "order_id": "ord_01M4910T7ZRV1SWMYT1CB7QACN",
           "ticket_id": "pos_lane_stream_a_19",
           "exact": true,
           "diffs": []
@@ -3642,52 +3642,52 @@
       "live": {
         "close_ms": [
           3001,
-          3001,
-          3001,
-          33506,
-          3001,
-          3001,
+          3000,
+          3000,
+          33505,
+          3000,
+          3000,
           45000,
           3000,
-          45001,
+          45000,
           3000,
-          3001,
+          3000,
           3000,
           3000,
           42517,
           3001,
           3001,
           3001,
-          3001,
+          3000,
           3000,
           3000
         ],
         "close_by": {
           "settled": [
             3001,
-            3001,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
             3001,
             3001,
             3001,
             3000,
-            3000,
-            3001,
-            3000,
-            3000,
-            3001,
-            3001,
-            3001,
-            3001,
             3000,
             3000
           ],
           "next_car": [
-            33506,
+            33505,
             42517
           ],
           "idle_timeout": [
             45000,
-            45001
+            45000
           ]
         },
         "reopens": 0,
@@ -3711,7 +3711,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false
@@ -4160,106 +4160,106 @@
           }
         ]
       },
-      "run_id": "run_01M480GFFTH1NQ182CMTQPZJ63",
+      "run_id": "run_01M4910T852P4T233VVQDRZV9Q",
       "layer_b": [
         {
-          "order_id": "ord_01M480GHFXEMATXSZ1MMZWE20M",
+          "order_id": "ord_01M4910W7KX7VS4GNFJ494N3GT",
           "ticket_id": "pos_lane_stream_b_7",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHFCZAJ0CDHY6ZDNH0FQ",
+          "order_id": "ord_01M4910W75WG3HR511S8ECPM09",
           "ticket_id": "pos_lane_stream_b_1",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHG4WKQSHGSSM9GQA2YH",
+          "order_id": "ord_01M4910W7SRG3AMNADYPAADQBR",
           "ticket_id": "pos_lane_stream_b_11",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHFEKF5WYEPS7GHBBG5J",
+          "order_id": "ord_01M4910W78Z5RWFNXVNCPMGC1Z",
           "ticket_id": "pos_lane_stream_b_2",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHFCGS3RRS08YWTXWXTY",
+          "order_id": "ord_01M4910W75FMQFA0R0F8Z7ABVV",
           "ticket_id": "pos_lane_stream_b_0",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHGETHHBKYXCS13N8T9A",
+          "order_id": "ord_01M4910W82VAQ32PWE9R89W4EG",
           "ticket_id": "pos_lane_stream_b_16",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHGBY63PSPSAMACZQMC9",
+          "order_id": "ord_01M4910W80152P8BTGC8DFGE91",
           "ticket_id": "pos_lane_stream_b_15",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHFZHQGMDA4QBRXT5DZ0",
+          "order_id": "ord_01M4910W7NHP386RQX6CEGPBHZ",
           "ticket_id": "pos_lane_stream_b_8",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHFPVNFR4Q60ABNYYKHX",
+          "order_id": "ord_01M4910W7EEMDJ12KVY9TY8MWR",
           "ticket_id": "pos_lane_stream_b_6",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHGN62TGZYQAHSPBN9EF",
+          "order_id": "ord_01M4910W87REMK9EV7TZGM5VV0",
           "ticket_id": "pos_lane_stream_b_19",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHFJQDZGMN7PQRNZ48VA",
+          "order_id": "ord_01M4910W7A2Q7Y5V46NTAK0YJ4",
           "ticket_id": "pos_lane_stream_b_3",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHG8CR4H6VNF63XC9KP0",
+          "order_id": "ord_01M4910W7X3E5JB9ECSG4V53B2",
           "ticket_id": "pos_lane_stream_b_13",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHGGS3XNAPVYJG5EY6PR",
+          "order_id": "ord_01M4910W83N81M94ZW9B38XTVD",
           "ticket_id": "pos_lane_stream_b_17",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHFJTG0PYJ61KJFH3NRT",
+          "order_id": "ord_01M4910W7BFTRFHWWK8E1B3TGM",
           "ticket_id": "pos_lane_stream_b_4",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHG2NP3W7K6742VQ1XJV",
+          "order_id": "ord_01M4910W7R2AM2TMYVDTRF50JQ",
           "ticket_id": "pos_lane_stream_b_10",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHGJ0N6CRCXQZNVRD8VZ",
+          "order_id": "ord_01M4910W85HSTQ5CNTA88P7P8G",
           "ticket_id": "pos_lane_stream_b_18",
           "exact": true,
           "diffs": []
         },
         {
-          "order_id": "ord_01M480GHG9DJMX66RP4GZ5J6B6",
+          "order_id": "ord_01M4910W7ZBKH3QRFT0QRKKQY0",
           "ticket_id": "pos_lane_stream_b_14",
           "exact": true,
           "diffs": []
@@ -4268,52 +4268,52 @@
       "live": {
         "close_ms": [
           3001,
+          3000,
           3001,
           3001,
-          3002,
-          39505,
+          39504,
           45002,
           3000,
-          45001,
+          45000,
           3000,
           45000,
-          3001,
-          3001,
           3000,
           3000,
           3000,
-          3001,
           3000,
-          45001,
-          3001,
-          3001
+          3000,
+          3000,
+          3000,
+          45000,
+          3000,
+          3000
         ],
         "close_by": {
           "settled": [
             3001,
-            3001,
-            3001,
-            3002,
-            3000,
             3000,
             3001,
             3001,
             3000,
             3000,
             3000,
-            3001,
             3000,
-            3001,
-            3001
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000
           ],
           "next_car": [
-            39505
+            39504
           ],
           "idle_timeout": [
             45002,
-            45001,
             45000,
-            45001
+            45000,
+            45000
           ]
         },
         "reopens": 0,
@@ -4337,7 +4337,7 @@
         "segmentation_llm_calls": 0,
         "gemini_today": {
           "day": "2026-10-06",
-          "requests": 0,
+          "requests": 2,
           "cap": 200,
           "tier": "unknown",
           "exhausted": false

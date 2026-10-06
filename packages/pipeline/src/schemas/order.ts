@@ -49,6 +49,7 @@ export const REVIEW_REASONS = [
   "low_audio_quality",
   "stream_gap",
   "transcript_gap",
+  /** No longer emitted (E11); kept so schema 2.0 receivers and stored orders still validate. */
   "outcome_undetermined",
   "roles_guessed_low_agreement",
   /** Plan D13: a quantity above the cap or a total above the cap; model output is never trusted blindly. */
