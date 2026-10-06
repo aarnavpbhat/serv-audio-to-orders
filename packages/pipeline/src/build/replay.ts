@@ -82,6 +82,8 @@ export interface BuildState {
   /** Total the crew spoke, per part (index = part). */
   spoken_totals: (number | null)[];
   cancelled: boolean;
+  /** Utterances of the last whole-order cancel, for outcome evidence. */
+  cancel_utterance_ids: string[];
   split: boolean;
   parts: number;
   declined_combo_ids: string[];
@@ -98,6 +100,7 @@ class Replayer {
   private readonly declinedCombos = new Set<string>();
   private readonly spokenTotals: (number | null)[] = [];
   private cancelled = false;
+  private cancelUtteranceIds: string[] = [];
   private split = false;
   /** "Can we pay separately?" before anything was ordered: each spoken total closes one order. */
   private splitByTotals = false;
@@ -114,6 +117,7 @@ class Replayer {
       readbacks: this.readbacks,
       spoken_totals: this.spokenTotals,
       cancelled: this.cancelled,
+      cancel_utterance_ids: this.cancelled ? this.cancelUtteranceIds : [],
       split: this.split,
       parts: Math.max(...this.lines.map((l) => l.part), ...this.side.map((s) => s.part), 0) + 1,
       declined_combo_ids: [...this.declinedCombos],
@@ -579,6 +583,7 @@ class Replayer {
     const affected = this.active();
     for (const l of affected) this.removeLine(l, "cancelled", e);
     this.cancelled = true;
+    this.cancelUtteranceIds = [...e.source_utterance_ids];
     this.record(e, true, `cancelled ${affected.length} line(s)`, affected.map((l) => l.line_id));
   }
 

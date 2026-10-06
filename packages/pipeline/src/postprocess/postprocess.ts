@@ -1,6 +1,7 @@
 /**
  * Build state -> order(s). Pure. Puts every mention in exactly one bucket,
- * detects combo opportunities, sets flags and picks the status.
+ * detects combo opportunities, sets flags, decides the outcome from evidence
+ * and sets the review flag.
  */
 import type { BuildState, Line, SideMention } from "../build/replay";
 import { round2, type Catalog } from "../menu/catalog";
@@ -15,9 +16,10 @@ import type {
   NotOrderedItem,
   Order,
   OrderItem,
-  OrderStatus,
+  OutcomeEvidence,
   Size,
 } from "../schemas";
+import { decideOutcome, reviewReasons, type OutcomeSignals } from "./outcome";
 
 export interface SegmentContext {
   segment_id: string;
@@ -30,6 +32,12 @@ export interface SegmentContext {
   non_english: boolean;
   low_audio_quality: boolean;
   crosstalk_suspected: boolean;
+  /** Utterances, vehicle and stream events the outcome rules read. */
+  signals: OutcomeSignals;
+  /** Live-path flags (stream_gap, transcript_gap, ...) set by the lane. */
+  extra_flags?: Flag[];
+  /** Roles were guessed from wording and the guesses disagree with each other. */
+  roles_low_agreement?: boolean;
 }
 
 export interface PostprocessOptions {
@@ -39,6 +47,8 @@ export interface PostprocessOptions {
   taxRate: number;
   totalTolerance: number;
   placeholders: boolean;
+  /** Plan D13: above these, the order goes to review. */
+  reviewCap: { maxQuantity: number; maxTotal: number };
   newOrderId: () => string;
   newGroupId: () => string;
 }
@@ -256,7 +266,6 @@ function buildPart(
   const cancelled = build.cancelled && lines.length > 0 && lines.every((l) => l.state === "removed");
 
   const flags = new Set<Flag>();
-  if (needsReview.length) flags.add("needs_review_present");
   if (readbackMismatch) flags.add("readback_mismatch");
   if (spoken !== null && Math.abs(spoken - computed) > opts.totalTolerance && !cancelled) flags.add("total_mismatch");
   if (missingSlot) flags.add("missing_required_slot");
@@ -269,12 +278,33 @@ function buildPart(
   if (seg.crosstalk_suspected) flags.add("crosstalk_suspected");
   if (opts.placeholders) flags.add("placeholder_values");
 
-  let status: OrderStatus;
-  if (cancelled) status = "cancelled";
-  else if (seg.truncated_start || seg.truncated_end) status = "incomplete";
-  else if (!seg.has_closing) status = "abandoned";
-  else if (needsReview.length || readbackMismatch) status = "needs_review";
-  else status = "completed";
+  for (const f of seg.extra_flags ?? []) flags.add(f);
+
+  const activeIds = new Set(lines.filter((l) => l.state === "active").flatMap((l) => l.source_utterance_ids));
+  const itemTimes = seg.signals.utterances.filter((u) => activeIds.has(u.id)).map((u) => u.start_s);
+  const cancelUtt = seg.signals.utterances.find((u) => build.cancel_utterance_ids.includes(u.id));
+  const cancelEvidence: OutcomeEvidence | null = cancelled
+    ? cancelUtt
+      ? { type: "spoken_cue", kind: "cancel", cue: cancelUtt.text.slice(0, 80), utterance_id: cancelUtt.id, at: cancelUtt.start_utc }
+      : { type: "order_state", event: "all_items_removed", at: seg.signals.utterances.at(-1)?.start_utc ?? new Date(0).toISOString() }
+    : null;
+  const outcome = decideOutcome({
+    cancelled,
+    cancelEvidence,
+    activeLines: items.length + needsReview.length,
+    // Items whose utterances are unknown still count as ordered before any cue.
+    firstItemS: itemTimes.length ? Math.min(...itemTimes) : Number.NEGATIVE_INFINITY,
+    signals: seg.signals,
+  });
+  const reasons = reviewReasons({
+    status: outcome.status,
+    flags: [...flags],
+    unclearItems: needsReview.length,
+    maxQuantity: Math.max(0, ...items.map((i) => i.quantity), ...needsReview.map((r) => r.quantity)),
+    total: computed,
+    cap: opts.reviewCap,
+    rolesLowAgreement: seg.roles_low_agreement ?? false,
+  });
 
   const scores = [
     ...items.map((i) => Math.min(i.recognition_confidence, i.commitment_confidence)),
@@ -286,7 +316,9 @@ function buildPart(
     order_id: opts.newOrderId(),
     group_id: groupId,
     segment_id: seg.segment_id,
-    status,
+    status: outcome.status,
+    outcome_evidence: outcome.evidence,
+    review: { required: reasons.length > 0, reasons },
     started_s: seg.start_s,
     ended_s: seg.end_s,
     items,

@@ -109,7 +109,8 @@
           "combo_opportunity"
         ],
         "group": null,
-        "customer_declined_combo": false
+        "customer_declined_combo": false,
+        "review": []
       }
     ]
   }

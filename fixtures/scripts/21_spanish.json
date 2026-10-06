@@ -113,7 +113,8 @@
           "non_english",
           "combo_opportunity"
         ],
-        "group": null
+        "group": null,
+        "review": []
       }
     ]
   },

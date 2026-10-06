@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { OrderEvent } from "./events";
 import { Size } from "./menu";
-import { Flag, NotOrderedReason, OrderStatus } from "./order";
+import { Flag, NotOrderedReason, OrderStatus, ReviewReason } from "./order";
 
 export const NoiseLevel = z.enum(["clean", "moderate", "heavy"]);
 export type NoiseLevel = z.infer<typeof NoiseLevel>;
@@ -32,7 +32,12 @@ export const ExpectedOrder = z.object({
   not_ordered: z.array(z.object({ catalog_id: z.string().nullable(), reason: NotOrderedReason })).default([]),
   /** Flags that must be present (placeholder_values is ignored by the eval). */
   flags: z.array(Flag).default([]),
+  /** Status when no vehicle events are available (audio only). */
   status: OrderStatus,
+  /** Status when the replay also sends the fixture's vehicle events, if different. */
+  status_with_vehicle_events: OrderStatus.optional(),
+  /** Exact set of review reasons expected. */
+  review: z.array(ReviewReason).default([]),
   /** Orders with the same non-null label must share a group_id. */
   group: z.string().nullable().default(null),
   customer_declined_combo: z.boolean().optional(),

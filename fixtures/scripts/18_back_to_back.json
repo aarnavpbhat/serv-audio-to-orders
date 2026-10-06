@@ -112,7 +112,8 @@
         "not_ordered": [],
         "needs_review": [],
         "flags": [],
-        "group": null
+        "group": null,
+        "review": []
       },
       {
         "status": "completed",
@@ -125,7 +126,8 @@
         "not_ordered": [],
         "needs_review": [],
         "flags": [],
-        "group": null
+        "group": null,
+        "review": []
       }
     ]
   }

@@ -144,7 +144,8 @@
           "combo_opportunity"
         ],
         "group": null,
-        "customer_declined_combo": true
+        "customer_declined_combo": true,
+        "review": []
       }
     ]
   }

@@ -27,7 +27,8 @@ export interface SandboxConfig {
     examplesDir: string;
     evalDir: string;
   };
-  locationId: Setting<string>;
+  /** Default store for replays; live sessions carry their own store_id. */
+  storeId: Setting<string>;
   laneId: Setting<string>;
   webhookUrl: Setting<string>;
   webhookSecret: Setting<string>;
@@ -51,6 +52,8 @@ export interface SandboxConfig {
   /** Below this speech-to-noise-floor ratio (dB) a conversation is flagged low_audio_quality. */
   lowAudioSnrDb: number;
   totalTolerance: number;
+  /** Plan D13: a quantity above maxQuantity on one line, or a total above maxTotal, sends the order to review. */
+  reviewCap: { maxQuantity: number; maxTotal: number };
   segment: {
     gapS: number;
     maxSegmentS: number;
@@ -155,7 +158,8 @@ export function getConfig(): SandboxConfig {
   const menuPath = path.join(repoRoot, "menu", "menu.json");
   const menuVersion = (JSON.parse(readFileSync(menuPath, "utf8")) as { menu_version: string }).menu_version;
 
-  const location = env("LOCATION_ID");
+  // STORE_ID replaces LOCATION_ID (schema v2.0); the old name still works.
+  const location = env("STORE_ID") ?? env("LOCATION_ID");
   const lane = env("LANE_ID");
   const url = env("WEBHOOK_URL");
   const secret = env("WEBHOOK_SECRET");
@@ -176,17 +180,17 @@ export function getConfig(): SandboxConfig {
       examplesDir: path.join(repoRoot, "examples"),
       evalDir: path.join(repoRoot, "eval"),
     },
-    locationId: {
-      key: "LOCATION_ID",
+    storeId: {
+      key: "STORE_ID",
       value: location ?? "store_demo_001",
       placeholder: location === null || location === "store_demo_001",
-      note: "Replace when Serv shares site IDs",
+      note: "Default for replays only; live sessions get the store from their ingest token. Replace when Serv shares site IDs",
     },
     laneId: {
       key: "LANE_ID",
       value: lane ?? "lane_1",
       placeholder: lane === null || lane === "lane_1",
-      note: "Replace when Serv shares lane IDs",
+      note: "Default for replays only; live sessions name their lane. Replace when Serv shares lane IDs",
     },
     webhookUrl: {
       key: "WEBHOOK_URL",
@@ -242,6 +246,7 @@ export function getConfig(): SandboxConfig {
     lowAudioQualityMeanConf: num("LOW_AUDIO_QUALITY_CONF", 0.8),
     lowAudioSnrDb: num("LOW_AUDIO_SNR_DB", 15),
     totalTolerance: 0.05,
+    reviewCap: { maxQuantity: num("REVIEW_MAX_QUANTITY", 10), maxTotal: num("REVIEW_MAX_TOTAL", 150) },
     segment: {
       gapS: num("SEGMENT_GAP_S", 8),
       maxSegmentS: 360,
@@ -269,7 +274,7 @@ export type PlaceholderSetting = Pick<Setting<unknown>, "key" | "placeholder" | 
 /** All Serv-dependent settings, for the UI badge list and the placeholder_values flag. */
 export function servSettings(cfg: SandboxConfig = getConfig()): PlaceholderSetting[] {
   const list: Setting<unknown>[] = [
-    cfg.locationId,
+    cfg.storeId,
     cfg.laneId,
     cfg.webhookUrl,
     cfg.webhookSecret,

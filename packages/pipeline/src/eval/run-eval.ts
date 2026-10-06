@@ -8,6 +8,7 @@ import type { ExpectedOrder, FixtureTimeline, NoiseLevel, Order } from "../schem
 import { loadTimeline } from "../transcribe/script";
 import { CHECKLIST } from "./checklist";
 import { compareOrders, passed, type OrderComparison } from "./compare";
+import { samplePayload } from "../webhook/sample";
 import { webhookSelfCheck, type WebhookCheck } from "./webhook-check";
 
 export interface EvalOptions {
@@ -50,6 +51,7 @@ export interface EvalReport {
     item_recall: number;
     bucket_accuracy: number;
     status_accuracy: number;
+    review_accuracy: number;
     flags_accuracy: number;
     segmentation: { expected: number; found: number; missed: number; extra: number; mean_start_err_s: number; mean_end_err_s: number };
   };
@@ -156,7 +158,7 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
     for (const c of compareOrders(engine.catalog, exp, produced)) comparisons.push({ ...c, pass: passed(c) });
     for (const extraOrder of produced.slice(exp.length)) {
       comparisons.push({
-        checks: { items: false, needs_review: true, not_ordered: true, flags: true, status: true, group: true, declined_combo: true },
+        checks: { items: false, needs_review: true, not_ordered: true, flags: true, status: true, review: true, group: true, declined_combo: true },
         item_tp: 0,
         item_fp: extraOrder.items.length,
         item_fn: 0,
@@ -171,7 +173,7 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
   for (const s of segs.filter((x) => !used.has(x.segment_id))) {
     for (const o of result.orders.filter((x) => x.order.segment_id === s.segment_id)) {
       comparisons.push({
-        checks: { items: false, needs_review: true, not_ordered: true, flags: true, status: true, group: true, declined_combo: true },
+        checks: { items: false, needs_review: true, not_ordered: true, flags: true, status: true, review: true, group: true, declined_combo: true },
         item_tp: 0,
         item_fp: o.order.items.length,
         item_fn: 0,
@@ -204,7 +206,7 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
   }
 
   let webhook: WebhookCheck[] = [];
-  if (opts.webhook) webhook = await webhookSelfCheck(SAMPLE_PAYLOAD);
+  if (opts.webhook) webhook = await webhookSelfCheck(samplePayload());
 
   const comps = fixtures.flatMap((f) => f.orders.comparisons);
   const tp = comps.reduce((s, c) => s + c.item_tp, 0);
@@ -247,6 +249,7 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
       item_recall: round(tp + fn ? tp / (tp + fn) : 1),
       bucket_accuracy: round(real.reduce((s, c) => s + c.bucket_correct, 0) / Math.max(1, real.reduce((s, c) => s + c.bucket_total, 0))),
       status_accuracy: round(real.filter((c) => c.checks.status).length / Math.max(1, real.length)),
+      review_accuracy: round(real.filter((c) => c.checks.review).length / Math.max(1, real.length)),
       flags_accuracy: round(real.filter((c) => c.checks.flags).length / Math.max(1, real.length)),
       segmentation: {
         expected: seg.reduce((s, x) => s + x.expected, 0),
@@ -278,6 +281,7 @@ export function formatReport(r: EvalReport): string {
     `  Item recall         ${pct(s.item_recall)}`,
     `  Bucket accuracy     ${pct(s.bucket_accuracy)}`,
     `  Status accuracy     ${pct(s.status_accuracy)}`,
+    `  Review exact match  ${pct(s.review_accuracy)}`,
     `  Flags exact match   ${pct(s.flags_accuracy)}`,
     `  Segments            ${s.segmentation.found} found / ${s.segmentation.expected} expected (missed ${s.segmentation.missed}, extra ${s.segmentation.extra})`,
     `  Boundary error      start ${s.segmentation.mean_start_err_s}s, end ${s.segmentation.mean_end_err_s}s (mean)`,
@@ -291,28 +295,3 @@ export function formatReport(r: EvalReport): string {
   ];
   return lines.join("\n");
 }
-
-const SAMPLE_PAYLOAD = {
-  schema_version: "1.0" as const,
-  event_type: "order.completed" as const,
-  order_id: "ord_selfcheck",
-  order_version: 1,
-  group_id: null,
-  location_id: "store_demo_001",
-  lane_id: "lane_1",
-  status: "completed" as const,
-  started_at: "2026-10-03T18:41:01.200Z",
-  ended_at: "2026-10-03T18:42:24.880Z",
-  timestamp_source: "env" as const,
-  audio: { source_file: "selfcheck.mp3", offset_start_s: 0, offset_end_s: 1 },
-  items: [],
-  needs_review: [],
-  not_ordered: [],
-  combo_opportunities: [],
-  customer_declined_combo: false,
-  flags: [],
-  totals: { computed: 0, spoken_by_crew: null, currency: "USD" },
-  overall_confidence: 1,
-  transcript: [],
-  processing: { stt: "selfcheck", extractor: "selfcheck", menu_version: "sandbox-1", pipeline_version: "0.1.0", latency_ms: 0 },
-};
