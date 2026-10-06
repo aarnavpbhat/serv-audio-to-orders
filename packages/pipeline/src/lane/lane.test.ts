@@ -163,15 +163,16 @@ describe("guessed roles", () => {
     ]);
   });
 
-  describe("a car with no speech (E1, E2)", () => {
+  describe("a car with no speech (E1, E2, E9)", () => {
     const at = (s: number) => new Date(Date.parse("2026-10-03T18:40:00Z") + s * 1000).toISOString();
-    async function drive(controls: [number, "vehicle_arrived" | "vehicle_departed" | "stream_paused"][]) {
+    async function drive(controls: [number, "vehicle_arrived" | "vehicle_departed" | "stream_paused"][], then?: (m: LaneManager) => Promise<unknown>) {
       const engine = testEngine();
       let extractions = 0;
       engine.extractor = { name: "stub", extract: async () => (extractions++, { events: [], usage: emptyUsage("none"), warnings: [], raw: null, repaired: false, fallback: false }) };
       const manager = new LaneManager({ engine, transcriber: new ScriptStreamingTranscriber(), runId: "run_quiet", deliver: false });
       await manager.handle({ kind: "session_open", session: { sessionId: "ses_q", storeId: "s", laneId: "l", sourceType: "hme_ws", audio: { sampleRate: 16000, channels: 1 }, timeBasis: "receive_clock", anchorAt: at(0), codecIn: "pcm_s16le" } });
       for (const [t, type] of controls) await manager.handle({ kind: "control", event: { sessionId: "ses_q", at: at(t), type } });
+      await then?.(manager);
       await manager.handle({ kind: "tick", at: at(60) });
       await manager.end();
       return { orders: [...manager.lanes.values()][0]?.orders ?? [], extractions };
@@ -194,6 +195,20 @@ describe("guessed roles", () => {
       ]);
       expect(orders).toEqual([]);
       expect(extractions).toBe(0);
+    });
+
+    it("arrives, then End session: nothing is sent", async () => {
+      const { orders, extractions } = await drive([[2, "vehicle_arrived"]], (m) => m.stop("ses_q", "end", at(6)));
+      expect(orders).toEqual([]);
+      expect(extractions).toBe(0);
+    });
+
+    it("arrives, then the connection drops for good: nothing is sent", async () => {
+      const { orders } = await drive([[2, "vehicle_arrived"]], async (m) => {
+        await m.handle({ kind: "session_close", sessionId: "ses_q", at: at(6), reason: "error" });
+        await m.handle({ kind: "tick", at: at(600) });
+      });
+      expect(orders).toEqual([]);
     });
 
     it("no vehicle event and no speech: nothing opens, nothing is sent", async () => {
