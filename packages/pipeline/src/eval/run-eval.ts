@@ -11,6 +11,7 @@ import { runPipeline, type RunResult } from "../run";
 import type { ExpectedOrder, FixtureTimeline, NoiseLevel, Order } from "../schemas";
 import { loadTimeline } from "../transcribe/script";
 import { CHECKLIST } from "./checklist";
+import { runLiveChecks, type LiveCheck } from "./live-checks";
 import { compareOrders, passed, type OrderComparison } from "./compare";
 import { samplePayload } from "../webhook/sample";
 import { webhookSelfCheck, type WebhookCheck } from "./webhook-check";
@@ -237,6 +238,8 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
 
   let webhook: WebhookCheck[] = [];
   if (opts.webhook) webhook = await webhookSelfCheck(samplePayload());
+  // Live-path rows run when the eval goes through the lane (or when asked for explicitly).
+  const live: LiveCheck[] = opts.via === "lane" && !opts.only?.length ? await runLiveChecks(engine) : [];
 
   const comps = fixtures.flatMap((f) => f.orders.comparisons);
   const tp = comps.reduce((s, c) => s + c.item_tp, 0);
@@ -248,6 +251,9 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
   const rows = CHECKLIST.map(({ row, title }) => {
     const wh = webhook.find((w) => w.row === row);
     if (wh) return { row, title, fixtures: ["webhook self-check"], pass: wh.pass, detail: wh.detail };
+    const lc = live.find((c) => c.row === row);
+    if (lc) return { row, title, fixtures: ["live check"], pass: lc.pass, detail: lc.detail };
+    if (row >= 29) return { row, title, fixtures: [], pass: false, detail: opts.via === "lane" ? "not checked yet" : "run with --via lane" };
     const covering = fixtures.filter((f) => f.covers.includes(row));
     return { row, title, fixtures: covering.map((f) => f.id), pass: covering.length > 0 && covering.every((f) => f.pass) };
   });

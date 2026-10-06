@@ -52,3 +52,15 @@ describe("replay through the lane", () => {
     expect(lane.orders[0]?.order.flags).toContain("stream_gap");
   });
 });
+
+describe("lane ids", () => {
+  it("refuses a session whose store, lane or session id could escape a file path", async () => {
+    const manager = new LaneManager({ engine: testEngine(), transcriber: new ScriptStreamingTranscriber(), runId: "run_t", deliver: false });
+    await manager.handle({
+      kind: "session_open",
+      session: { sessionId: "ses_1", storeId: "../../etc", laneId: "lane_1", sourceType: "hme_ws", audio: { sampleRate: 16000, channels: 1 }, timeBasis: "receive_clock", anchorAt: new Date().toISOString(), codecIn: "pcm_s16le" },
+    });
+    expect(manager.lanes.size).toBe(0);
+    expect(manager.rejected.has("ses_1")).toBe(true);
+  });
+});

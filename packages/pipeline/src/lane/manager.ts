@@ -1,15 +1,26 @@
 /** Routes source messages to lanes. Lanes are keyed by store_id:lane_id, so a reconnect continues the same lane. */
 import type { SourceMessage } from "../input/types";
+import { isSafeId } from "../lib/safe-id";
 import { LaneSession, laneKey, type LaneOptions } from "./lane";
 
 export class LaneManager {
   readonly lanes = new Map<string, LaneSession>();
   private readonly bySession = new Map<string, LaneSession>();
 
+  /** Sessions refused at open (unsafe ids); their later messages are dropped. */
+  readonly rejected = new Set<string>();
+
   constructor(private readonly opts: LaneOptions) {}
 
   async handle(m: SourceMessage): Promise<void> {
     if (m.kind === "session_open") {
+      // Store, lane and session ids end up in file paths and payloads: strict pattern only.
+      const { storeId, laneId, sessionId } = m.session;
+      if (![storeId, laneId, sessionId].every(isSafeId)) {
+        this.rejected.add(sessionId);
+        (this.opts.log ?? this.opts.engine.log)(`session refused: unsafe store, lane or session id`);
+        return;
+      }
       const key = laneKey(m.session.storeId, m.session.laneId);
       let lane = this.lanes.get(key);
       if (!lane) {

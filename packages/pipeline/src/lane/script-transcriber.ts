@@ -41,7 +41,7 @@ class ScriptStream implements TranscriptStream {
     private readonly seen: Set<string>,
     private readonly handlers: TranscriptHandlers,
   ) {
-    this.offsetS = timeline ? (Date.parse(session.anchorAt) - Date.parse(timeline.recording_start_utc)) / 1000 : 0;
+    this.offsetS = session.sourceOffsetS ?? (timeline ? (Date.parse(session.anchorAt) - Date.parse(timeline.recording_start_utc)) / 1000 : 0);
   }
 
   push(frame: AudioFrame): void {
