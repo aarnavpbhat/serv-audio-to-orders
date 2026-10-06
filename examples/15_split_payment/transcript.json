@@ -1,17 +1,17 @@
 {
-  "transcript_id": "tr_01M443TAR2AM7C3KDRQJCFCFBY",
+  "transcript_id": "tr_run_01M47MMT0532YX2HEGAFR89F8R",
   "source_file": "15_split_payment.mono.clean.mp3",
   "audio": {
-    "codec": "mp3",
-    "sample_rate": 8000,
+    "codec": "pcm_s16le",
+    "sample_rate": 16000,
     "channels": 1,
-    "duration_s": 34.56
+    "duration_s": 34.35
   },
   "audio_start_utc": "2026-10-03T18:40:00.000Z",
-  "timestamp_source": "env",
-  "role_source": "wording",
-  "stt": "deepgram/nova-3",
-  "language": "en",
+  "timestamp_source": "recording_metadata",
+  "role_source": "diarization",
+  "stt": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+  "language": null,
   "utterances": [
     {
       "id": "u1",
@@ -288,7 +288,7 @@
     },
     {
       "id": "u6",
-      "speaker": "customer",
+      "speaker": "crew",
       "speaker_label": "spk0",
       "speaker_guessed": true,
       "start_s": 16.295,

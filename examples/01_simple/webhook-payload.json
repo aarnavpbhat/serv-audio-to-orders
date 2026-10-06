@@ -1,19 +1,48 @@
 {
-  "schema_version": "1.0",
-  "event_type": "order.completed",
-  "order_id": "ord_01M443TA6569Q8K4QWVHEGFZHC",
+  "schema_version": "2.0",
+  "event_type": "order.finalized",
+  "order_id": "ord_01M47MMRZ1J9P2ACY80ARBSQ2A",
   "order_version": 1,
+  "supersedes_version": null,
+  "correction_reason": null,
   "group_id": null,
-  "location_id": "store_demo_001",
+  "store_id": "store_demo_001",
   "lane_id": "lane_1",
+  "session_id": "ses_01M47MMRVYRGMRSY1YBNJS2VYN",
   "status": "completed",
-  "started_at": "2026-10-03T18:40:01.120Z",
-  "ended_at": "2026-10-03T18:40:20.555Z",
-  "timestamp_source": "env",
-  "audio": {
-    "source_file": "01_simple.mono.clean.mp3",
-    "offset_start_s": 1.12,
-    "offset_end_s": 20.555
+  "outcome_evidence": [
+    {
+      "type": "spoken_cue",
+      "kind": "closing",
+      "cue": "pull forward",
+      "utterance_id": "u6",
+      "at": "2026-10-03T18:40:19.435Z"
+    }
+  ],
+  "review": {
+    "required": false,
+    "reasons": []
+  },
+  "times": {
+    "started_at": "2026-10-03T18:40:01.120Z",
+    "ended_at": "2026-10-03T18:40:20.555Z",
+    "time_basis": "recording_metadata",
+    "received_at": "2026-10-06T03:38:15.811Z",
+    "finalized_at": "2026-10-06T03:38:15.912Z"
+  },
+  "audio_ref": {
+    "session_id": "ses_01M47MMRVYRGMRSY1YBNJS2VYN",
+    "sample_start": 17920,
+    "sample_end": 328880,
+    "archive_uri": null
+  },
+  "source": {
+    "type": "file_replay",
+    "codec_in": "pcm_s16le",
+    "channels": 1,
+    "channel_roles": [
+      "mixed"
+    ]
   },
   "items": [
     {
@@ -62,6 +91,7 @@
     {
       "id": "u1",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:01.120Z",
       "end_utc": "2026-10-03T18:40:04.880Z",
       "text": "Welcome to Sandbox Burger. What can I get for you today?",
@@ -70,6 +100,7 @@
     {
       "id": "u2",
       "speaker": "customer",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:05.600Z",
       "end_utc": "2026-10-03T18:40:09.200Z",
       "text": "Hi. Can I get a double cheeseburger and a medium fries?",
@@ -78,6 +109,7 @@
     {
       "id": "u3",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:09.600Z",
       "end_utc": "2026-10-03T18:40:12.880Z",
       "text": "Sure. A double cheeseburger and a medium fry.",
@@ -86,6 +118,7 @@
     {
       "id": "u4",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:12.880Z",
       "end_utc": "2026-10-03T18:40:13.760Z",
       "text": "Anything else?",
@@ -93,7 +126,8 @@
     },
     {
       "id": "u5",
-      "speaker": "crew",
+      "speaker": "customer",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:14.635Z",
       "end_utc": "2026-10-03T18:40:19.355Z",
       "text": "No. That's it. Your total is $8.28.",
@@ -102,6 +136,7 @@
     {
       "id": "u6",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:19.435Z",
       "end_utc": "2026-10-03T18:40:20.555Z",
       "text": "Please pull forward.",
@@ -113,6 +148,6 @@
     "extractor": "gemini/gemini-3.5-flash-lite",
     "menu_version": "sandbox-1",
     "pipeline_version": "0.1.0",
-    "latency_ms": 104
+    "latency_ms": 5
   }
 }

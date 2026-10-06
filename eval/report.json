@@ -1,28 +1,71 @@
 {
-  "generated_at": "2026-10-04T18:45:56.795Z",
+  "generated_at": "2026-10-06T03:36:01.217Z",
   "config": {
     "layout": "mono",
-    "transcriber": "deepgram/nova-3",
+    "scenario": null,
+    "transcriber": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
     "extractor": "gemini/gemini-3.5-flash-lite",
     "model": "gemini-3.5-flash-lite",
     "menu_version": "sandbox-1"
   },
   "summary": {
-    "fixtures": 24,
-    "fixtures_passed": 24,
+    "fixtures": 28,
+    "fixtures_passed": 27,
     "item_precision": 1,
     "item_recall": 1,
-    "bucket_accuracy": 1,
+    "bucket_accuracy": 0.995,
     "status_accuracy": 1,
+    "review_accuracy": 1,
     "flags_accuracy": 1,
     "segmentation": {
-      "expected": 34,
-      "found": 34,
+      "expected": 74,
+      "found": 74,
       "missed": 0,
       "extra": 0,
-      "mean_start_err_s": 0.13,
-      "mean_end_err_s": 0.38
+      "mean_start_err_s": 0.14,
+      "mean_end_err_s": 0.79
     }
+  },
+  "layer_b": {
+    "tickets": 67,
+    "matched": 67,
+    "exact": 66,
+    "exact_rate": 0.985,
+    "extraction_error": 0,
+    "window_change": 2,
+    "unmatched": 0,
+    "window_s": 90,
+    "source": "synthetic"
+  },
+  "live": {
+    "close_latency_p50_ms": 3001,
+    "close_latency_p95_ms": 45001,
+    "close_latency_by_trigger": {
+      "settled": {
+        "orders": 63,
+        "p50_ms": 3001,
+        "p95_ms": 3001
+      },
+      "end_of_input": {
+        "orders": 2,
+        "p50_ms": 5655,
+        "p95_ms": 19303
+      },
+      "idle_timeout": {
+        "orders": 7,
+        "p50_ms": 45001,
+        "p95_ms": 45003
+      },
+      "next_car": {
+        "orders": 5,
+        "p50_ms": 33506,
+        "p95_ms": 42517
+      }
+    },
+    "orders": 77,
+    "reopen_rate": 0,
+    "premature_reopens": 0,
+    "duplicate_versions": 0
   },
   "rows": [
     {
@@ -208,9 +251,11 @@
       "fixtures": [
         "18_back_to_back",
         "compilation_a",
-        "compilation_b"
+        "compilation_b",
+        "lane_stream_a",
+        "lane_stream_b"
       ],
-      "pass": true
+      "pass": false
     },
     {
       "row": 24,
@@ -254,6 +299,120 @@
       ],
       "pass": true,
       "detail": "429 then 200; waited 2.0s for Retry-After 2"
+    },
+    {
+      "row": 29,
+      "title": "Stream pauses after a closing cue",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "completed; evidence closing, stream_paused"
+    },
+    {
+      "row": 30,
+      "title": "Stream pauses mid-order, no cue",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "undetermined; review outcome_undetermined"
+    },
+    {
+      "row": 31,
+      "title": "Disconnect 10 s, reconnect",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "1 order(s); flags placeholder_values, stream_gap"
+    },
+    {
+      "row": 32,
+      "title": "Disconnect longer than grace",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "undetermined; flags placeholder_values, stream_interrupted"
+    },
+    {
+      "row": 33,
+      "title": "Vehicle departs before closing",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "abandoned; evidence vehicle_departed"
+    },
+    {
+      "row": 34,
+      "title": "60 s silence mid-order, no events",
+      "fixtures": [
+        "24_long_silence"
+      ],
+      "pass": true
+    },
+    {
+      "row": 35,
+      "title": "Late addition after close",
+      "fixtures": [
+        "23_late_addition"
+      ],
+      "pass": true
+    },
+    {
+      "row": 36,
+      "title": "Each wire codec",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "9 codecs, same 5 utterances, audio within 3%"
+    },
+    {
+      "row": 37,
+      "title": "Replay of an old recording",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "started_at 2025-01-15T09:30:01.000Z, finalized_at 2026-10-06"
+    },
+    {
+      "row": 38,
+      "title": "Vehicle events present",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "5 conversations, 5 opened by vehicle_arrived, 5 cars"
+    },
+    {
+      "row": 39,
+      "title": "Unclear item in a finished order",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "completed; review unclear_items"
+    },
+    {
+      "row": 40,
+      "title": "Two lanes at once",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "store_a: dbl_cheese,fries; store_b: spicy_chicken,sprite"
+    },
+    {
+      "row": 41,
+      "title": "Window change in POS ticket",
+      "fixtures": [
+        "01_simple"
+      ],
+      "pass": true
     }
   ],
   "fixtures": [
@@ -288,6 +447,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -301,28 +461,58 @@
           }
         ]
       },
-      "run_id": "run_01M443K5V4Z8JWVHRJ500J034P",
+      "run_id": "run_01M47MG81N6H77W8T562B3BF0H",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MG86P761C90Z7TVTD1QJR",
+          "ticket_id": "pos_01_simple_0",
+          "exact": false,
+          "diffs": [
+            {
+              "item": "fries|medium|x1",
+              "category": "window_change"
+            },
+            {
+              "item": "onion_rings|medium|x1",
+              "category": "window_change"
+            }
+          ]
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3005
+        ],
+        "close_by": {
+          "settled": [
+            3005
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.403,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2340,
-          "output_tokens": 534,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 103,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -357,6 +547,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -370,28 +561,49 @@
           }
         ]
       },
-      "run_id": "run_01M443K7QPCCAYHV5RX0PSMXB6",
+      "run_id": "run_01M47MG87C1VWGH89S9XG5EH3G",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MG8C23E0YCC6BSZRCPC8Z",
+          "ticket_id": "pos_02_combo_slot_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.397,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2347,
-          "output_tokens": 543,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 104,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -426,6 +638,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -439,28 +652,49 @@
           }
         ]
       },
-      "run_id": "run_01M443KE57KFVFMBWCTDRYPMN3",
+      "run_id": "run_01M47MG8C7XW6TNPTG6SP2NWBB",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MG8GS8X7ENTTGWR8PKQ02",
+          "ticket_id": "pos_03_combo_missing_drink_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.372,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2327,
-          "output_tokens": 503,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 105,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -495,6 +729,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -508,28 +743,49 @@
           }
         ]
       },
-      "run_id": "run_01M443KKDMYEFD6ZPHBXS35ST7",
+      "run_id": "run_01M47MG8GYFM5BT3D6QWNZ7JRY",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MG8NWFVT5M2JW2539492D",
+          "ticket_id": "pos_04_correction_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.469,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2370,
-          "output_tokens": 658,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 106,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -565,6 +821,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -578,28 +835,49 @@
           }
         ]
       },
-      "run_id": "run_01M443KSH8AAYVQ3CK04H0NYP9",
+      "run_id": "run_01M47MG8P0E1RKV4QP9TS6AB50",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MG8V60ADWVZP0T4Y92GPF",
+          "ticket_id": "pos_05_removed_and_upsell_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.587,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2402,
-          "output_tokens": 979,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 107,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -634,6 +912,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -647,28 +926,42 @@
           }
         ]
       },
-      "run_id": "run_01M443M02ZQ3C17RQE2S1RZ2JF",
+      "run_id": "run_01M47MG8VBE3N54VTKKTTE0W3M",
+      "layer_b": [],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.394,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2342,
-          "output_tokens": 272,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 108,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -703,6 +996,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -716,28 +1010,42 @@
           }
         ]
       },
-      "run_id": "run_01M443M4DJ9H0RS81ESG0RKESE",
+      "run_id": "run_01M47MG906V6FMXY1GEXB3647E",
+      "layer_b": [],
+      "live": {
+        "close_ms": [
+          19303
+        ],
+        "close_by": {
+          "end_of_input": [
+            19303
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.494,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2315,
-          "output_tokens": 542,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 109,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -773,6 +1081,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -786,28 +1095,49 @@
           }
         ]
       },
-      "run_id": "run_01M443MAZZYWR5JCJP91ZM4HTS",
+      "run_id": "run_01M47MG955CJPA93STR5RP4GPV",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MG99Y001T5CCRSP879V6R",
+          "ticket_id": "pos_08_per_unit_and_hesitation_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.468,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2370,
-          "output_tokens": 762,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 110,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -843,6 +1173,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -856,28 +1187,49 @@
           }
         ]
       },
-      "run_id": "run_01M443MH9764RAXNQABYZFDS35",
+      "run_id": "run_01M47MG9A29ZFH972E5V2FK2AT",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MG9F36KFDWD5QK29J1WZD",
+          "ticket_id": "pos_09_reference_back_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.539,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2382,
-          "output_tokens": 1243,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 111,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -912,6 +1264,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -925,28 +1278,49 @@
           }
         ]
       },
-      "run_id": "run_01M443MR7SV1XCBR3TZ0867BGS",
+      "run_id": "run_01M47MG9F83RSTKR0WHBKVP7TK",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MG9M3DDG78ACCRWD169JC",
+          "ticket_id": "pos_10_number_ambiguity_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.481,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2368,
-          "output_tokens": 843,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 112,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -982,6 +1356,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -995,28 +1370,49 @@
           }
         ]
       },
-      "run_id": "run_01M443MX4CK25WP3TN3RC1F5TG",
+      "run_id": "run_01M47MG9M63G4NC8K1KHSSYN73",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MG9S9S7K48HWC27H2S49R",
+          "ticket_id": "pos_11_declined_upsell_out_of_stock_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.564,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2392,
-          "output_tokens": 1262,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 113,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1051,6 +1447,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1064,28 +1461,49 @@
           }
         ]
       },
-      "run_id": "run_01M443N3SE3RYFWWD1PRWR9YGD",
+      "run_id": "run_01M47MG9SDGHHK0K5JYP3BCTFK",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MG9Y8KGS42P77A6A9322Y",
+          "ticket_id": "pos_12_combo_separately_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.438,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2360,
-          "output_tokens": 721,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 114,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1121,6 +1539,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1134,28 +1553,49 @@
           }
         ]
       },
-      "run_id": "run_01M443N8MNM6X303Q48FQPZ4TY",
+      "run_id": "run_01M47MG9YAK60SVHK3SK7SCCMX",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGA36DTQZ6JG1DY3X056A",
+          "ticket_id": "pos_13_inquiry_and_misheard_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.484,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2360,
-          "output_tokens": 684,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 115,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1190,6 +1630,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1203,28 +1644,49 @@
           }
         ]
       },
-      "run_id": "run_01M443NE75XYGK7HKJRB8FKEG7",
+      "run_id": "run_01M47MGA397WQ38QJKTVMDPVGJ",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGA7X4DT1BYSKJCFPJCVF",
+          "ticket_id": "pos_14_garbled_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3008
+        ],
+        "close_by": {
+          "settled": [
+            3008
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.378,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2347,
-          "output_tokens": 328,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 116,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1259,6 +1721,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1277,6 +1740,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1290,28 +1754,57 @@
           }
         ]
       },
-      "run_id": "run_01M443NKJ0JHE653DNB7S42S4J",
+      "run_id": "run_01M47MGA882RXXX4CCSJ6QX6WF",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGADD1H6PD75A6E0YMTHK",
+          "ticket_id": "pos_15_split_payment_1",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGADCFWTPBRZVCSKEWBKV",
+          "ticket_id": "pos_15_split_payment_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001,
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001,
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.576,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2388,
-          "output_tokens": 1358,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 117,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1346,6 +1839,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1359,28 +1853,49 @@
           }
         ]
       },
-      "run_id": "run_01M443NVHYQFHC4SXVJ409GVAV",
+      "run_id": "run_01M47MGADF5JZPNBHFXMS6XE4P",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGAJ99PDZ7M0K9W187P2G",
+          "ticket_id": "pos_16_crew_crosstalk_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.479,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2335,
-          "output_tokens": 521,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 118,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1416,6 +1931,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1429,28 +1945,49 @@
           }
         ]
       },
-      "run_id": "run_01M443NZMPBD2F4RCSP4P0D1S8",
+      "run_id": "run_01M47MGAJCAJG5AB6B6GJ0HBQZ",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGAQ14JXGEN6MHBDPHR44",
+          "ticket_id": "pos_17_readback_and_total_mismatch_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.392,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2340,
-          "output_tokens": 517,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 119,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1487,6 +2024,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1505,6 +2043,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1518,28 +2057,57 @@
           }
         ]
       },
-      "run_id": "run_01M443P5Q0JS3E6YDYREC15EEP",
+      "run_id": "run_01M47MGAQ5CF2PJF3WSN781TK2",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGAWM99MWZGB4R0GAMX6G",
+          "ticket_id": "pos_18_back_to_back_0",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGAWM9JKKZF044SS3DR1A",
+          "ticket_id": "pos_18_back_to_back_1",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3000,
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3000,
+            3000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.661,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 2,
-          "input_tokens": 4622,
-          "output_tokens": 808,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 2,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 121,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1574,6 +2142,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1587,28 +2156,49 @@
           }
         ]
       },
-      "run_id": "run_01M443PGX3KMK0V1HP6P4SZXRM",
+      "run_id": "run_01M47MGAWRC5KSMHCNYAH1JDA8",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGB0Z38SC867F5Q2V0Q0N",
+          "ticket_id": "pos_19_truncated_start_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.222,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2296,
-          "output_tokens": 304,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 122,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1643,6 +2233,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1656,28 +2247,42 @@
           }
         ]
       },
-      "run_id": "run_01M443PPJMW17X3J92D5SFB4SS",
+      "run_id": "run_01M47MGB12W6HSPAR9MG6F4CTT",
+      "layer_b": [],
+      "live": {
+        "close_ms": [
+          5655
+        ],
+        "close_by": {
+          "end_of_input": [
+            5655
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.154,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2285,
-          "output_tokens": 323,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 123,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1712,6 +2317,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1725,28 +2331,49 @@
           }
         ]
       },
-      "run_id": "run_01M443PWG9XJM67EWCP9VBPFYB",
+      "run_id": "run_01M47MGB551NPTFH3NC2KA5B1G",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGB9Z86X89XQXDJW0QJ2S",
+          "ticket_id": "pos_21_spanish_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.449,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2357,
-          "output_tokens": 670,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 124,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -1781,6 +2408,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1794,28 +2422,224 @@
           }
         ]
       },
-      "run_id": "run_01M443Q2ZDG3AWEHGX20PTHB8W",
+      "run_id": "run_01M47MGBA2CWN1VSS60S4W74N3",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGBF0C3VMQEYQJ28HCV3C",
+          "ticket_id": "pos_22_heavy_noise_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 0.427,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 1,
-          "input_tokens": 2344,
-          "output_tokens": 522,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 125,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "23_late_addition",
+      "title": "Late addition after the close: \"oh wait, add a small fries\"",
+      "file": "fixtures/audio/23_late_addition.mono.clean.mp3",
+      "covers": [
+        35
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          15.863
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M47MGBF41JDPJ295FKEBK7Z3",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGBMG2E3KDTDA163GRMVW",
+          "ticket_id": "pos_23_late_addition_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 1,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 2,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "24_long_silence",
+      "title": "60 seconds of silence mid-order, no closing and no vehicle events",
+      "file": "fixtures/audio/24_long_silence.mono.clean.mp3",
+      "covers": [
+        34
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.34
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M47MGBMMDVRF87QZC4EHWV6Z",
+      "layer_b": [],
+      "live": {
+        "close_ms": [
+          45001
+        ],
+        "close_by": {
+          "idle_timeout": [
+            45001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
         }
       }
     },
@@ -1858,6 +2682,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1876,6 +2701,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1894,6 +2720,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1912,6 +2739,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1930,6 +2758,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -1943,28 +2772,77 @@
           }
         ]
       },
-      "run_id": "run_01M443Q8KGS5FZFMQW0CQGRVYG",
+      "run_id": "run_01M47MGBVGQPXPVERNHMST5ARM",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGC7517MHKGPXMGYWMAHW",
+          "ticket_id": "pos_compilation_a_2",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGC78T70PSYKGFGX9942X",
+          "ticket_id": "pos_compilation_a_4",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGC731M31PK5M9WDMG8QJ",
+          "ticket_id": "pos_compilation_a_0",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGC7384KT75BNCEG92TVW",
+          "ticket_id": "pos_compilation_a_1",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001,
+          3000,
+          3001,
+          25441,
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001,
+            3000,
+            3001,
+            3001
+          ],
+          "next_car": [
+            25441
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 2.974,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 5,
-          "input_tokens": 11755,
-          "output_tokens": 3306,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 5,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 130,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
         }
       }
     },
@@ -2009,6 +2887,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -2027,6 +2906,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -2045,6 +2925,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -2063,6 +2944,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -2081,6 +2963,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -2099,6 +2982,7 @@
               "not_ordered": true,
               "flags": true,
               "status": true,
+              "review": true,
               "group": true,
               "declined_combo": true
             },
@@ -2112,37 +2996,1360 @@
           }
         ]
       },
-      "run_id": "run_01M443R6A054VTP7VX9747SA35",
+      "run_id": "run_01M47MGC7CS3G17ZAMCCNYW4WW",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGCKY98YKBQ9ECTNYYM4S",
+          "ticket_id": "pos_compilation_b_1",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGCM1TST6R1CR7XT3GHJW",
+          "ticket_id": "pos_compilation_b_2",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGCM360H0STYH6GBZR7DE",
+          "ticket_id": "pos_compilation_b_3",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGCM4RM2G9EDG4TX5MFEA",
+          "ticket_id": "pos_compilation_b_4",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGCKYVDJCM46WDCP6TA13",
+          "ticket_id": "pos_compilation_b_0",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGCM5E1SP8NB2NXM02KBZ",
+          "ticket_id": "pos_compilation_b_5",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          15621,
+          3001,
+          3001,
+          3001,
+          3000,
+          3000
+        ],
+        "close_by": {
+          "next_car": [
+            15621
+          ],
+          "settled": [
+            3001,
+            3001,
+            3001,
+            3000,
+            3000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
       "usage": {
         "stt": {
-          "provider": "deepgram/nova-3",
-          "audio_minutes": 3.362,
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
           "cached": true,
           "role_llm_calls": 0
         },
         "llm": {
-          "calls": 6,
-          "input_tokens": 14126,
-          "output_tokens": 4126,
-          "cached_calls": 0,
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 6,
           "model": "gemini-3.5-flash-lite"
         },
         "segmentation_llm_calls": 0,
         "gemini_today": {
-          "day": "2026-10-04",
-          "requests": 136,
-          "exhausted": false,
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
           "tier": "unknown",
-          "cap": 200
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "lane_stream_a",
+      "title": "Lane stream A: 19 cars over about 20 minutes with 25 to 75 s gaps",
+      "file": "fixtures/audio/lane_stream_a.mono.moderate.mp3",
+      "covers": [
+        23
+      ],
+      "pass": false,
+      "segmentation": {
+        "expected": 19,
+        "found": 19,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12,
+          0.188,
+          0.163,
+          0.103,
+          0.172,
+          0.186,
+          0.196,
+          0.165,
+          0.177,
+          0.157,
+          0.182,
+          0.112,
+          0.136,
+          0.177,
+          0.159,
+          0.164,
+          0.176,
+          0.124,
+          0.144
+        ],
+        "end_err_s": [
+          0.387,
+          0.521,
+          0.362,
+          0.333,
+          0.294,
+          0.329,
+          0.261,
+          0.353,
+          0.293,
+          0.427,
+          0.538,
+          0.344,
+          0.363,
+          0.351,
+          0.371,
+          0.334,
+          0.441,
+          0.431,
+          0.342
+        ]
+      },
+      "orders": {
+        "expected": 20,
+        "produced": 20,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 0,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": false,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 4,
+            "diffs": [
+              "missing not_ordered cookie:uncommitted"
+            ],
+            "pass": false
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 4,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 5,
+            "bucket_total": 5,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M47MGCMA4PEB7K5T8NDZBWWY",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGEPVT7FYXNNFHYNRFE0H",
+          "ticket_id": "pos_lane_stream_a_8",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEQ00M5KB0P5JNASSABA",
+          "ticket_id": "pos_lane_stream_a_10",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEPG0K7HQDTNFFPD2H15",
+          "ticket_id": "pos_lane_stream_a_4",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEPRAHMRMZ52T0TYM9YA",
+          "ticket_id": "pos_lane_stream_a_7",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEQ2GGH6AH0WMPNEQFKA",
+          "ticket_id": "pos_lane_stream_a_11",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEQNWCBAHYXNTYJSXC2M",
+          "ticket_id": "pos_lane_stream_a_17",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEQKP76C0707EVFD0QW9",
+          "ticket_id": "pos_lane_stream_a_16",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEPC3PKE33SM9THK1TN3",
+          "ticket_id": "pos_lane_stream_a_2",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEQNE84PDSVA2YYHZQ9A",
+          "ticket_id": "pos_lane_stream_a_15",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEPXHZMMJPNRJEDG588R",
+          "ticket_id": "pos_lane_stream_a_9",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEQ5AETHNA3ZX6M775JT",
+          "ticket_id": "pos_lane_stream_a_12",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEQRG6HCRJ8AZHGR4ED5",
+          "ticket_id": "pos_lane_stream_a_18",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEP91CMV4DXJ4R1T05NE",
+          "ticket_id": "pos_lane_stream_a_0",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEPEMRAS4KGRZN718TER",
+          "ticket_id": "pos_lane_stream_a_3",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEP9AMS61A9N5YPKX3KH",
+          "ticket_id": "pos_lane_stream_a_1",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEQ7645NPT46VCDG21JW",
+          "ticket_id": "pos_lane_stream_a_13",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEQ9ZGAWRYG2W6MDA9PT",
+          "ticket_id": "pos_lane_stream_a_14",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGEQTGH0GYH9FJSFVCBDN",
+          "ticket_id": "pos_lane_stream_a_19",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001,
+          3001,
+          3001,
+          33506,
+          3001,
+          3001,
+          45000,
+          3001,
+          45001,
+          3001,
+          3001,
+          3001,
+          3001,
+          42517,
+          3001,
+          3001,
+          3001,
+          3001,
+          3000,
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3000,
+            3000
+          ],
+          "next_car": [
+            33506,
+            42517
+          ],
+          "idle_timeout": [
+            45000,
+            45001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 19,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "lane_stream_b",
+      "title": "Lane stream B: 19 cars including a late addition, a long silence and Spanish (clean audio, so no heavy-noise car)",
+      "file": "fixtures/audio/lane_stream_b.mono.clean.mp3",
+      "covers": [
+        23
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 19,
+        "found": 19,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12,
+          0.179,
+          0.138,
+          0.125,
+          0.193,
+          0.155,
+          0.153,
+          0.18,
+          0.16,
+          0.196,
+          0.161,
+          0.151,
+          0.119,
+          0.112,
+          0.118,
+          0.186,
+          0.108,
+          0.066,
+          0.143
+        ],
+        "end_err_s": [
+          0.346,
+          0.307,
+          15.845,
+          0.427,
+          0.345,
+          0.267,
+          0.35,
+          0.38,
+          0.384,
+          0.389,
+          0.508,
+          0.489,
+          0.374,
+          0.363,
+          0.304,
+          0.358,
+          0.326,
+          0.412,
+          0.316
+        ]
+      },
+      "orders": {
+        "expected": 20,
+        "produced": 20,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 4,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 5,
+            "bucket_total": 5,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 0,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M47MGER4BPAK0FEEH6XAK3R8",
+      "layer_b": [
+        {
+          "order_id": "ord_01M47MGGR9CZKHM39CPV925CTQ",
+          "ticket_id": "pos_lane_stream_b_7",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGQR5P0XYRYDH6XYFPJV",
+          "ticket_id": "pos_lane_stream_b_1",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGRH2BET1W0WSYD9KYZS",
+          "ticket_id": "pos_lane_stream_b_11",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGQTA6S689STKB66MYGP",
+          "ticket_id": "pos_lane_stream_b_2",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGQRY0QEPVQ782MHNXQC",
+          "ticket_id": "pos_lane_stream_b_0",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGRV00KQHZT7JFEHGM34",
+          "ticket_id": "pos_lane_stream_b_16",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGRSQ1PP64Z11EQBY3Z6",
+          "ticket_id": "pos_lane_stream_b_15",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGRBWJDTPJVNCPJMTR5M",
+          "ticket_id": "pos_lane_stream_b_8",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGR292KNTW0FQV5YD1RX",
+          "ticket_id": "pos_lane_stream_b_6",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGS2991Y916A6V8R8YP0",
+          "ticket_id": "pos_lane_stream_b_19",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGQY6NSF8QWYE2XDTET2",
+          "ticket_id": "pos_lane_stream_b_3",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGRPAWR9W03C3HZPKR5B",
+          "ticket_id": "pos_lane_stream_b_13",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGRWNZMX605RQAZK5GDY",
+          "ticket_id": "pos_lane_stream_b_17",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGQY3TW68ZBT862HPXEQ",
+          "ticket_id": "pos_lane_stream_b_4",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGRF4RKZM3AV2CFZ924R",
+          "ticket_id": "pos_lane_stream_b_10",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGRYVPCDHDGW65JZZNFB",
+          "ticket_id": "pos_lane_stream_b_18",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M47MGGRQ6RVC1DEY6WBCKXBJ",
+          "ticket_id": "pos_lane_stream_b_14",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001,
+          3001,
+          3001,
+          3001,
+          39505,
+          45003,
+          3001,
+          45001,
+          3001,
+          45000,
+          3001,
+          3001,
+          3000,
+          3000,
+          3000,
+          3000,
+          3001,
+          45001,
+          3001,
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3001,
+            3000,
+            3000,
+            3000,
+            3000,
+            3001,
+            3001,
+            3001
+          ],
+          "next_car": [
+            39505
+          ],
+          "idle_timeout": [
+            45003,
+            45001,
+            45000,
+            45001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 1,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 20,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-05",
+          "requests": 129,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
         }
       }
     }
   ],
   "usage": {
     "deepgram_minutes": 0,
-    "llm_calls": 34,
-    "llm_cached_calls": 0,
-    "input_tokens": 79870,
-    "output_tokens": 22329
+    "llm_calls": 0,
+    "llm_cached_calls": 76,
+    "input_tokens": 0,
+    "output_tokens": 0
   }
 }

@@ -20,8 +20,9 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 10. Review screen | v2-step/10-review-screen | Done: PR #12 |
 | 11. Eval v2 | v2-step/11-eval | Done: PR #13 |
 | 12. Human-voiced held-out set | v2-step/12-heldout | Done: PR #14 (tooling; recordings need people) |
-| 13. Retire the batch path | v2-step/13-retire-batch | PR #15 |
-| 14. Docs | v2-step/14-docs | Next |
+| 13. Retire the batch path | v2-step/13-retire-batch | Done: PR #15 |
+| 14. Docs | v2-step/14-docs | PR #16 |
+| 15. Release review and merge | v2 into main | Next (merge into main waits for Aarnav) |
 
 ## Decisions not covered by the plan
 
@@ -80,6 +81,23 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 14. Docs
+
+- README rewritten for v2:
+  - what the service is now, and the live diagram
+  - how to run the live service, tokens, replays, sim-check and the held-out set
+  - the web pages, the repository layout, the live input and the conversation tracker
+  - the outcome and review model, and webhook schema 2.0
+  - placeholders (now including the HME wire format), a configuration table for the new variables (`.env.example` is outside what I can edit), and a simulator guide
+  - eval results for both layers and the live path, and the known gaps
+- Known gaps:
+  - removed: "batch, not streaming" and "no human-review loop"
+  - added: the HME interface, close latency with no closing cue, live recognition barely exercised, dev routes behind a proxy, no sign-in for reviews
+  - updated: the held-out set, stereo, wall-clock time, lane bleed
+  - kept verbatim: "Ingest authentication" and "Long-term data storage"
+- `examples/` regenerated from replays through the lane (schema 2.0). All cached: 0 Deepgram minutes, 0 Gemini requests.
+- `eval/report.json` is now the v2 real-provider report: 27/28 fixtures and 40/41 rows, with Layer B and live metrics.
 
 ### 13. Retire the batch path (D1)
 
