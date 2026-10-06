@@ -11,7 +11,8 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 2. Versioned corrections | v2-step/02-versions | Done |
 | 3. Input layer and replay | v2-step/03-input-layer | Done |
 | 4. Clocks and IDs | v2-step/04-clocks-ids | Done |
-| 5. Conversation tracker | v2-step/05-tracker | Next |
+| 5. Conversation tracker | v2-step/05-tracker | Done |
+| 6. Deepgram streaming | v2-step/06-deepgram-live | Next |
 
 ## Decisions not covered by the plan
 
@@ -33,9 +34,23 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **Replay `--via direct` sends canonical PCM.** Wire codecs (mu-law, Opus, MP3 and so on) are exercised by the decoder tests now and over a real socket with `--via ws` in step 8 (row 36).
 - **Simulator text lines.** A dev-only `script_line` source message carries typed lines from the simulator's text mode. HME never sends it.
 - **Fixture recording start.** Every fixture's `recording_start_utc` is `2026-10-03T18:40:00Z`, the same start the v1 eval used.
+- **Tracker details the plan left open.** An arrival only starts a new conversation when the next line greets a new car (a ghost arrival during crew chatter no longer splits an order). A customer "thanks" or "that's it" during the close resets the settle timer instead of reopening ordering. A late addition does not reopen when the speaker greets ("hi, can I get...") or a car has arrived since. Crew lines heard just before a conversation opens (up to 10 s) belong to it. A conversation with no customer speech makes no order, as in v1.
+- **Speech watermark.** Timers never run past speech still in progress (the transcriber reports how far its output is final), so a close does not settle while the customer is mid-sentence.
+- **Late vehicle evidence.** A vehicle event in the reopen window re-runs the outcome with the same events (no new LLM call) and sends `order.updated` only if the status changes.
+- **Hard cap.** A conversation longer than 6 minutes is finalized at the cap (not split at the best gap as v1 did); none of the fixtures come near it.
+- **Ceiling runs stay free.** The oracle extractor turns the LLM tie-breaker off. Earlier ceiling runs today sent 11 free-tier tie-breaker requests (cached; reruns are free).
+- **Live-only fixture.** `23_late_addition` is skipped by the v1 file path (it needs a reopen); the lane path expects `order_version` 2.
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 5. Conversation tracker
+
+- `lane/tracker.ts`: pure state machine (IDLE, ACTIVE, CLOSING, FINALIZED, reopen) with timers passed in (settle 3 s, idle 45 s, grace 180 s, reopen 20 s, cap 6 min; all in `config/sandbox.ts`, overridable by env). Every decision is logged with its trigger and signals.
+- Gray zones ask the LLM yes/no question once, with a 3 s deadline and no retries; no answer means the rules decide. Live calls never wait for a per-minute slot.
+- The lane runs the tracker by default; finalizations run per conversation in order (v1, then v2 on a reopen or late evidence) while audio keeps flowing.
+- New fixtures: `23_late_addition` (row 35) and `24_long_silence` (row 34).
+- Done when: rows 29 to 35, 38 and 39 pass on the ceiling run. All pass; the full lane eval is 26/26 with zero boundary error, and 26/26 under the vehicle-events, paused, noisy and stereo scenarios.
 
 ### 4. Clocks and IDs
 

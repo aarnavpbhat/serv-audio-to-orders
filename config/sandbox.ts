@@ -54,6 +54,16 @@ export interface SandboxConfig {
   totalTolerance: number;
   /** Plan D13: a quantity above maxQuantity on one line, or a total above maxTotal, sends the order to review. */
   reviewCap: { maxQuantity: number; maxTotal: number };
+  /** Live conversation tracker timers (seconds). Shorter settle = faster orders but more reopens. */
+  tracker: {
+    closeSettleS: number;
+    idleTimeoutS: number;
+    reconnectGraceS: number;
+    reopenWindowS: number;
+    maxConversationS: number;
+    /** Gray-zone "is this a new car?" question: one try, this deadline, then the rules decide. */
+    judgeTimeoutMs: number;
+  };
   segment: {
     gapS: number;
     maxSegmentS: number;
@@ -247,6 +257,14 @@ export function getConfig(): SandboxConfig {
     lowAudioSnrDb: num("LOW_AUDIO_SNR_DB", 15),
     totalTolerance: 0.05,
     reviewCap: { maxQuantity: num("REVIEW_MAX_QUANTITY", 10), maxTotal: num("REVIEW_MAX_TOTAL", 150) },
+    tracker: {
+      closeSettleS: num("CLOSE_SETTLE_S", 3),
+      idleTimeoutS: num("IDLE_TIMEOUT_S", 45),
+      reconnectGraceS: num("RECONNECT_GRACE_S", 180),
+      reopenWindowS: num("REOPEN_WINDOW_S", 20),
+      maxConversationS: 360,
+      judgeTimeoutMs: num("JUDGE_TIMEOUT_MS", 3000),
+    },
     segment: {
       gapS: num("SEGMENT_GAP_S", 8),
       maxSegmentS: 360,

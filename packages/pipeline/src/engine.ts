@@ -21,7 +21,7 @@ export type ExtractorKind = "gemini" | "fuzzy" | "oracle";
 export interface EngineOptions {
   transcriber?: TranscriberKind;
   extractor?: ExtractorKind;
-  /** Disable the LLM boundary / role tie-breakers. */
+  /** Disable the LLM boundary / role tie-breakers. The oracle (ceiling) extractor implies this, so ceiling runs stay free. */
   noJudge?: boolean;
   log?: (msg: string) => void;
 }
@@ -62,7 +62,7 @@ export function createEngine(opts: EngineOptions = {}): Engine {
     ? new GeminiClient(cfg.geminiApiKey, cfg.geminiModel, cfg.geminiRpm, path.join(cfg.paths.cacheDir, "llm"), { cap: cfg.geminiDailyCap, file: path.join(cfg.paths.dataDir, "gemini-ledger.json") }, cfg.geminiThinking)
     : null;
   if (extractorKind === "gemini" && !gemini) throw new ConfigError("GEMINI_API_KEY is not set. Add it to .env, or use --extractor fuzzy");
-  const judge = gemini && !opts.noJudge ? new GeminiJudge(gemini) : null;
+  const judge = gemini && !opts.noJudge && extractorKind !== "oracle" ? new GeminiJudge(gemini) : null;
 
   const transcriberKind = opts.transcriber ?? defaultTranscriber(cfg);
   let transcriber: Transcriber;

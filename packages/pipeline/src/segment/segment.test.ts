@@ -12,7 +12,9 @@ import { repoRoot } from "../test-helpers";
 const cfg = getConfig();
 const segCfg: SegmentConfig = { ...cfg.segment, lowAudioQualityMeanConf: cfg.lowAudioQualityMeanConf };
 const audioDir = path.join(repoRoot, "fixtures/audio");
-const files = readdirSync(audioDir).filter((f) => f.endsWith(".mono.clean.mp3") || f.endsWith(".mono.moderate.mp3") || f.endsWith(".mono.heavy.mp3"));
+// A late addition after the close is one car to the live tracker (it reopens the order), but
+// v1's whole-file rules see two conversations; that case is covered by the tracker tests.
+const files = readdirSync(audioDir).filter((f) => /\.mono\.(clean|moderate|heavy)\.mp3$/.test(f) && !f.startsWith("23_late_addition"));
 const opts: TranscribeOptions = { channelMap: null, keyterms: [], language: "en", cacheDir: "", lowConfWord: 0.6 };
 
 async function segmentsFor(file: string) {

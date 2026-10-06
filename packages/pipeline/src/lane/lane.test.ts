@@ -17,7 +17,7 @@ describe("replay through the lane", () => {
     const engine = testEngine();
     const file = audio("18_back_to_back");
     const v1 = await runPipeline(engine, file, { channelMap: null, audioStartUtc: "2026-10-03T18:40:00Z", deliver: false });
-    const v2 = await replayFile(engine, file, { transcriber: new ScriptStreamingTranscriber(), deliver: false });
+    const v2 = await replayFile(engine, file, { transcriber: new ScriptStreamingTranscriber(), deliver: false, mode: "batch" });
     expect(shape(v2.orders)).toEqual(shape(v1.orders));
     expect(v2.segmentation.segments.map((s) => [s.start_s, s.end_s])).toEqual(v1.segmentation.segments.map((s) => [s.start_s, s.end_s]));
   });

@@ -90,7 +90,21 @@ class ScriptStream implements TranscriptStream {
     };
   }
 
-  pause(): void {}
+  watermarkS(): number {
+    // The earliest heard utterance that started but is not final yet.
+    for (const u of this.timeline?.utterances ?? []) {
+      if (this.seen.has(u.id) || u.start_s >= this.heardTo) continue;
+      if (u.end_s + SCRIPT_ENDPOINT_S > this.heardTo) return u.start_s - this.offsetS;
+    }
+    return Number.POSITIVE_INFINITY;
+  }
+
+  /** A pause ends whatever was being said: finalize what was heard, drop the rest. */
+  pause(): void {
+    this.emitUpTo(this.heardTo);
+    for (const u of this.timeline?.utterances ?? []) if (u.start_s < this.heardTo) this.seen.add(u.id);
+  }
+
   resume(): void {}
 
   async end(): Promise<void> {

@@ -33,7 +33,8 @@ export class OracleExtractor implements Extractor {
       for (const group of script?.events ?? []) {
         const mapped = group.map((e) => ({ ...e, source_utterance_ids: e.source_utterance_ids.map((u) => byTurn.get(`${fid}#${Number(u.slice(1)) - 1}`) ?? u) }));
         if (!mapped.some((e) => e.source_utterance_ids.some((u) => inSegment.has(u)))) continue;
-        for (const e of mapped) {
+        // Only what was said inside this conversation so far (a reopened order adds the rest later).
+        for (const e of mapped.filter((x) => x.source_utterance_ids.every((u) => inSegment.has(u)))) {
           const t = e.source_utterance_ids.map((u) => start.get(u)).filter((x): x is number => x !== undefined);
           events.push(OrderEvent.parse({ ...e, t_s: t.length ? Math.max(...t) : null }));
         }

@@ -13,7 +13,7 @@ import { postprocess, type SegmentContext } from "../postprocess/postprocess";
 import type { CorrectionReason, Flag, Order, OrderEvent, OrderPayload, Segment, Transcript, Utterance } from "../schemas";
 import { isChatter } from "../segment/segment";
 import { insertOrder, type OutboxRow } from "../store/db";
-import type { ExtractResult, LlmUsage } from "../extract/types";
+import { emptyUsage, type ExtractResult, type LlmUsage } from "../extract/types";
 import { toPayload, type PayloadContext } from "../webhook/payload";
 
 export interface RunOrder {
@@ -102,6 +102,10 @@ export interface FinalizeInput {
   correctionReason?: CorrectionReason | null;
   archiveUri?: string | null;
   deliver: boolean;
+  /** Late evidence: build the new version only if the statuses would differ from these. */
+  onlyIfStatusChanges?: string[];
+  /** Reuse these events instead of extracting again (late evidence changes the outcome, not the items). */
+  events?: OrderEvent[];
   /** Processing already spent before extraction (ingest, transcription, segmentation), for latency_ms. */
   latencyBaseMs?: number;
   now?: () => number;
@@ -123,7 +127,9 @@ export async function finalizeConversation(engine: Engine, input: FinalizeInput)
   const all = seg.utterance_ids.map((id) => byId.get(id)).filter((u) => u !== undefined);
   const utterances = all.filter((u) => !skip.has(u.id));
 
-  const ex = await engine.extractor.extract({ segment: seg, utterances, catalog: engine.catalog, ...(input.audioFile ? { audioFile: input.audioFile } : {}) });
+  const ex: ExtractResult = input.events
+    ? { events: input.events, usage: emptyUsage("none"), warnings: [], raw: null, repaired: false, fallback: false }
+    : await engine.extractor.extract({ segment: seg, utterances, catalog: engine.catalog, ...(input.audioFile ? { audioFile: input.audioFile } : {}) });
   const state = replay(ex.events, engine.catalog);
   const ctx = segmentContext(seg, { lowAudioQualityMeanConf: cfg.lowAudioQualityMeanConf, lowAudioSnrDb: cfg.lowAudioSnrDb, ...(input.levelsDb ? { levelsDb: input.levelsDb } : {}) }, all, input.signals);
   // ASR language tags miss short or mixed-language turns; the model's reading counts too.
@@ -144,6 +150,9 @@ export async function finalizeConversation(engine: Engine, input: FinalizeInput)
     newGroupId: () => input.groupId ?? newId("grp"),
   });
 
+  if (input.onlyIfStatusChanges && orders.map((o) => o.status).join() === input.onlyIfStatusChanges.join()) {
+    return { orders: [], sends: [], usage: ex.usage };
+  }
   const latency = Math.round((input.latencyBaseMs ?? 0) + (performance.now() - t0));
   const results: RunOrder[] = [];
   const sends: Promise<OutboxRow>[] = [];

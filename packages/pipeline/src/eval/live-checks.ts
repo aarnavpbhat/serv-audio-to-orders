@@ -3,9 +3,12 @@
  * lane, each with its own pass condition. Free: script transcriber, and the
  * eval's extractor (the oracle for the ceiling run).
  */
+import { readdirSync } from "node:fs";
 import path from "node:path";
 import type { Engine } from "../engine";
 import { FileReplaySource } from "../input/file-replay";
+import { Scenario, type ScenarioInput } from "../input/scenario";
+import { loadTimeline } from "../transcribe/script";
 import { mergeSources } from "../input/merge";
 import { LaneManager } from "../lane/manager";
 import { replayFile } from "../lane/replay";
@@ -18,7 +21,12 @@ export interface LiveCheck {
   detail: string;
 }
 
-const audio = (engine: Engine, id: string) => path.join(engine.cfg.paths.fixturesDir, "audio", `${id}.mono.clean.mp3`);
+/** The mono rendering of a fixture, whatever its noise level. */
+function audio(engine: Engine, id: string): string {
+  const dir = path.join(engine.cfg.paths.fixturesDir, "audio");
+  const hit = readdirSync(dir).find((f) => f.startsWith(`${id}.mono.`) && f.endsWith(".mp3"));
+  return path.join(dir, hit ?? `${id}.mono.clean.mp3`);
+}
 
 /** Row 37: a recording replayed today carries the times it was spoken. */
 async function oldRecording(engine: Engine): Promise<LiveCheck> {
@@ -51,14 +59,82 @@ async function twoLanes(engine: Engine): Promise<LiveCheck> {
   return { row: 40, pass, detail: `store_a: ${items(la)}; store_b: ${items(lb)}` };
 }
 
+/** Replay one fixture with a scenario built from its own timeline. */
+async function replay(engine: Engine, id: string, scenario: (t: { end: (uid: string) => number }) => Omit<ScenarioInput, "name">) {
+  const file = audio(engine, id);
+  const tl = loadTimeline(file);
+  const end = (uid: string) => tl?.utterances.find((u) => u.id === uid)?.end_s ?? 0;
+  return replayFile(engine, file, { transcriber: new ScriptStreamingTranscriber(), deliver: false, scenario: Scenario.parse({ ...scenario({ end }), name: "check" }) });
+}
+
+/** Row 29: the stream pauses right after the crew's closing cue: completed, the cue is the evidence. */
+async function pauseAfterClose(engine: Engine): Promise<LiveCheck> {
+  const r = await replay(engine, "01_simple", ({ end }) => ({ pauses: [{ at_s: end("u5") + 0.3, for_s: 20 }] }));
+  const o = r.orders[0]?.order;
+  const pass = r.orders.length === 1 && o?.status === "completed" && o.outcome_evidence[0]?.kind === "closing" && o.outcome_evidence.some((e) => e.event === "stream_paused" && e.context_only);
+  return { row: 29, pass, detail: `${o?.status ?? "no order"}; evidence ${o?.outcome_evidence.map((e) => e.kind ?? e.event).join(", ") ?? "-"}` };
+}
+
+/** Row 30: the stream pauses mid-order with no cue: undetermined, never completed. */
+async function pauseMidOrder(engine: Engine): Promise<LiveCheck> {
+  const r = await replay(engine, "01_simple", ({ end }) => ({ pauses: [{ at_s: end("u2") + 0.5, for_s: 60 }] }));
+  const o = r.orders[0]?.order;
+  const pass = r.orders.length === 1 && o?.status === "undetermined" && (o.outcome_evidence.every((e) => e.context_only) ?? false) && o.review.reasons.includes("outcome_undetermined");
+  return { row: 30, pass, detail: `${o?.status ?? "no order"}; review ${o?.review.reasons.join(", ") ?? "-"}` };
+}
+
+/** Row 31: a 10 s disconnect that comes back: one order, flagged stream_gap. */
+async function disconnectReconnect(engine: Engine): Promise<LiveCheck> {
+  const r = await replay(engine, "01_simple", ({ end }) => ({ disconnects: [{ at_s: end("u2") + 0.2, for_s: 10, reconnect: true }] }));
+  const flags = r.orders.flatMap((o) => o.order.flags);
+  const pass = r.orders.length === 1 && flags.includes("stream_gap") && !flags.includes("stream_interrupted");
+  return { row: 31, pass, detail: `${r.orders.length} order(s); flags ${flags.join(", ") || "-"}` };
+}
+
+/** Row 32: a disconnect longer than the grace window: undetermined, stream_interrupted. */
+async function disconnectLong(engine: Engine): Promise<LiveCheck> {
+  const r = await replay(engine, "01_simple", ({ end }) => ({ disconnects: [{ at_s: end("u2") + 0.2, for_s: 600, reconnect: false }] }));
+  const o = r.orders[0]?.order;
+  const pass = r.orders.length === 1 && o?.status === "undetermined" && o.flags.includes("stream_interrupted");
+  return { row: 32, pass, detail: `${o?.status ?? "no order"}; flags ${o?.flags.join(", ") ?? "-"}` };
+}
+
+/** Row 33: the car leaves before any close: abandoned, with the vehicle event as evidence. */
+async function departsBeforeClose(engine: Engine): Promise<LiveCheck> {
+  const r = await replay(engine, "07_abandoned", () => ({ vehicle_events: "on" }));
+  const o = r.orders[0]?.order;
+  const pass = o?.status === "abandoned" && o.outcome_evidence[0]?.event === "vehicle_departed";
+  return { row: 33, pass, detail: `${o?.status ?? "no order"}; evidence ${o?.outcome_evidence.map((e) => e.kind ?? e.event).join(", ") ?? "-"}` };
+}
+
+/** Row 38: with vehicle events, every conversation opens on its car's arrival. */
+async function boundariesFollowEvents(engine: Engine): Promise<LiveCheck> {
+  const r = await replay(engine, "compilation_a", () => ({ vehicle_events: "on" }));
+  const opens = r.decisions.filter((d) => d.to === "ACTIVE" && (d.from === "IDLE" || d.from === "FINALIZED"));
+  const byArrival = opens.filter((d) => d.trigger === "vehicle_arrived").length;
+  const tl = loadTimeline(audio(engine, "compilation_a"));
+  const cars = new Set(tl?.orders.map((o) => `${o.start_s}`)).size;
+  const pass = r.segmentation.segments.length === cars && byArrival === cars;
+  return { row: 38, pass, detail: `${r.segmentation.segments.length} conversations, ${byArrival} opened by vehicle_arrived, ${cars} cars` };
+}
+
+/** Row 39: an unclear item in a finished order: completed, with review.required. */
+async function unclearItem(engine: Engine): Promise<LiveCheck> {
+  const r = await replay(engine, "14_garbled", () => ({}));
+  const o = r.orders[0]?.order;
+  const pass = o?.status === "completed" && o.review.required && o.review.reasons.includes("unclear_items");
+  return { row: 39, pass, detail: `${o?.status ?? "no order"}; review ${o?.review.reasons.join(", ") ?? "-"}` };
+}
+
 export async function runLiveChecks(engine: Engine): Promise<LiveCheck[]> {
-  const checks = [oldRecording, twoLanes];
+  const checks = [pauseAfterClose, pauseMidOrder, disconnectReconnect, disconnectLong, departsBeforeClose, oldRecording, boundariesFollowEvents, unclearItem, twoLanes];
   const out: LiveCheck[] = [];
   for (const c of checks) {
     try {
       out.push(await c(engine));
     } catch (e) {
       out.push({ row: Number.NaN, pass: false, detail: `${c.name}: ${(e as Error).message}` });
+      engine.log(`live check ${c.name} failed: ${(e as Error).message}`);
     }
   }
   return out;
