@@ -1,7 +1,7 @@
 /** Server-side reads shaped for the UI. */
 import { readFileSync } from "node:fs";
 import { getConfig, servSettings } from "@serv/config";
-import { dataUsage, store, type DataUsage, type EvalReport, type OrderEvent, type OrderPayload, type Segmentation, type Transcript, type AppliedEvent } from "@serv/pipeline";
+import { dataUsage, store, type DataUsage, type EvalReport, type FolderReport, type OrderEvent, type OrderPayload, type Segmentation, type Transcript, type AppliedEvent } from "@serv/pipeline";
 import { queuePosition } from "./jobs";
 
 export function db() {
@@ -187,4 +187,13 @@ export function ordersNeedingReview(limit = 100): ReviewOrder[] {
     .map((r) => ({ payload: JSON.parse(r.payload) as OrderPayload, run_id: r.run_id, created_at: r.created_at }))
     .filter((r) => r.payload.review?.required)
     .slice(0, limit);
+}
+
+/** The held-out set's own report (scored apart from the main eval), if it has been run. */
+export function readHeldoutReport(): FolderReport | null {
+  try {
+    return JSON.parse(readFileSync(`${getConfig().paths.evalDir}/heldout-report.json`, "utf8")) as FolderReport;
+  } catch {
+    return null;
+  }
 }
