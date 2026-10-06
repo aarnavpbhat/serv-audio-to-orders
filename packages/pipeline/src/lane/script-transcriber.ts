@@ -16,13 +16,15 @@ export const SCRIPT_ENDPOINT_S = 0.3;
 export class ScriptStreamingTranscriber implements StreamingTranscriber {
   readonly name = "script/ground-truth";
 
-  /** Emitted fixture utterance ids per fixture file, so a reconnect does not repeat them. */
+  /** Emitted fixture utterance ids per lane and file, so a reconnect does not repeat them. */
   private readonly emitted = new Map<string, Set<string>>();
 
   open(session: StreamSession, handlers: TranscriptHandlers): TranscriptStream {
     const timeline = session.sourceRef ? loadTimeline(session.sourceRef) : null;
-    const key = session.sourceRef ?? session.sessionId;
-    const seen = this.emitted.get(key) ?? new Set<string>();
+    const key = `${session.storeId}:${session.laneId}:${session.sourceRef ?? session.sessionId}`;
+    // A session starting at the top of the file is a new replay; a later offset is a reconnect.
+    const fresh = !session.sourceOffsetS;
+    const seen = (!fresh && this.emitted.get(key)) || new Set<string>();
     this.emitted.set(key, seen);
     return new ScriptStream(session, timeline, seen, handlers);
   }

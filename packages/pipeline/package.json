@@ -24,6 +24,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^22",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "vitest": "^5.0.3"
@@ -37,6 +38,7 @@
     "ffprobe-static": "^3.1.0",
     "fuse.js": "^7.5.0",
     "opus-decoder": "^0.7.12",
+    "ws": "^8.22.0",
     "zod": "^4.6.5"
   }
 }

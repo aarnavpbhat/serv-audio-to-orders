@@ -216,7 +216,7 @@ class DeepgramStream implements TranscriptStream {
       const f = this.buffer.shift() as AudioFrame;
       const len = f.pcm[0]?.length ?? 0;
       queued -= len;
-      this.handlers.gap?.(f.sampleOffset / CANONICAL_RATE, (f.sampleOffset + len) / CANONICAL_RATE);
+      this.handlers.gap?.(f.sampleOffset / CANONICAL_RATE, (f.sampleOffset + len) / CANONICAL_RATE, "dropped");
     }
   }
 

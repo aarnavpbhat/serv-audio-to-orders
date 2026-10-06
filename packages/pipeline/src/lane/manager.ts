@@ -38,6 +38,10 @@ export class LaneManager {
     await this.bySession.get(id)?.handle(m);
   }
 
+  lane(storeId: string, laneId: string): LaneSession | undefined {
+    return this.lanes.get(laneKey(storeId, laneId));
+  }
+
   async end(): Promise<void> {
     for (const lane of this.lanes.values()) await lane.end();
   }

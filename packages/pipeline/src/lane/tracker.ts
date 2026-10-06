@@ -291,6 +291,13 @@ export class ConversationTracker {
     }
   }
 
+  /** A live-path flag for the open conversation (audio rate exceeded, audio dropped). */
+  flagCurrent(flag: Flag): boolean {
+    if (!this.current) return false;
+    this.current.flags.add(flag);
+    return true;
+  }
+
   /** Timers: settle, idle, grace, reopen window, hard cap. */
   onTick(now: string): TrackerAction[] {
     const t = ms(now);
