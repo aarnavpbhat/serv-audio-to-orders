@@ -11,6 +11,7 @@ import { newId } from "../lib/ids";
 import { ntpOffsetMs } from "../lib/sntp";
 import { liveWriter } from "../lane/live-feed";
 import { LaneManager } from "../lane/manager";
+import { ScriptStreamingTranscriber } from "../lane/script-transcriber";
 import type { LaneSession, LaneUpdate } from "../lane/lane";
 import { insertRun, updateRun } from "../store/db";
 import { RawCaptureSink } from "../data/raw-sink";
@@ -127,7 +128,8 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
       : {}),
     allowQueryToken: cfg.ingest.allowQueryToken,
     enableDevRoutes: devRoutes,
-    resolveFixture: devRoutes && engine.streaming.name.startsWith("script") ? fixtureResolver(cfg.paths.fixturesDir) : undefined,
+    // Peers may name a fixture only for the free script transcriber (dev routes), never a paid one.
+    resolveFixture: devRoutes && engine.streaming instanceof ScriptStreamingTranscriber ? fixtureResolver(cfg.paths.fixturesDir) : undefined,
     allowInsecure: cfg.ingest.allowInsecure,
     ...(cfg.ingest.tlsCert && cfg.ingest.tlsKey ? { tls: { cert: cfg.ingest.tlsCert, key: cfg.ingest.tlsKey } } : {}),
     log,

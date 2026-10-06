@@ -26,10 +26,15 @@ export class DeepgramTranscriber implements Transcriber {
     this.client = new DeepgramClient({ apiKey, timeoutInSeconds: 300, maxRetries: 0 });
   }
 
+  /** Where a file's raw response is cached (keyed by the file's SHA-256). */
+  static cacheFile(cacheDir: string, hash: string, multichannel: boolean, language: string): string {
+    return path.join(cacheDir, hash, `deepgram${multichannel ? ".multichannel" : ""}.${language}.json`);
+  }
+
   async transcribe(input: IngestResult, opts: TranscribeOptions): Promise<TranscribeResult> {
     const multichannel = input.audio.channels > 1 && opts.channelMap !== null;
     const dir = path.join(opts.cacheDir, input.hash);
-    const cacheFile = path.join(dir, `deepgram${multichannel ? ".multichannel" : ""}.${opts.language}.json`);
+    const cacheFile = DeepgramTranscriber.cacheFile(opts.cacheDir, input.hash, multichannel, opts.language);
     let raw: DgResponse;
     let cached = false;
     if (!opts.refresh && existsSync(cacheFile)) {

@@ -130,7 +130,9 @@ async function unclearItem(engine: Engine): Promise<LiveCheck> {
 }
 
 /** Row 36: every wire codec over a real socket gives the same transcript as PCM. */
-async function wireCodecs(engine: Engine): Promise<LiveCheck> {
+async function wireCodecs(real: Engine): Promise<LiveCheck> {
+  // This checks the decoders, not speech recognition: always the free script transcriber.
+  const engine: Engine = { ...real, streaming: new ScriptStreamingTranscriber() };
   const service = await startService(engine, { host: "127.0.0.1", port: 0, devRoutes: true, record: false, liveFeed: false, skipClockCheck: true, deliver: false, log: () => {} });
   const url = `ws://127.0.0.1:${service.server.address.port}`;
   const file = audio(engine, "01_simple");

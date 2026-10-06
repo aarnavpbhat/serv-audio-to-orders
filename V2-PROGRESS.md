@@ -19,8 +19,9 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 9. Live simulator | v2-step/09-simulator | Done: PR #11 |
 | 10. Review screen | v2-step/10-review-screen | Done: PR #12 |
 | 11. Eval v2 | v2-step/11-eval | Done: PR #13 |
-| 12. Human-voiced held-out set | v2-step/12-heldout | PR #14 (tooling; recordings need people) |
-| 13. Retire the batch path | v2-step/13-retire-batch | Next |
+| 12. Human-voiced held-out set | v2-step/12-heldout | Done: PR #14 (tooling; recordings need people) |
+| 13. Retire the batch path | v2-step/13-retire-batch | PR #15 |
+| 14. Docs | v2-step/14-docs | Next |
 
 ## Decisions not covered by the plan
 
@@ -73,9 +74,29 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **Shutdown drains closing sessions.** A session whose socket closed just before shutdown was still decoding when the service stopped, so its last audio and its close were lost. Row 36's last codec (FLAC) failed now and then because of it. The server now waits for draining sessions.
 - **The held-out set is tooling only so far.** Recording 8 to 12 conversations with real voices needs people, and scoring them needs about 10 Deepgram minutes, beyond the one lane stream the plan allows without asking. So this step builds import, scoring and the report, and leaves the recordings and the one real run to Aarnav. `fixtures/heldout/README.md` says how.
 - **FLAC is written through a temp file.** Written to a pipe, ffmpeg could not go back and fill in the stream length, so the file had no duration. ffprobe refused it, which broke replaying saved fixtures, and archived order audio had no length either.
+- **Files use the prerecorded API inside the live path.** D1 sends every file through the lane. Streaming each file to Deepgram live would bill every rerun and eval, because live results cannot be cached. So file replays use Deepgram's prerecorded API, cached on disk as in v1, and the lane releases each utterance once the audio covering it has arrived (`lane/timed-stream.ts`, shared with the free script transcriber). HME connections and the simulator still stream live. `--live-stt` streams files live when that is what is being tested (as in the step 6 run).
+- **A car heard entirely as crew is checked, not dropped.** The lane dropped any conversation with no customer line before the role pass could run, and the comment claimed v1 did the same. v1 did not: it extracted every conversation, and it got the first car of `compilation_b` right while v2 lost it. All 8 conversations missing in the first real v2 eval (and cars 4, 9 and 14 in the step 6 live run) had this cause: diarization put the customer's voice under the crew's label. Such conversations now go through the role pass. The LLM labels the lines; with no LLM, wording and turn-taking decide. Agreement is measured against the wording guess, not against diarization.
+- **Unplanned Deepgram spend (my mistake).** Before the first real eval of this step I checked the Deepgram cache for one fixture only. The two v2 lane streams (about 23 minutes each) had never gone through the prerecorded API, so that run billed **47.6 Deepgram minutes**, more than the one lane stream the plan allows without asking. `pnpm eval` now adds up uncached minutes first and refuses to spend them without `--yes`. Everything is cached now, so reruns are free.
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 13. Retire the batch path (D1)
+
+- `runPipeline` (`pnpm pipeline run`, web runs, examples) is now a thin wrapper:
+  - probe the file, which still fails early on empty or corrupt audio
+  - replay it into a lane at max speed
+- The lane's temporary batch mode and the eval's `--via` flag are gone. There is one path.
+- `lane/file-transcriber.ts`: file sessions get prerecorded transcription (cached, one transcription per file), and other sessions go to the live transcriber. `FileReplaySource` takes channel roles for stereo files (from `CHANNEL_MAP`).
+- `eval/live-checks.ts` row 36 always uses the free transcriber. It checks decoders, not ASR.
+- Ceiling (free): **28/28, 41/41**.
+- Real providers (Deepgram prerecorded, cached; Gemini Flash-Lite) through the single path, **40/41 rows**:
+  - **27/28 fixtures, 74/74 conversations**
+  - 100% item precision, recall and status
+  - Layer B: 66 of 67 tickets match exactly; the only difference is the intended window change
+  - The one remaining difference: `lane_stream_a` leaves a hesitated cookie off `not_ordered` (an extraction nuance, not tuned)
+  - v1's last real eval was 24/24 on the fixtures it had then
+  - Cost: 0 Deepgram minutes and 7 new Gemini requests once cached. The first, uncached run billed 47.6 minutes; see above.
 
 ### 12. Human-voiced held-out set (tooling)
 

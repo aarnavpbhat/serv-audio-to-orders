@@ -17,8 +17,6 @@ import type { StreamingTranscriber } from "./types";
 
 export interface ReplayRunOptions extends ReplayOptions {
   transcriber: StreamingTranscriber;
-  /** tracker (default) or batch (v1 segmentation, for parity checks). */
-  mode?: "tracker" | "batch";
   deliver?: boolean;
   runId?: string;
   /** Keep order audio, provider messages and session events in the data store, as the live server does. */
@@ -59,7 +57,7 @@ export async function replayFile(engine: Engine, file: string, opts: ReplayRunOp
   }
   updateRun(db, runId, { status: "running", stage: "transcribe", transcriber: opts.transcriber.name, extractor: engine.extractor.name });
   try {
-    const manager = new LaneManager({ engine, transcriber: opts.transcriber, runId, deliver: opts.deliver !== false, ...(opts.mode ? { mode: opts.mode } : {}), ...(opts.record ? { record: true } : {}), ...(opts.onUpdate ? { onUpdate: opts.onUpdate } : {}) });
+    const manager = new LaneManager({ engine, transcriber: opts.transcriber, runId, deliver: opts.deliver !== false, ...(opts.record ? { record: true } : {}), ...(opts.onUpdate ? { onUpdate: opts.onUpdate } : {}) });
     for await (const m of source.messages()) await manager.handle(m);
     updateRun(db, runId, { stage: "extract" });
     await manager.end();

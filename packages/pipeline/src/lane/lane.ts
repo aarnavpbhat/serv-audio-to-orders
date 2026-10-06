@@ -4,9 +4,7 @@
  * events, feeds the streaming transcriber, keeps the lane transcript on one
  * time axis (the lane anchor), runs the conversation tracker, and turns each
  * finished conversation into orders (and later versions on reopen or late evidence).
- *
- * Batch mode (v1 segmentation once input ends) is kept only to check replay
- * parity against the old file path; the tracker is the live path.
+ * Files replay through this same path (plan D1).
  */
 import type { Engine } from "../engine";
 import { replay } from "../build/replay";
@@ -18,7 +16,8 @@ import { CANONICAL_RATE, type ControlEvent, type ScriptLine, type SourceMessage,
 import { newId } from "../lib/ids";
 import { finalizeConversation, type FinalizeResult, type RunOrder } from "../orders/finalize";
 import type { BoundaryDecision, Flag, OrderEvent, OrderPayload, OutcomeEvidence, Segment, Segmentation, Transcript, Utterance } from "../schemas";
-import { describe, segmentTranscript } from "../segment/segment";
+import { describe } from "../segment/segment";
+import { inferTurnRoles } from "../transcribe/roles";
 import type { OutboxRow } from "../store/db";
 import { LaneRecorder, type SessionEventLine } from "./recorder";
 import { ConversationTracker, type TrackerAction, type TrackerDecision } from "./tracker";
@@ -50,8 +49,6 @@ export interface LaneOptions {
   /** Run id for the lane's orders: fixed (replays), or per lane (the live server). */
   runId: string | ((storeId: string, laneId: string) => string);
   deliver: boolean;
-  /** tracker (default): the live path. batch: v1 segmentation at end of input, for parity checks only. */
-  mode?: "tracker" | "batch";
   /** Wall clock for processing times (received_at, finalized_at). */
   now?: () => number;
   log?: (msg: string) => void;
@@ -130,9 +127,7 @@ export class LaneSession {
   private codecIn = "pcm_s16le";
   private readonly now: () => number;
   private readonly log: (msg: string) => void;
-  private readonly mode: "tracker" | "batch";
   private streamMinutes = 0;
-  private batchSegmentation: Segmentation | null = null;
   private readonly recorder: LaneRecorder | null;
   private lastStatus = "";
   private lastDraft = "";
@@ -153,7 +148,6 @@ export class LaneSession {
     this.runId = typeof opts.runId === "string" ? opts.runId : opts.runId(storeId, laneId);
     this.now = opts.now ?? Date.now;
     this.log = opts.log ?? opts.engine.log;
-    this.mode = opts.mode ?? "tracker";
     this.llm = emptyUsage(opts.engine.gemini?.model ?? "none");
     const t = opts.engine.cfg.tracker;
     this.tracker = new ConversationTracker({
@@ -235,7 +229,7 @@ export class LaneSession {
         if (m.event.type === "stream_resumed") s?.stream.resume();
         await this.drain();
         this.advance(atMs);
-        if (this.mode === "tracker" && isTrackerControl(m.event.type)) await this.act(this.tracker.onControl({ type: m.event.type, at: m.event.at }));
+        if (isTrackerControl(m.event.type)) await this.act(this.tracker.onControl({ type: m.event.type, at: m.event.at }));
         break;
       }
       case "script_line":
@@ -257,7 +251,7 @@ export class LaneSession {
         if (m.reason !== "eof") {
           this.events.push({ atMs, type: "disconnect", sessionId: m.sessionId });
           this.emit({ type: "event", event: "disconnect", at: m.at });
-          if (this.mode === "tracker") await this.act(this.tracker.onControl({ type: "disconnect", at: m.at }));
+          await this.act(this.tracker.onControl({ type: "disconnect", at: m.at }));
         }
         this.recordSession(m.sessionId, m.at, m.reason);
         break;
@@ -270,7 +264,6 @@ export class LaneSession {
 
   /** Live view: tracker status when it changes, and the open order's keyword preview when its lines change. */
   private async report(): Promise<void> {
-    if (this.mode !== "tracker") return;
     const status = this.tracker.status;
     const key = JSON.stringify(status);
     if (key !== this.lastStatus) {
@@ -312,7 +305,7 @@ export class LaneSession {
     if (reconnect) {
       this.events.push({ atMs: anchorMs, type: "reconnect", sessionId: session.sessionId });
       this.emit({ type: "event", event: "reconnect", at: session.anchorAt });
-      if (this.mode === "tracker") this.queued.push(...this.tracker.onControl({ type: "reconnect", at: session.anchorAt }));
+      this.queued.push(...this.tracker.onControl({ type: "reconnect", at: session.anchorAt }));
     }
   }
 
@@ -387,10 +380,6 @@ export class LaneSession {
 
   /** Final utterances go to the tracker in order; gray zones get one quick judge question. */
   private async drain(): Promise<void> {
-    if (this.mode !== "tracker") {
-      this.pending.length = 0;
-      return;
-    }
     while (this.pending.length) {
       const u = this.pending.shift() as Utterance;
       let newCar: boolean | null = null;
@@ -406,7 +395,7 @@ export class LaneSession {
 
   /** Timers run on recording time, but never past speech that is still in progress. */
   private async tickTracker(): Promise<void> {
-    if (this.mode !== "tracker" || this.anchorMs === null) return;
+    if (this.anchorMs === null) return;
     let wm = this.clockMs;
     for (const s of this.sessions.values()) {
       if (!s.open) continue;
@@ -458,10 +447,10 @@ export class LaneSession {
       .map((id) => this.byId.get(id))
       .filter((u): u is Utterance => u !== undefined)
       .sort((x, y) => x.start_s - y.start_s);
-    // Guessed roles are checked again after the LLM role pass, so a mislabelled customer is not lost.
-    if (!utts.some((u) => u.speaker === "customer" || u.speaker_guessed)) {
-      // A car that never spoke (or only crew lines): no order, as in v1.
-      this.log(`${this.key}: ${a.conversationId} closed with no customer speech; no order`);
+    // Nothing heard at all: no order. Lines all heard as crew still go on: the role pass
+    // (runFinalize) decides whether the customer's voice was put under the crew's label.
+    if (!utts.length) {
+      this.log(`${this.key}: ${a.conversationId} closed with no speech; no order`);
       return;
     }
     const durS = this.laneS(this.audioEndMs || this.clockMs);
@@ -490,14 +479,24 @@ export class LaneSession {
    */
   private async rolePass(seg: Segment): Promise<boolean> {
     const utts = seg.utterance_ids.map((id) => this.byId.get(id)).filter((u): u is Utterance => u !== undefined);
-    if (!utts.some((u) => u.speaker_guessed) || this.rolesChecked.has(seg.utterance_ids.join())) return this.lowAgreement.has(seg.utterance_ids.join());
+    // Every car has a customer: a conversation heard as all crew means diarization put
+    // the customer's voice under the crew's label, so its roles are checked too.
+    const noCustomer = !utts.some((u) => u.speaker === "customer");
+    if ((!noCustomer && !utts.some((u) => u.speaker_guessed)) || this.rolesChecked.has(seg.utterance_ids.join())) return this.lowAgreement.has(seg.utterance_ids.join());
     this.rolesChecked.add(seg.utterance_ids.join());
-    const roles = await this.opts.engine.judge?.labelLines?.(utts.map((u) => u.text));
+    // The LLM labels the lines; without one, a crew-only conversation falls back to wording and turn-taking.
+    // Agreement compares two independent guesses: the LLM against the wording. (Against
+    // diarization that heard everyone as crew it would always look low.)
+    const wording = noCustomer ? inferTurnRoles(utts) : utts.map((u) => u.speaker);
+    const roles = (await this.opts.engine.judge?.labelLines?.(utts.map((u) => u.text))) ?? (noCustomer ? wording : null);
     if (!roles) return false;
-    const agree = utts.filter((u, i) => u.speaker === roles[i]).length / utts.length;
+    const agree = utts.filter((_, i) => wording[i] === roles[i]).length / utts.length;
     utts.forEach((u, i) => {
       const r = roles[i];
-      if (r) u.speaker = r;
+      if (r && r !== u.speaker) {
+        u.speaker = r;
+        u.speaker_guessed = true;
+      }
     });
     const low = agree < ROLE_AGREEMENT_MIN;
     if (low) this.lowAgreement.add(seg.utterance_ids.join());
@@ -618,7 +617,6 @@ export class LaneSession {
 
   /** Conversations as v1-style segments, plus the tracker's open decisions as boundaries. */
   segmentation(): Segmentation {
-    if (this.mode === "batch") return this.batchSegmentation ?? { segments: [], boundaries: [], llm_calls: 0 };
     const transcript = this.transcript().utterances;
     const convs = [...this.conversations.values()].filter((c) => c.segment);
     const segments = convs.map((c) => c.segment as Segment);
@@ -648,11 +646,6 @@ export class LaneSession {
       this.streamMinutes += s.stream.audioMinutes();
       closing.push(id);
     }
-    if (this.mode === "batch") {
-      this.pending.length = 0;
-      await this.finalizeBatch();
-      return;
-    }
     await this.drain();
     const endAt = new Date(Math.max(this.clockMs, this.audioEndMs)).toISOString();
     await this.act(this.tracker.onEnd(endAt));
@@ -671,63 +664,6 @@ export class LaneSession {
       );
     }
     this.llm = addUsage(this.llm, done.usage);
-  }
-
-  /** Batch mode: v1 segmentation over the whole lane transcript, then each segment becomes orders. */
-  private async finalizeBatch(): Promise<void> {
-    const { engine } = this.opts;
-    const transcript = this.transcript();
-    if (!transcript.utterances.length) {
-      this.batchSegmentation = { segments: [], boundaries: [], llm_calls: 0 };
-      return;
-    }
-    const segmentation = await segmentTranscript(transcript, { ...engine.cfg.segment, lowAudioQualityMeanConf: engine.cfg.lowAudioQualityMeanConf }, engine.judge);
-    this.batchSegmentation = segmentation;
-    const segs = segmentation.segments;
-    for (const [i, seg] of segs.entries()) {
-      const next = segs[i + 1];
-      const ev = this.batchEvidence(seg, next?.start_s ?? null);
-      let segment = seg;
-      if (seg.truncated_end) {
-        const endMs = (this.anchorMs ?? 0) + seg.end_s * 1000;
-        if (this.events.some((e) => (e.type === "stream_paused" || e.type === "vehicle_departed") && e.atMs >= endMs - 500 && e.atMs <= endMs + 5000)) segment = { ...seg, truncated_end: false };
-      }
-      const conv: Conversation = {
-        id: `conv_${i + 1}`,
-        index: i,
-        openedWallMs: this.now(),
-        orderIds: [newId("ord")],
-        groupId: null,
-        version: 0,
-        versions: new Map(),
-        events: null,
-        statuses: [],
-        segment,
-        finalized: null,
-        chain: Promise.resolve(),
-      };
-      await this.runFinalize(conv, { segment, vehicle: ev.vehicle, stream: ev.stream, silence: [], flags: ev.flags }, null, null);
-    }
-  }
-
-  /** Batch mode evidence: vehicle and stream events between this conversation's start and the next one's. */
-  private batchEvidence(seg: Segment, nextStartS: number | null): { vehicle: OutcomeEvidence[]; stream: OutcomeEvidence[]; flags: Flag[] } {
-    const base = this.anchorMs ?? 0;
-    const startMs = base + seg.start_s * 1000;
-    const endMs = base + seg.end_s * 1000;
-    const windowEnd = nextStartS === null ? Number.POSITIVE_INFINITY : base + nextStartS * 1000;
-    const iso = (ms: number) => new Date(ms).toISOString();
-    const vehicle = this.events
-      .filter((e) => (e.type === "vehicle_departed" || e.type === "vehicle_arrived") && e.atMs > startMs && e.atMs <= windowEnd)
-      .map((e): OutcomeEvidence => ({ type: "vehicle_event", event: e.type, at: iso(e.atMs) }));
-    const stream = this.events
-      .filter((e) => ["stream_paused", "stream_resumed", "disconnect", "reconnect"].includes(e.type) && e.atMs >= startMs && e.atMs <= Math.min(windowEnd, endMs + 30_000))
-      .map((e): OutcomeEvidence => ({ type: "stream_event", event: e.type, at: iso(e.atMs), context_only: true }));
-    const flags: Flag[] = [];
-    for (const d of this.events.filter((e) => e.type === "disconnect" && e.atMs >= startMs && e.atMs <= endMs)) {
-      flags.push(this.events.some((e) => e.type === "reconnect" && e.atMs > d.atMs) ? "stream_gap" : "stream_interrupted");
-    }
-    return { vehicle, stream, flags: [...new Set(flags)] };
   }
 }
 

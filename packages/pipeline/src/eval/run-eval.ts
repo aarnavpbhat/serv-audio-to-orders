@@ -2,11 +2,14 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { Engine } from "../engine";
-import type { Scenario } from "../input/scenario";
+import { DEFAULT_SCENARIO, type Scenario } from "../input/scenario";
 import { replayFile } from "../lane/replay";
 import type { StreamingTranscriber } from "../lane/types";
 import { loadFixtureScripts } from "../fixtures/load";
-import { runPipeline, type RunResult } from "../run";
+import type { RunResult } from "../run";
+import { FileOrLiveTranscriber } from "../lane/file-transcriber";
+import { probeAudio, sha256File } from "../ingest/probe";
+import { DeepgramTranscriber } from "../transcribe/deepgram";
 import type { ExpectedOrder, FixtureTimeline, NoiseLevel } from "../schemas";
 import { loadTimeline } from "../transcribe/script";
 import { CHECKLIST } from "./checklist";
@@ -23,16 +26,13 @@ export interface EvalOptions {
   compilations: boolean;
   deliver: boolean;
   webhook: boolean;
-  /** file: v1 batch path. lane: replay through the live path at max speed (plan D1). */
-  via?: "file" | "lane";
   scenario?: Scenario;
-  /** Streaming transcriber for --via lane (default: the free script transcriber). */
+  /** Streaming transcriber (default: the engine's; files replay through the live path at max speed, plan D1). */
   streamingTranscriber?: StreamingTranscriber;
 }
 
 interface Target {
   id: string;
-  liveOnly?: boolean;
   title: string;
   covers: number[];
   noise: NoiseLevel;
@@ -59,7 +59,7 @@ export interface FixtureReport {
 
 export interface EvalReport {
   generated_at: string;
-  config: { layout: string; via: string; scenario: string | null; transcriber: string; extractor: string; model: string | null; menu_version: string };
+  config: { layout: string; scenario: string | null; transcriber: string; extractor: string; model: string | null; menu_version: string };
   summary: {
     fixtures: number;
     fixtures_passed: number;
@@ -73,7 +73,7 @@ export interface EvalReport {
   };
   /** Layer B ("rung up"): orders against POS tickets. Synthetic tickets until Serv shares real ones. */
   layer_b: { tickets: number; matched: number; exact: number; exact_rate: number; extraction_error: number; window_change: number; unmatched: number; window_s: number; source: "synthetic" };
-  /** Live-path metrics (--via lane). Close latency at max speed is estimated: tracker lag on recording time plus processing time. */
+  /** Live-path metrics. Close latency at max speed is estimated: tracker lag on recording time plus processing time. */
   live: {
     close_latency_p50_ms: number;
     close_latency_p95_ms: number;
@@ -96,7 +96,6 @@ function targets(fixturesDir: string, opts: EvalOptions): Target[] {
   const scripts = loadFixtureScripts(path.join(fixturesDir, "scripts"));
   const out: Target[] = scripts.map((s) => ({
     id: s.id,
-    liveOnly: s.live_only,
     title: s.title,
     covers: s.covers,
     noise: s.render.noise,
@@ -117,12 +116,10 @@ function targets(fixturesDir: string, opts: EvalOptions): Target[] {
         for (const e of t.expected) expected.push({ span: span + e.span, order: e.order });
         span += spans;
       }
-      const liveOnly = c.scripts.some((sid) => out.find((x) => x.id === sid)?.liveOnly);
-      out.push({ id: c.id, title: c.title, covers: [23], noise: c.noise, compilation: true, expected, liveOnly });
+      out.push({ id: c.id, title: c.title, covers: [23], noise: c.noise, compilation: true, expected });
     }
   }
-  const runnable = opts.via === "lane" ? out : out.filter((t) => !t.liveOnly);
-  return opts.only?.length ? runnable.filter((t) => opts.only?.includes(t.id)) : runnable;
+  return opts.only?.length ? out.filter((t) => opts.only?.includes(t.id)) : out;
 }
 
 function spansOf(timeline: FixtureTimeline): { start_s: number; end_s: number }[] {
@@ -146,35 +143,30 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions, changes:
   let laneRun: Awaited<ReturnType<typeof replayFile>> | null = null;
   let result: Pick<RunResult, "run_id" | "segmentation" | "orders" | "usage">;
   try {
-    if (opts.via === "lane") {
-      const r = (laneRun = await replayFile(engine, file, {
-        transcriber: opts.streamingTranscriber ?? engine.streaming,
-        ...(opts.scenario ? { scenario: { ...opts.scenario, channels: opts.layout } } : {}),
-        deliver: opts.deliver,
-        speed: "max",
-      }));
-      result = {
-        run_id: r.run_id,
-        segmentation: r.segmentation,
-        orders: r.orders,
-        usage: {
-          stt: { provider: (opts.streamingTranscriber ?? engine.streaming).name, audio_minutes: r.usage.deepgram_minutes, cached: false, role_llm_calls: 0 },
-          llm: r.usage.llm,
-          segmentation_llm_calls: r.segmentation.llm_calls,
-          gemini_today: r.usage.gemini_today ? { ...r.usage.gemini_today, tier: "unknown", exhausted: false } : null,
-        },
-      };
-    } else {
-      result = await runPipeline(engine, file, {
-        channelMap: opts.layout === "stereo" ? { 0: "customer", 1: "crew" } : null,
-        audioStartUtc: "2026-10-03T18:40:00Z",
-        deliver: opts.deliver,
-      });
-    }
+    const transcriber = opts.streamingTranscriber ?? engine.streaming;
+    const billedBefore = transcriber instanceof FileOrLiveTranscriber ? transcriber.billedMinutes : 0;
+    const r = (laneRun = await replayFile(engine, file, {
+      transcriber,
+      scenario: { ...(opts.scenario ?? DEFAULT_SCENARIO), channels: opts.layout },
+      deliver: opts.deliver,
+      speed: "max",
+    }));
+    const billed = r.usage.deepgram_minutes + (transcriber instanceof FileOrLiveTranscriber ? transcriber.billedMinutes - billedBefore : 0);
+    result = {
+      run_id: r.run_id,
+      segmentation: r.segmentation,
+      orders: r.orders,
+      usage: {
+        stt: { provider: transcriber.name, audio_minutes: billed, cached: billed === 0, role_llm_calls: 0 },
+        llm: r.usage.llm,
+        segmentation_llm_calls: r.segmentation.llm_calls,
+        gemini_today: r.usage.gemini_today ? { ...r.usage.gemini_today, tier: "unknown", exhausted: false } : null,
+      },
+    };
   } catch (e) {
     return { ...base, error: (e as Error).message };
   }
-  const compareOpts = { lane: opts.via === "lane", vehicleEvents: opts.via === "lane" ? (opts.scenario?.vehicle_events ?? "off") : ("off" as const) };
+  const compareOpts = { lane: true, vehicleEvents: opts.scenario?.vehicle_events ?? ("off" as const) };
 
   const spans = spansOf(timeline);
   const segs = result.segmentation.segments;
@@ -298,6 +290,29 @@ function liveMetrics(r: Awaited<ReturnType<typeof replayFile>>, t: Target): NonN
   };
 }
 
+/**
+ * Deepgram minutes a run would bill: audio whose prerecorded response is not
+ * cached yet (or every minute, when files are streamed live). Shown before a
+ * real-provider eval so credit is never spent by surprise.
+ */
+export async function uncachedMinutes(engine: Engine, opts: Pick<EvalOptions, "layout" | "only" | "compilations">): Promise<{ minutes: number; files: string[] }> {
+  if (engine.streaming.name.startsWith("script")) return { minutes: 0, files: [] };
+  const live = !(engine.streaming instanceof FileOrLiveTranscriber);
+  let minutes = 0;
+  const files: string[] = [];
+  for (const t of targets(engine.cfg.paths.fixturesDir, { layout: opts.layout, compilations: opts.compilations, deliver: false, webhook: false, ...(opts.only ? { only: opts.only } : {}) })) {
+    const file = path.join(engine.cfg.paths.fixturesDir, "audio", `${t.id}.${opts.layout}.${t.noise}.mp3`);
+    if (!existsSync(file)) continue;
+    const multichannel = opts.layout === "stereo";
+    const cached = !live && existsSync(DeepgramTranscriber.cacheFile(engine.cfg.paths.cacheDir, await sha256File(file), multichannel, engine.cfg.language));
+    if (cached) continue;
+    const info = await probeAudio(file);
+    minutes += (info.duration_s / 60) * (multichannel ? info.channels : 1);
+    files.push(path.basename(file));
+  }
+  return { minutes: Math.round(minutes * 10) / 10, files };
+}
+
 export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string) => void = console.log): Promise<EvalReport> {
   const list = targets(engine.cfg.paths.fixturesDir, opts);
   const changes = loadWindowChanges(engine.cfg.paths.fixturesDir);
@@ -312,7 +327,7 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
   let webhook: WebhookCheck[] = [];
   if (opts.webhook) webhook = await webhookSelfCheck(samplePayload());
   // Live-path rows run when the eval goes through the lane (or when asked for explicitly).
-  const live: LiveCheck[] = opts.via === "lane" && !opts.only?.length ? await runLiveChecks(engine) : [];
+  const live: LiveCheck[] = !opts.only?.length ? await runLiveChecks(engine) : [];
 
   const comps = fixtures.flatMap((f) => f.orders.comparisons);
   const tp = comps.reduce((s, c) => s + c.item_tp, 0);
@@ -333,7 +348,7 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
     const lc = live.find((c) => c.row === row);
     if (lc) return { row, title, fixtures: ["live check"], pass: lc.pass, detail: lc.detail };
     const covering = fixtures.filter((f) => f.covers.includes(row));
-    if (row >= 29 && !covering.length) return { row, title, fixtures: [], pass: false, detail: opts.via === "lane" ? "not checked yet" : "run with --via lane" };
+    if (row >= 29 && !covering.length) return { row, title, fixtures: [], pass: false, detail: opts.only?.length ? "not run with --only" : "not checked yet" };
     return { row, title, fixtures: covering.map((f) => f.id), pass: covering.length > 0 && covering.every((f) => f.pass) };
   });
 
@@ -360,9 +375,8 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
     generated_at: new Date().toISOString(),
     config: {
       layout: opts.layout,
-      via: opts.via ?? "file",
       scenario: opts.scenario?.name ?? null,
-      transcriber: opts.via === "lane" ? (opts.streamingTranscriber ?? engine.streaming).name : engine.transcriber.name,
+      transcriber: (opts.streamingTranscriber ?? engine.streaming).name,
       extractor: engine.extractor.name,
       model: engine.gemini?.resolvedModel ?? engine.gemini?.model ?? null,
       menu_version: engine.catalog.version,
@@ -427,7 +441,7 @@ export function formatReport(r: EvalReport): string {
   const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
   const lines = [
     "",
-    `Eval: ${r.config.transcriber} + ${r.config.extractor} (${r.config.layout}, via ${r.config.via ?? "file"}${r.config.scenario ? `, scenario ${r.config.scenario}` : ""})`,
+    `Eval: ${r.config.transcriber} + ${r.config.extractor} (${r.config.layout}${r.config.scenario ? `, scenario ${r.config.scenario}` : ""})`,
     "",
     "  Layer A (heard)",
     `  Fixtures passed     ${s.fixtures_passed}/${s.fixtures}`,
