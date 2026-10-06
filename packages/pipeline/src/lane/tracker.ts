@@ -111,6 +111,11 @@ export class ConversationTracker {
     private readonly newId: (n: number) => string = (n) => `conv_${n}`,
   ) {}
 
+  /** Lines of the open conversation (the live view's draft order). */
+  get openUtterances(): Utterance[] {
+    return this.current?.utterances ?? [];
+  }
+
   get status(): { state: TrackerState; conversationId: string | null; timers: Record<string, string | null> } {
     const c = this.current;
     return {

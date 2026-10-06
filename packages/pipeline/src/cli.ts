@@ -27,6 +27,7 @@ import { DEFAULT_SCENARIO, loadScenario } from "./input/scenario";
 import { replayOverWs, replayRawOverWs } from "./input/ws-replay";
 import { startService } from "./server/serve";
 import { openDb } from "./store/db";
+import { liveWriter } from "./lane/live-feed";
 import { latencySummary, replayFile, type ReplayResult } from "./lane/replay";
 import { sleep } from "./lib/retry";
 import { runPipeline, type RunResult } from "./run";
@@ -331,6 +332,8 @@ async function main(): Promise<void> {
         ...(values.store ? { storeId: values.store } : {}),
         ...(values.lane ? { laneId: values.lane } : {}),
         deliver: !values["no-deliver"],
+        // The web app's Live page shows replays as they run.
+        onUpdate: liveWriter(engine.db),
       });
       if (values.json) console.log(JSON.stringify({ run_id: result.run_id, orders: result.orders.map((o) => o.payload), deliveries: result.deliveries, usage: result.usage }, null, 2));
       else printReplay(result, scenario.name);

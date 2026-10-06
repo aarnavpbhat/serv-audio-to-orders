@@ -14,8 +14,9 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 5. Conversation tracker | v2-step/05-tracker | Done |
 | 6. Deepgram streaming | v2-step/06-deepgram-live | Done: PR #7 |
 | 7. WebSocket endpoint and ingest auth (Part A) | v2-step/07-ws-endpoint | Done: PR #8 |
-| 7b. Long-term data store (Part B) | v2-step/07b-data-store | PR open after #8 |
-| 8. Live UI | v2-step/08-live-ui | Next |
+| 7b. Long-term data store (Part B) | v2-step/07b-data-store | Done: PR #9 |
+| 8. Live UI | v2-step/08-live-ui | PR #10 |
+| 9. Live simulator | v2-step/09-simulator | Next |
 
 ## Decisions not covered by the plan
 
@@ -51,9 +52,36 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **Prune and delete list first.** `pnpm data prune` and `pnpm data delete` show what they would remove; `--yes` removes it. Catalog rows are marked deleted, and each delete writes a tombstone row.
 - **Labels before the review screen.** `pnpm data label` and `putLabel()` write a person's verdict on one order version; the review screen (step 11) will use the same call.
 - **Test databases.** `openDb(":memory:")` shares one handle per path, so every `testEngine()` now gets its own temp database and blob root.
+- **How the live view gets its data.** The live service and the web app are separate processes, so lane updates go through a `live_events` table in the shared SQLite database. `/api/live/events` streams them as server-sent events and resumes from `Last-Event-ID` after a reconnect. It is a display feed trimmed to the last 20,000 rows; the data store keeps the record. No dependency was added.
+- **"The open order building" is a keyword preview.** Running the LLM on every line would spend free-tier requests. Instead, the open conversation's customer lines go through the free keyword extractor, and the card says the real order is built when the conversation closes.
+- **Replays show up live.** `pnpm feed replay` (direct) also writes to the live feed, so a replay at `--speed 1` can be watched on the Live page.
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 8. Live UI
+
+- The lane reports three new update types:
+  - `status`: tracker state and timers, sent only when they change
+  - `draft`: a keyword preview of the open conversation
+  - `delivery`: webhook result per order version
+- Session updates now carry the codec, channels and source type.
+- `lane/live-feed.ts` writes updates to `live_events`, without word timings and without the transcript copy inside order payloads.
+- The `/live` page (Live in the sidebar) shows lane chips with connection dots, and for the chosen lane `components/live/LaneView.tsx` shows:
+  - connection and codec
+  - a rolling transcript in the Apple Music lyrics style, with interim text and conversation open, close and reopen marks
+  - the tracker state with timers counting down
+  - the open order preview
+  - recent decisions with their trigger and signals
+  - orders with outcome evidence, the review flag, version and webhook status
+- The simulator (step 9) reuses `LaneView`.
+- Tests:
+  - the lane emits every update type during a replay, and status only on change
+  - live table round trip
+  - the browser reducer
+  - SSE route: recent rows, new rows, resume after `Last-Event-ID`
+  - e2e: the Live page connects
+- Checked by eye with a 2x replay of `18_back_to_back` and vehicle events.
 
 ### 7b. Long-term data store (Part B)
 

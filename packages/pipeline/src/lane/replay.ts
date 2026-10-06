@@ -10,6 +10,7 @@ import { newId } from "../lib/ids";
 import type { RunOrder } from "../orders/finalize";
 import type { Segmentation, Transcript } from "../schemas";
 import { insertRun, outboxForRun, updateRun, type OutboxRow } from "../store/db";
+import type { LaneOptions } from "./lane";
 import { LaneManager } from "./manager";
 import type { TrackerDecision } from "./tracker";
 import type { StreamingTranscriber } from "./types";
@@ -22,6 +23,8 @@ export interface ReplayRunOptions extends ReplayOptions {
   runId?: string;
   /** Keep order audio, provider messages and session events in the data store, as the live server does. */
   record?: boolean;
+  /** Lane updates (the CLI feeds the web app's live view with them). */
+  onUpdate?: LaneOptions["onUpdate"];
 }
 
 export interface ReplayResult {
@@ -56,7 +59,7 @@ export async function replayFile(engine: Engine, file: string, opts: ReplayRunOp
   }
   updateRun(db, runId, { status: "running", stage: "transcribe", transcriber: opts.transcriber.name, extractor: engine.extractor.name });
   try {
-    const manager = new LaneManager({ engine, transcriber: opts.transcriber, runId, deliver: opts.deliver !== false, ...(opts.mode ? { mode: opts.mode } : {}), ...(opts.record ? { record: true } : {}) });
+    const manager = new LaneManager({ engine, transcriber: opts.transcriber, runId, deliver: opts.deliver !== false, ...(opts.mode ? { mode: opts.mode } : {}), ...(opts.record ? { record: true } : {}), ...(opts.onUpdate ? { onUpdate: opts.onUpdate } : {}) });
     for await (const m of source.messages()) await manager.handle(m);
     updateRun(db, runId, { stage: "extract" });
     await manager.end();
