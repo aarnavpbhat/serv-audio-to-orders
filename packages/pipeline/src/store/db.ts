@@ -105,6 +105,21 @@ CREATE TABLE IF NOT EXISTS mock_settings (
   retry_after_s INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS testlab_results (
+  id TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL,
+  scenario_id TEXT NOT NULL,
+  tester_mode TEXT NOT NULL,
+  input TEXT NOT NULL,
+  stt TEXT NOT NULL,
+  extractor TEXT NOT NULL,
+  pass INTEGER NOT NULL,
+  wer_customer REAL,
+  wer_crew REAL,
+  role_accuracy REAL,
+  speed_ms REAL,
+  detail TEXT NOT NULL
+);
 `;
 
 const handles = new Map<string, DB>();
@@ -328,4 +343,36 @@ export function listMockOrders(db: DB, limit = 200): MockOrderRow[] {
 
 export function listMockInbox(db: DB, limit = 100): MockInboxRow[] {
   return db.prepare(`SELECT * FROM mock_inbox ORDER BY id DESC LIMIT ?`).all(limit) as MockInboxRow[];
+}
+
+// ------------------------------------------------------------------ test lab (v2.1 step 7)
+
+export interface TestlabResultRow {
+  id: string;
+  created_at: number;
+  /** A scenario id, or "free_play". */
+  scenario_id: string;
+  tester_mode: string;
+  /** "mic" or "text". */
+  input: string;
+  stt: string;
+  extractor: string;
+  pass: number;
+  wer_customer: number | null;
+  wer_crew: number | null;
+  role_accuracy: number | null;
+  speed_ms: number | null;
+  /** The scorecard as JSON. */
+  detail: string;
+}
+
+export function insertTestlabResult(db: DB, r: TestlabResultRow): void {
+  db.prepare(
+    `INSERT INTO testlab_results (id, created_at, scenario_id, tester_mode, input, stt, extractor, pass, wer_customer, wer_crew, role_accuracy, speed_ms, detail)
+     VALUES (@id, @created_at, @scenario_id, @tester_mode, @input, @stt, @extractor, @pass, @wer_customer, @wer_crew, @role_accuracy, @speed_ms, @detail)`,
+  ).run(r);
+}
+
+export function listTestlabResults(db: DB, limit = 500): TestlabResultRow[] {
+  return db.prepare(`SELECT * FROM testlab_results ORDER BY created_at DESC LIMIT ?`).all(limit) as TestlabResultRow[];
 }

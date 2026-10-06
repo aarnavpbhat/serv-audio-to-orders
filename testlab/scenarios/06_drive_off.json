@@ -1,0 +1,44 @@
+{
+  "id": "drive_off",
+  "number": 6,
+  "title": "Drive off",
+  "checks": "The car leaves before the order is finished: sent as abandoned.",
+  "minutes": 1,
+  "lines": [
+    {
+      "role": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?"
+    },
+    {
+      "role": "customer",
+      "text": "Can I get a ten piece nuggets and a"
+    }
+  ],
+  "actions": [
+    {
+      "at": "start",
+      "do": "car_arrived"
+    },
+    {
+      "at": "end",
+      "do": "car_left"
+    }
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "abandoned",
+        "items": [
+          {
+            "catalog_id": "nuggets_10",
+            "quantity": 1
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [],
+        "review": []
+      }
+    ]
+  }
+}

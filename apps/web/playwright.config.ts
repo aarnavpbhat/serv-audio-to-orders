@@ -15,7 +15,7 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 const BASE_URL = `http://localhost:${PORT}`;
 // The monkey test drives the simulator against its own feed service (free script
 // transcriber, fuzzy extractor: no API calls) and reads both servers' logs.
-const LIVE = /(monkey|stop|review)\.spec/;
+const LIVE = /(monkey|stop|review|testlab)\.spec/;
 const FEED_PORT = Number(process.env.E2E_FEED_PORT ?? 8797);
 export const LOG_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), ".e2e-logs");
 mkdirSync(LOG_DIR, { recursive: true });
@@ -76,7 +76,8 @@ export default defineConfig({
       port: FEED_PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
-      env: { WEBHOOK_URL: `${BASE_URL}/api/mock-webhook`, ENABLE_DEV_ROUTES: "true", INGEST_PORT: String(FEED_PORT) },
+      // A short reconnect grace, so Test Lab's "Connection lost" ends in seconds, not 3 minutes.
+      env: { WEBHOOK_URL: `${BASE_URL}/api/mock-webhook`, ENABLE_DEV_ROUTES: "true", INGEST_PORT: String(FEED_PORT), RECONNECT_GRACE_S: "10" },
     },
   ],
 });

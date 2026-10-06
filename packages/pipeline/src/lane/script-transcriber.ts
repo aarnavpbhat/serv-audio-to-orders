@@ -43,6 +43,8 @@ export class ScriptStreamingTranscriber implements StreamingTranscriber {
     const seen = (!fresh && this.emitted.get(key)) || new Set<string>();
     this.emitted.set(key, seen);
     const offsetS = session.sourceOffsetS ?? (timeline ? (Date.parse(session.anchorAt) - Date.parse(timeline.recording_start_utc)) / 1000 : 0);
-    return new TimedStream(session, timeline ? timeline.utterances.map(fromTimeline) : null, offsetS, seen, handlers);
+    // No fixture (typed lines in the simulator or Test Lab): there is nothing to hear from the
+    // audio, so nothing holds the tracker's timers back. (null would hold them forever.)
+    return new TimedStream(session, timeline ? timeline.utterances.map(fromTimeline) : [], offsetS, seen, handlers);
   }
 }

@@ -254,4 +254,20 @@ describe("guessed roles", () => {
       expect(await manager.stop("ses_unknown", "end", at(30))).toBe(false);
     });
   });
+
+  it("typed lines (no fixture) still let the tracker's timers run: a close settles on the clock", async () => {
+    const engine = testEngine();
+    engine.extractor = new FuzzyExtractor();
+    const manager = new LaneManager({ engine, transcriber: new ScriptStreamingTranscriber(), runId: "run_typed", deliver: false });
+    const at = (s: number) => new Date(Date.parse("2026-10-03T18:40:00Z") + s * 1000).toISOString();
+    await manager.handle({ kind: "session_open", session: { sessionId: "ses_t", storeId: "s", laneId: "l", sourceType: "hme_ws", audio: { sampleRate: 16000, channels: 1 }, timeBasis: "receive_clock", anchorAt: at(0), codecIn: "pcm_s16le" } });
+    await manager.handle({ kind: "script_line", line: { sessionId: "ses_t", speaker: "crew", text: "Welcome, what can I get for you today?", at: at(2) } });
+    await manager.handle({ kind: "script_line", line: { sessionId: "ses_t", speaker: "customer", text: "Can I get a cheeseburger?", at: at(5) } });
+    await manager.handle({ kind: "script_line", line: { sessionId: "ses_t", speaker: "crew", text: "Please pull forward to the window.", at: at(8) } });
+    // Wall-clock ticks only (the feed service's 250 ms ticker), no audio.
+    await manager.handle({ kind: "tick", at: at(12) });
+    const lane = [...manager.lanes.values()][0];
+    expect(lane?.decisions.map((d) => d.trigger)).toContain("settled");
+    expect(lane?.orders).toHaveLength(1);
+  });
 });
