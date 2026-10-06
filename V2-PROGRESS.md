@@ -12,7 +12,10 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 3. Input layer and replay | v2-step/03-input-layer | Done |
 | 4. Clocks and IDs | v2-step/04-clocks-ids | Done |
 | 5. Conversation tracker | v2-step/05-tracker | Done |
-| 6. Deepgram streaming | v2-step/06-deepgram-live | Next |
+| 6. Deepgram streaming | v2-step/06-deepgram-live | Done: PR #7 |
+| 7. WebSocket endpoint and ingest auth (Part A) | v2-step/07-ws-endpoint | Done: PR #8 |
+| 7b. Long-term data store (Part B) | v2-step/07b-data-store | PR open after #8 |
+| 8. Live UI | v2-step/08-live-ui | Next |
 
 ## Decisions not covered by the plan
 
@@ -40,9 +43,74 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **Hard cap.** A conversation longer than 6 minutes is finalized at the cap (not split at the best gap as v1 did); none of the fixtures come near it.
 - **Ceiling runs stay free.** The oracle extractor turns the LLM tie-breaker off. Earlier ceiling runs today sent 11 free-tier tie-breaker requests (cached; reruns are free).
 - **Live-only fixture.** `23_late_addition` is skipped by the v1 file path (it needs a reopen); the lane path expects `order_version` 2.
+- **Raw capture is staged, then stored.** Parts are written to `.data/staging/raw/` as they fill, and each finished part moves into the blob store under the plan's `raw/store=/lane=/date=/session=` key with its index. A `session.json` manifest (declared format, token id, open time) goes first, so `pnpm feed replay-raw` can send a session back byte for byte.
+- **What the disk guard pauses.** At 95% of `DATA_DISK_BUDGET_GB`, raw capture and order audio stop; transcripts, orders, webhooks, LLM records, events and labels continue. The open conversation (or the order, for audio) gets `capture_paused`.
+- **Order audio comes from a ring buffer.** Each lane keeps its recent mono audio (the 6 minute cap plus the reopen window plus 2 minutes). Each order version's audio is cut from it with 0.5 s either side and stored as FLAC; `audio_ref.archive_uri` points at it. Replays and the v1 file path do not archive (the file is the source); `replayFile(..., { record: true })` turns it on for tests.
+- **Deepgram messages are kept per connection.** Every message (interims included) of one Deepgram connection is stored as `deepgram-<n>.json` when that connection closes.
+- **Gemini records sit with each order version.** Every extraction request and answer (prompt contents, system prompt hash, prompt version, usage, cached or not) is stored under `llm/.../order=<id>/<request_hash>.json`. The live yes/no tie-breaker calls are not stored yet; their answers are in the tracker decisions.
+- **Prune and delete list first.** `pnpm data prune` and `pnpm data delete` show what they would remove; `--yes` removes it. Catalog rows are marked deleted, and each delete writes a tombstone row.
+- **Labels before the review screen.** `pnpm data label` and `putLabel()` write a person's verdict on one order version; the review screen (step 11) will use the same call.
+- **Test databases.** `openDb(":memory:")` shares one handle per path, so every `testEngine()` now gets its own temp database and blob root.
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 7b. Long-term data store (Part B)
+
+- `data/blob-store.ts`: the `BlobStore` interface (`put`, `get`, `exists`, `delete`, `list`). `LocalBlobStore` writes under `.data/blobs/`, writing to a temp file and then renaming it. `S3BlobStore` is a stub. Keys are checked segment by segment (no `..`, no absolute paths).
+- `data/store.ts`: the `artifacts` catalog (all fields in the plan) and the `data_tombstones` table. It has key builders for raw, audio, asr, llm, events and labels, partitioned by `store=/lane=/date=`. It also provides `find`, `deleteWhere`, `prune`, `verify` and `usage`, plus the disk guard.
+- What each kind holds:
+  - raw: `data/raw-sink.ts`
+  - audio: `lane/recorder.ts` plus `encodeFlac`
+  - asr: the `raw` handler on the Deepgram stream
+  - llm: `LlmCallRecord` on `ExtractResult`
+  - events: session control events plus tracker decisions
+  - labels: `data/labels.ts`
+- `pnpm data find|usage|verify|prune|delete|label` and `pnpm feed replay-raw <session>`.
+- The settings panel shows data store usage against the budget.
+- The ingest ticket route now requires `content-type: application/json` (from the step 7 security review).
+- README: the data commands, the env vars `DATA_DISK_BUDGET_GB` (default 50) and `RETENTION_POLICY` (`keep_all`), and the "Long-term data storage" gap, added verbatim.
+- Tests (`data/data.test.ts` plus one Deepgram test):
+  - a raw replay gives identical frames over a real socket
+  - parts roll by size
+  - a recorded replay catalogues audio, llm, events and labels
+  - delete by store
+  - prune
+  - the disk guard pauses capture and warns at 80%
+  - verify catches a changed file and a missing one
+  - Deepgram messages are kept per connection
+- Smoke test: `pnpm feed serve` with a dev ticket replay of `01_simple`. One order was delivered, with 5 artifacts (manifest, part, index, events, FLAC); `pnpm data verify` said all match.
+
+### 7. WebSocket endpoint and ingest auth (Part A)
+
+- `server/ingest-server.ts` serves `/hme/v1/stream`. The path and wire format are PLACEHOLDERS: audio arrives as binary in the declared codec and control events as JSON text. The HME parts live in `src/input/hme/`.
+- `input/auth/`:
+  - `IngestAuth` and `TokenAuth`; tokens are `sit_<id>_<secret>` and only the SHA-256 is stored
+  - tickets for the simulator
+  - auth attempt log
+  - `pnpm pipeline token create|list|revoke`, where revoking closes sessions with 4401
+- Limits and checks as in Part A: 429 after 10 failures per IP per minute, 64 KB and 8 KB message limits, 4409 replace, 4 per token, ping and pong, and 4413 for the rate limit. The server listens on 127.0.0.1 unless TLS or `ALLOW_INSECURE_WS` is set.
+- `server/serve.ts` (`pnpm feed serve`):
+  - checks the NTP offset at start
+  - runs lanes on the wall clock (250 ms tick)
+  - keeps run records current for the existing run view
+- `input/ws-replay.ts` is a fake base station (`pnpm feed replay <f> --via ws`). Eval row 36 sends 9 codecs over a real socket.
+- Security review found nothing at confidence 8 or above. The JSON content-type hardening for the ticket route went into 7b.
+
+### 6. Deepgram streaming
+
+- `lane/deepgram-stream.ts`:
+  - Settings: nova-3 live, linear16 16 kHz, diarize for mixed audio and multichannel when roles are known, interim results, endpointing 300 ms, utterance end 1000 ms, VAD events, keyterms from the menu.
+  - Connection handling: KeepAlive while paused and an idle close after 30 s; reconnect with up to 30 s buffered, and anything dropped is reported as `audio_dropped`.
+  - On end it sends CloseStream and waits for the last finals.
+  - A processed-to watermark keeps the tracker from settling ahead of the transcript.
+- One real run (`lane_stream_a`, 19 cars, 1x, Deepgram live plus Gemini Flash-Lite): 22.6 Deepgram minutes and 14 Gemini calls, with 27 of 200 Gemini requests used that day.
+  - Close latency (conversation end to first webhook 2xx): p50 5.6 s, p95 47.1 s. The tail is the 45 s idle fallback when no closing cue is heard.
+  - 13 conversations gave 14 orders: 1 cancelled, 1 undetermined (car 7, no closing cue) and 3 sent to review.
+  - Two bugs found and fixed, each with a regression test:
+    1. Cars 4, 9 and 14 were dropped as "no customer speech". The check ran before the LLM role pass could correct guessed roles.
+    2. A split part created during a reopen was given version 2 instead of 1. Versions are now kept per order id.
+  - Not rerun after the fixes, because the plan allows one lane stream of Deepgram credit without asking.
 
 ### 5. Conversation tracker
 
