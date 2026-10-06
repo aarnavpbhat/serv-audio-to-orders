@@ -96,7 +96,7 @@ export function Transcript({
                 style={{ transformOrigin: crew ? "right center" : "left center" }}
               >
                 <span className="mb-0.5 flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-white/55">
-                  <span className={`h-1.5 w-1.5 rounded-full ${isChatter ? "bg-white/40" : crew ? "bg-[#a5a3ff]" : "bg-[#5ef0dc]"}`} />
+                  <span className={`h-1.5 w-1.5 rounded-full ${isChatter ? "bg-white/40" : crew ? "bg-crew-art" : "bg-customer-art"}`} />
                   {isChatter ? "crew chatter" : u.speaker}
                   {u.speaker_guessed && <span title="Role guessed from wording because diarization heard one voice">?</span>}
                   <span className="font-normal normal-case tabular-nums text-white/40 opacity-0 transition group-hover:opacity-100">
