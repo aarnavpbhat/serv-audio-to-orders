@@ -170,6 +170,11 @@ export class ConversationTracker {
         this.preroll.push(u);
         return out;
       }
+      // "Thanks", "bye": the same car signing off, not a new conversation.
+      if (u.speaker === "customer" && !this.arrivedSinceFinalize && CUSTOMER_ACK.test(u.text.trim())) {
+        this.decisions.push({ at, conversationId: this.last.id, from: this.state, to: this.state, trigger: "ack_after_finalize", signals: ["customer_ack"] });
+        return out;
+      }
       this.endWindow(at);
     }
 
