@@ -40,6 +40,8 @@ Free-tier prompts and responses may be used by Google to improve its products. T
 
 ## How to run
 
+To prove each part works, step by step with costs, see [TESTING.md](TESTING.md).
+
 ```bash
 pnpm dev                                          # web app + mock webhook on http://localhost:3000
 pnpm pipeline run path/to/lane1.mp3               # process a file, deliver orders to WEBHOOK_URL
