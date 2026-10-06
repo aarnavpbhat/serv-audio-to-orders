@@ -17,8 +17,7 @@ import { ConfigError, createEngine, type EngineOptions, type ExtractorKind, type
 import { formatReport, runEval } from "./eval/run-eval";
 import { IngestError } from "./ingest/probe";
 import { DEFAULT_SCENARIO, loadScenario } from "./input/scenario";
-import { replayFile, type ReplayResult } from "./lane/replay";
-import { ScriptStreamingTranscriber } from "./lane/script-transcriber";
+import { latencySummary, replayFile, type ReplayResult } from "./lane/replay";
 import { sleep } from "./lib/retry";
 import { runPipeline, type RunResult } from "./run";
 import { latestOrder, outboxForOrder } from "./store/db";
@@ -103,6 +102,9 @@ function printReplay(r: ReplayResult, scenario: string): void {
   }
   for (const d of r.deliveries) console.log(`  ${d.webhook_id}  ${d.status}  attempts=${d.attempt_count}`);
   console.log(`  ${r.timings.total_ms} ms; ${r.usage.deepgram_minutes} Deepgram min; LLM ${r.usage.llm.calls} calls (${r.usage.llm.cached_calls} cached)`);
+  const l = latencySummary(r.closeLatencyMs);
+  if (l.close_latency_p50_ms !== undefined) console.log(`  close latency (conversation end -> first webhook 2xx): p50 ${l.close_latency_p50_ms} ms, p95 ${l.close_latency_p95_ms} ms over ${r.closeLatencyMs.length} orders`);
+  if (r.usage.gemini_today) console.log(`  Gemini today: ${r.usage.gemini_today.requests}/${r.usage.gemini_today.cap} requests`);
 }
 
 async function main(): Promise<void> {
@@ -205,7 +207,7 @@ async function main(): Promise<void> {
       const speed = !values.speed || values.speed === "max" ? ("max" as const) : Number(values.speed);
       if (speed !== "max" && !(speed > 0)) throw new ConfigError(`--speed must be a positive number or max, got ${values.speed}`);
       const result = await replayFile(engine, file, {
-        transcriber: new ScriptStreamingTranscriber(),
+        transcriber: engine.streaming,
         scenario,
         speed,
         ...(values.store ? { storeId: values.store } : {}),

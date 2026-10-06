@@ -18,6 +18,8 @@ export interface BoundaryJudge {
   isNewCustomer(before: Utterance[], after: Utterance[]): Promise<boolean>;
   /** Live: one quick try; null means no answer and the rules decide. */
   newCustomerAnswer?(before: Utterance[], after: Utterance[], live: { timeoutMs: number }): Promise<boolean | null>;
+  /** Plan D7: crew or customer for each line of one conversation whose voices were not separated. */
+  labelLines?(lines: string[]): Promise<("crew" | "customer")[] | null>;
 }
 
 const EDGE_TOLERANCE_S = 2;

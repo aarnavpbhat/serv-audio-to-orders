@@ -10,6 +10,9 @@ import { loadCatalog } from "./menu/load";
 import { FuzzyMatcher } from "./menu/fuzzy";
 import type { BoundaryJudge } from "./segment/segment";
 import { openDb, type DB } from "./store/db";
+import { DeepgramStreamingTranscriber, sdkSocketFactory } from "./lane/deepgram-stream";
+import { ScriptStreamingTranscriber } from "./lane/script-transcriber";
+import type { StreamingTranscriber } from "./lane/types";
 import { DeepgramTranscriber } from "./transcribe/deepgram";
 import { ScriptTranscriber } from "./transcribe/script";
 import type { Transcriber } from "./transcribe/types";
@@ -32,6 +35,8 @@ export interface Engine {
   matcher: FuzzyMatcher;
   db: DB;
   transcriber: Transcriber;
+  /** Live path: one streaming connection per session (Deepgram live, or the free script transcriber). */
+  streaming: StreamingTranscriber;
   extractor: Extractor;
   judge: BoundaryJudge | null;
   gemini: GeminiClient | null;
@@ -66,11 +71,19 @@ export function createEngine(opts: EngineOptions = {}): Engine {
 
   const transcriberKind = opts.transcriber ?? defaultTranscriber(cfg);
   let transcriber: Transcriber;
+  let streaming: StreamingTranscriber;
   if (transcriberKind === "deepgram") {
     if (!cfg.deepgramApiKey) throw new ConfigError("DEEPGRAM_API_KEY is not set. Add it to .env, or use --transcriber script for fixture audio");
     transcriber = new DeepgramTranscriber(cfg.deepgramApiKey, judge);
+    streaming = new DeepgramStreamingTranscriber(sdkSocketFactory(cfg.deepgramApiKey), {
+      keyterms: loadCatalog(cfg.paths.menu).keyterms(),
+      language: cfg.language,
+      idleCloseS: cfg.deepgramIdleCloseS,
+      log,
+    });
   } else {
     transcriber = new ScriptTranscriber();
+    streaming = new ScriptStreamingTranscriber();
   }
 
   const extractor: Extractor =
@@ -91,5 +104,5 @@ export function createEngine(opts: EngineOptions = {}): Engine {
     },
     { log },
   );
-  return { cfg, catalog, matcher, db, transcriber, extractor, judge, gemini, deliverer, placeholders: anyPlaceholders(cfg), log };
+  return { cfg, catalog, matcher, db, transcriber, streaming, extractor, judge, gemini, deliverer, placeholders: anyPlaceholders(cfg), log };
 }
