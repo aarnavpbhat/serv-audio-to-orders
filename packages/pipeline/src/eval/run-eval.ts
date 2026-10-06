@@ -14,6 +14,8 @@ import { runLiveChecks, type LiveCheck } from "./live-checks";
 import { compareOrders, passed, type OrderComparison } from "./compare";
 import { samplePayload } from "../webhook/sample";
 import { webhookSelfCheck, type WebhookCheck } from "./webhook-check";
+import { latencySummary } from "../lane/replay";
+import { loadWindowChanges, matchLayerB, POS_WINDOW_S, syntheticTicket, type LayerBMatch, type PosTicket, type WindowChange } from "./pos";
 
 export interface EvalOptions {
   layout: "mono" | "stereo";
@@ -48,6 +50,10 @@ export interface FixtureReport {
   run_id?: string;
   segmentation: { expected: number; found: number; missed: number; extra: number; start_err_s: number[]; end_err_s: number[] };
   orders: { expected: number; produced: number; comparisons: (OrderComparison & { pass: boolean })[] };
+  /** Layer B: our orders against the (synthetic) POS tickets. */
+  layer_b?: LayerBMatch[];
+  /** Live path only: what the lane did. */
+  live?: { close_ms: number[]; close_by: Record<string, number[]>; reopens: number; expected_reopens: number; duplicate_versions: number };
   usage?: RunResult["usage"];
 }
 
@@ -65,6 +71,19 @@ export interface EvalReport {
     flags_accuracy: number;
     segmentation: { expected: number; found: number; missed: number; extra: number; mean_start_err_s: number; mean_end_err_s: number };
   };
+  /** Layer B ("rung up"): orders against POS tickets. Synthetic tickets until Serv shares real ones. */
+  layer_b: { tickets: number; matched: number; exact: number; exact_rate: number; extraction_error: number; window_change: number; unmatched: number; window_s: number; source: "synthetic" };
+  /** Live-path metrics (--via lane). Close latency at max speed is estimated: tracker lag on recording time plus processing time. */
+  live: {
+    close_latency_p50_ms: number;
+    close_latency_p95_ms: number;
+    /** By what closed the conversation (settled after a closing cue, idle timeout, vehicle departed, ...). */
+    close_latency_by_trigger: Record<string, { orders: number; p50_ms: number; p95_ms: number }>;
+    orders: number;
+    reopen_rate: number;
+    premature_reopens: number;
+    duplicate_versions: number;
+  } | null;
   rows: { row: number; title: string; fixtures: string[]; pass: boolean; detail?: string }[];
   fixtures: FixtureReport[];
   usage: { deepgram_minutes: number; llm_calls: number; llm_cached_calls: number; input_tokens: number; output_tokens: number };
@@ -110,7 +129,7 @@ function spansOf(timeline: FixtureTimeline): { start_s: number; end_s: number }[
   return [...new Map(timeline.orders.map((o) => [`${o.start_s}-${o.end_s}`, { start_s: o.start_s, end_s: o.end_s }])).values()];
 }
 
-async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise<FixtureReport> {
+async function evalTarget(engine: Engine, t: Target, opts: EvalOptions, changes: WindowChange[] = []): Promise<FixtureReport> {
   const file = path.join(engine.cfg.paths.fixturesDir, "audio", `${t.id}.${opts.layout}.${t.noise}.mp3`);
   const base: FixtureReport = {
     id: t.id,
@@ -124,15 +143,16 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
   const timeline = existsSync(file) ? loadTimeline(file) : null;
   if (!timeline) return { ...base, error: `missing ${base.file}; run pnpm fixtures:build` };
 
+  let laneRun: Awaited<ReturnType<typeof replayFile>> | null = null;
   let result: Pick<RunResult, "run_id" | "segmentation" | "orders" | "usage">;
   try {
     if (opts.via === "lane") {
-      const r = await replayFile(engine, file, {
+      const r = (laneRun = await replayFile(engine, file, {
         transcriber: opts.streamingTranscriber ?? engine.streaming,
         ...(opts.scenario ? { scenario: { ...opts.scenario, channels: opts.layout } } : {}),
         deliver: opts.deliver,
         speed: "max",
-      });
+      }));
       result = {
         run_id: r.run_id,
         segmentation: r.segmentation,
@@ -219,9 +239,30 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
     }
   }
 
+  // Layer B: a ticket for each completed expected order, opened 10 s into its span.
+  const start = Date.parse(timeline.recording_start_utc);
+  const tickets: PosTicket[] = [];
+  const expectedByTicket = new Map<string, ExpectedOrder>();
+  t.expected.forEach((e, i) => {
+    const sp = spans[e.span];
+    if (!sp) return;
+    const tk = syntheticTicket(
+      engine.catalog,
+      { fixture: t.id, index: i, order: e.order, start: new Date(start + sp.start_s * 1000).toISOString(), end: new Date(start + sp.end_s * 1000).toISOString(), storeId: engine.cfg.storeId.value, laneId: engine.cfg.laneId.value },
+      changes,
+    );
+    if (tk) {
+      tickets.push(tk);
+      expectedByTicket.set(tk.ticket_id, e.order);
+    }
+  });
+  const layerB = matchLayerB(engine.catalog, result.orders.map((o) => o.payload), tickets, (id) => expectedByTicket.get(id));
+
   return {
     ...base,
     run_id: result.run_id,
+    layer_b: layerB,
+    ...(laneRun ? { live: liveMetrics(laneRun, t) } : {}),
     pass: missed === 0 && extra === 0 && countsOk && comparisons.every((c) => c.pass),
     segmentation: { expected: spans.length, found: segs.length, missed, extra, start_err_s: startErr, end_err_s: endErr },
     orders: { expected: t.expected.length, produced: result.orders.length, comparisons },
@@ -229,11 +270,40 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
   };
 }
 
+/** Close latency (estimated at max speed), reopens and duplicate versions for one lane replay. */
+function liveMetrics(r: Awaited<ReturnType<typeof replayFile>>, t: Target): NonNullable<FixtureReport["live"]> {
+  const finals = r.decisions.filter((d) => d.to === "FINALIZED").map((d) => ({ at: Date.parse(d.at), trigger: d.trigger }));
+  const close_by: Record<string, number[]> = {};
+  const close_ms = r.orders.flatMap((o) => {
+    const end = Date.parse(o.payload.times.ended_at);
+    const f = finals.filter((x) => x.at >= end - 1).sort((a, b) => a.at - b.at)[0];
+    if (!f) return [];
+    const ms = Math.round(f.at - end + o.payload.processing.latency_ms);
+    (close_by[f.trigger] ??= []).push(ms);
+    return [ms];
+  });
+  const seen = new Set<string>();
+  let duplicate_versions = 0;
+  for (const v of r.versions) {
+    const k = `${v.payload.order_id}:${v.payload.order_version}`;
+    if (seen.has(k)) duplicate_versions++;
+    seen.add(k);
+  }
+  return {
+    close_ms,
+    close_by,
+    reopens: r.versions.filter((v) => v.payload.correction_reason === "reopened_late_addition").length,
+    expected_reopens: t.expected.filter((e) => (e.order.lane_version ?? 1) > 1).length,
+    duplicate_versions,
+  };
+}
+
 export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string) => void = console.log): Promise<EvalReport> {
   const list = targets(engine.cfg.paths.fixturesDir, opts);
+  const changes = loadWindowChanges(engine.cfg.paths.fixturesDir);
   const fixtures: FixtureReport[] = [];
   for (const t of list) {
-    const r = await evalTarget(engine, t, opts);
+    const r = await evalTarget(engine, t, opts, changes);
     fixtures.push(r);
     const diffs = r.error ? [r.error] : r.orders.comparisons.flatMap((c) => c.diffs);
     log(`${r.pass ? "PASS" : "FAIL"}  ${t.id}${diffs.length ? `\n        ${diffs.slice(0, 6).join("\n        ")}` : ""}`);
@@ -254,6 +324,12 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
   const rows = CHECKLIST.map(({ row, title }) => {
     const wh = webhook.find((w) => w.row === row);
     if (wh) return { row, title, fixtures: ["webhook self-check"], pass: wh.pass, detail: wh.detail };
+    if (row === 41) {
+      // Window change: we heard it right (Layer A passes) and Layer B blames the window, not us.
+      const wc = fixtures.filter((f) => changes.some((c) => c.fixture === f.id));
+      const ok = wc.length > 0 && wc.every((f) => f.pass && (f.layer_b ?? []).some((m) => m.diffs.length > 0) && (f.layer_b ?? []).every((m) => m.diffs.every((d) => d.category === "window_change")));
+      return { row, title, fixtures: wc.map((f) => f.id), pass: ok, ...(wc.length ? {} : { detail: "no window-change fixture in this run" }) };
+    }
     const lc = live.find((c) => c.row === row);
     if (lc) return { row, title, fixtures: ["live check"], pass: lc.pass, detail: lc.detail };
     const covering = fixtures.filter((f) => f.covers.includes(row));
@@ -271,6 +347,14 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
     }),
     { deepgram_minutes: 0, llm_calls: 0, llm_cached_calls: 0, input_tokens: 0, output_tokens: 0 },
   );
+
+  const matches = fixtures.flatMap((f) => f.layer_b ?? []);
+  const diffs = matches.flatMap((m) => m.diffs);
+  const paired = matches.filter((m) => m.order_id && m.ticket_id);
+  const lanes = fixtures.flatMap((f) => (f.live ? [f.live] : []));
+  const closeMs = lanes.flatMap((l) => l.close_ms);
+  const lat = latencySummary(closeMs);
+  const reopens = lanes.reduce((s, l) => s + l.reopens, 0);
 
   const report: EvalReport = {
     generated_at: new Date().toISOString(),
@@ -301,6 +385,34 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
         mean_end_err_s: round(mean(seg.flatMap((x) => x.end_err_s)), 2),
       },
     },
+    layer_b: {
+      tickets: matches.filter((m) => m.ticket_id).length,
+      matched: paired.length,
+      exact: paired.filter((m) => m.exact).length,
+      exact_rate: round(paired.filter((m) => m.exact).length / Math.max(1, matches.filter((m) => m.ticket_id).length)),
+      extraction_error: diffs.filter((d) => d.category === "extraction_error").length,
+      window_change: diffs.filter((d) => d.category === "window_change").length,
+      unmatched: diffs.filter((d) => d.category === "unmatched").length,
+      window_s: POS_WINDOW_S,
+      source: "synthetic",
+    },
+    live: lanes.length
+      ? {
+          close_latency_p50_ms: lat.close_latency_p50_ms ?? 0,
+          close_latency_p95_ms: lat.close_latency_p95_ms ?? 0,
+          close_latency_by_trigger: Object.fromEntries(
+            [...new Set(lanes.flatMap((l) => Object.keys(l.close_by)))].map((k) => {
+              const xs = lanes.flatMap((l) => l.close_by[k] ?? []);
+              const q = latencySummary(xs);
+              return [k, { orders: xs.length, p50_ms: q.close_latency_p50_ms ?? 0, p95_ms: q.close_latency_p95_ms ?? 0 }];
+            }),
+          ),
+          orders: closeMs.length,
+          reopen_rate: round(reopens / Math.max(1, closeMs.length)),
+          premature_reopens: lanes.reduce((s, l) => s + Math.max(0, l.reopens - l.expected_reopens), 0),
+          duplicate_versions: lanes.reduce((s, l) => s + l.duplicate_versions, 0),
+        }
+      : null,
     rows,
     fixtures,
     usage: { ...usage, deepgram_minutes: round(usage.deepgram_minutes) },
@@ -317,6 +429,7 @@ export function formatReport(r: EvalReport): string {
     "",
     `Eval: ${r.config.transcriber} + ${r.config.extractor} (${r.config.layout}, via ${r.config.via ?? "file"}${r.config.scenario ? `, scenario ${r.config.scenario}` : ""})`,
     "",
+    "  Layer A (heard)",
     `  Fixtures passed     ${s.fixtures_passed}/${s.fixtures}`,
     `  Item precision      ${pct(s.item_precision)}`,
     `  Item recall         ${pct(s.item_recall)}`,
@@ -326,6 +439,21 @@ export function formatReport(r: EvalReport): string {
     `  Flags exact match   ${pct(s.flags_accuracy)}`,
     `  Segments            ${s.segmentation.found} found / ${s.segmentation.expected} expected (missed ${s.segmentation.missed}, extra ${s.segmentation.extra})`,
     `  Boundary error      start ${s.segmentation.mean_start_err_s}s, end ${s.segmentation.mean_end_err_s}s (mean)`,
+    "",
+    `  Layer B (rung up, ${r.layer_b.source} POS tickets, ±${r.layer_b.window_s} s)`,
+    `  Exact ticket match  ${r.layer_b.exact}/${r.layer_b.tickets} (${pct(r.layer_b.exact_rate)})`,
+    `  Differences         ${r.layer_b.extraction_error} extraction error, ${r.layer_b.window_change} window change, ${r.layer_b.unmatched} unmatched`,
+    ...(r.live
+      ? [
+          "",
+          "  Live path",
+          `  Close latency       p50 ${r.live.close_latency_p50_ms} ms, p95 ${r.live.close_latency_p95_ms} ms over ${r.live.orders} orders (estimated at max speed)`,
+          ...Object.entries(r.live.close_latency_by_trigger).map(([k, v]) => `    ${k.replace(/_/g, " ").padEnd(18)}${v.orders} orders, p50 ${v.p50_ms} ms, p95 ${v.p95_ms} ms`),
+          `  Reopens             ${pct(r.live.reopen_rate)} of orders, ${r.live.premature_reopens} premature`,
+          `  Duplicate versions  ${r.live.duplicate_versions}`,
+        ]
+      : []),
+    "",
     `  Usage               ${r.usage.deepgram_minutes} Deepgram min, ${r.usage.llm_calls} LLM calls (${r.usage.llm_cached_calls} cached), ${r.usage.input_tokens + r.usage.output_tokens} tokens`,
     "",
     "  Row  Case                                     Result",

@@ -17,8 +17,9 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 7b. Long-term data store (Part B) | v2-step/07b-data-store | Done: PR #9 |
 | 8. Live UI | v2-step/08-live-ui | Done: PR #10 |
 | 9. Live simulator | v2-step/09-simulator | Done: PR #11 |
-| 10. Review screen | v2-step/10-review-screen | PR #12 |
-| 11. Eval v2 | v2-step/11-eval | Next |
+| 10. Review screen | v2-step/10-review-screen | Done: PR #12 |
+| 11. Eval v2 | v2-step/11-eval | PR #13 |
+| 12. Human-voiced held-out set | v2-step/12-heldout | Next |
 
 ## Decisions not covered by the plan
 
@@ -65,9 +66,38 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **What resolving a review does.** A picked candidate becomes an item at full confidence, priced from the menu at the size heard (a combo gets its fixed and default slots; a slot the customer must choose stays open). "Not ordered" moves the line to `not_ordered` as `uncommitted`. Totals and the total and slot flags are re-checked; flags about the audio stay. Review is cleared, unless an unclear item was left open.
 - **Optimistic check on resolve.** The person resolves the version they saw. If a newer version exists (a reopen or a late event got there first), the save is refused with 409 and the page asks for a reload.
 - **Every resolution is also a label.** The reviewer's choices are stored as a label on the version they reviewed (verdict `incorrect`, with what they chose), so later evals can use them.
+- **Synthetic POS tickets.** Until Serv shares POS data, each completed expected order becomes a ticket opened 10 s into its conversation, on the replay's store and lane. `fixtures/pos/window-changes.json` lists what the crew rang differently at the window (one entry so far, 01_simple: fries switched to onion rings, row 41). A ticket line is item, size and quantity; modifiers and combo slots are left out until the real ticket format is known.
+- **Ticket matching uses items, not just time.** Within ±90 s on the same store and lane, pairs are taken by most items in common, then closest in time, across all orders at once. Time alone mispaired split payments (two tickets at the same moment) and back-to-back cars, and blamed the extraction for it.
+- **Close latency in the eval is an estimate.** At max speed the wall clock means nothing, so the eval adds the tracker's lag on recording time (conversation end to finalize) to the measured processing time. The real 1x number came from step 6: p50 5.6 s, p95 47.1 s.
+- **Shutdown drains closing sessions.** A session whose socket closed just before shutdown was still decoding when the service stopped, so its last audio and its close were lost. Row 36's last codec (FLAC) failed now and then because of it. The server now waits for draining sessions.
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 11. Eval v2
+
+- **Layer A ("heard"):** the same measures as v1, now labelled as Layer A.
+- **Layer B ("rung up"):** `eval/pos.ts`
+  - placeholder ticket schema
+  - synthetic tickets plus window changes
+  - a matcher that sorts every difference into `extraction_error`, `window_change` or `unmatched`
+- **Live-path metrics** (`--via lane`):
+  - close latency, overall and by what closed the conversation
+  - reopen rate and premature reopens
+  - duplicate versions
+- Row 41: a window change passes when Layer A passes and Layer B blames only the window.
+- `/eval` shows Layer A, Layer B and the live path, with latency broken down by close trigger.
+- Ceiling run (script transcriber plus oracle, free) via the lane:
+  - **28/28 fixtures, 41/41 rows**
+  - Layer B: 66 of 67 tickets match exactly; the one difference is the intended window change
+  - Close latency estimate: p50 3.0 s, p95 45 s
+    - 70 orders settled after a closing cue (p95 3.0 s)
+    - 4 hit the idle timeout (45 s)
+    - 1 closed on the next car (25 s)
+    - 2 ended with the input
+  - 0 premature reopens and 0 duplicate versions
+- **Against the plan's target (p95 under 10 s at 1x):** orders with a closing cue meet it. Orders without one wait for the 45 s idle timeout. That is the cost of "a pause never sets the outcome" (D10). Possible fixes, such as a shorter idle timeout or vehicle events, are open, so this is not tuned.
+- The committed `eval/report.json` is still the v1 real-provider report. A v2 report is generated in the docs step.
 
 ### 10. Review screen
 
