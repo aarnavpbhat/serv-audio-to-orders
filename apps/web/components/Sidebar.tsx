@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/Tooltip
 import { cn } from "@/lib/utils";
 import { Artwork } from "./Artwork";
 import { ThemeToggle } from "./ThemeToggle";
-import { ChartIcon, CheckIcon, Equalizer, InboxIcon, ListIcon, LiveIcon, MicIcon, SearchIcon, WaveIcon } from "./Icons";
+import { ChartIcon, CheckIcon, Equalizer, InboxIcon, ListIcon, MicIcon, SearchIcon, WaveIcon } from "./Icons";
 
 interface RecentRun {
   id: string;
@@ -23,7 +23,6 @@ interface RecentRun {
 
 const NAV = [
   { href: "/", label: "Runs", icon: WaveIcon },
-  { href: "/live", label: "Live", icon: LiveIcon },
   { href: "/orders", label: "Orders", icon: ListIcon },
   { href: "/mock-webhook", label: "Mock Webhook", icon: InboxIcon },
   { href: "/eval", label: "Eval", icon: ChartIcon },

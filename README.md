@@ -53,7 +53,7 @@ pnpm pipeline examples                            # regenerate examples/
 pnpm pipeline settings                            # which Serv-dependent values are still placeholders
 pnpm feed serve                                   # the live service: HME WebSocket endpoint + lanes (127.0.0.1:8787)
 pnpm pipeline token create --store s1 --lanes lane_1,lane_2   # an ingest token for a base station (shown once)
-pnpm feed replay lane_stream_a --speed 1          # replay a recording as a live feed (watch it on /live)
+pnpm feed replay lane_stream_a --speed 1          # replay a recording as a live feed (orders show on /orders)
 pnpm feed replay 01_simple --via ws --scenario codec-mulaw   # ...as a fake base station over the real socket
 pnpm feed sim-check                               # the simulator's five acted scenarios, typed, over the real endpoint
 pnpm pipeline heldout import rec.m4a --name heldout_01      # add a human recording to the held-out set
@@ -94,7 +94,7 @@ Every file, whether from `pnpm pipeline run`, a web upload or the eval, is repla
 | `/runs/[id]` orders | Three buckets per order (items, needs review, not ordered), flags, combo opportunities, the event log, raw LLM output. Tick "Replay events with the audio" and the order rebuilds itself as the audio plays (the same pure `replay()` runs in the browser) |
 | `/runs/[id]` deliveries | Every attempt with time, phase, status code and latency; payload viewer; Resend |
 | `/mock-webhook` | Received payloads, signature check result, dedupe, and toggles for 500, 429 (Retry-After) and timeout |
-| `/live` | Every lane as it runs: connection, rolling transcript with interim text, tracker state and timers counting down, the open order building, close decisions with their evidence, orders and webhook status (server-sent events from the live service). With dev routes, a Sessions panel lists every live session with End session and Discard |
+| `/live` | Disabled for now (answers 404, not in the sidebar). Test Lab and the simulator show the same lane view for the stream they start; the code stays in `components/live/` |
 | `/runs/[id]` known answer | Fixture runs only: Expected vs Extracted, side by side with every difference listed, scored automatically (no review prompt) |
 | `/orders` | Every order (latest version), read only, filtered by status, review flag, store, lane and date |
 | `/testlab` | Dev only. Test Lab: pick a scenario, follow the script on screen, get a scorecard (see "Test Lab" below). `/testlab/history` shows results over time |
@@ -244,7 +244,7 @@ In free play, after End session you pick what was actually ordered from the menu
 
 ## Stopping a stream: End session and Discard
 
-Every live stream (Test Lab, the simulator, a WebSocket replay, a real connection) stops in one click, from the page that started it or from the Sessions panel on `/live` (decision E3):
+Every live stream (Test Lab, the simulator, a WebSocket replay, a real connection) stops in one click from the page that started it (decision E3); a WebSocket replay stops with Ctrl+C or `POST /api/sessions/:id/stop` (ids from `GET /api/sessions`):
 
 | Action | Open conversation | Webhook | Session marked |
 |---|---|---|---|
@@ -266,7 +266,7 @@ Each item says why it was flagged in plain words ("We heard a shake but not whic
 - **Text mode** (free): type what the crew and the customer say. Lines skip transcription, so this tests the tracker, extraction and delivery at no cost.
 - **Microphone**: speak; the page converts the mic to 16 kHz PCM (or mu-law) in an AudioWorklet. This uses Deepgram live: the page shows the minutes and stops after 15 minutes, or after 30 s with no audio (both can be changed).
 - **Buttons**: Car arrived and Car left, Pause and Resume stream, Drop connection (reconnects at 2, 4 and 8 s like HME, or stays down), and engine or heavy noise mixed under the mic. Hold C while the crew speaks to label it; the labels are saved with the fixture and never sent.
-- **Live panel**: the same lane view as `/live`, plus the mock inbox.
+- **Live panel**: the lane view (connection, transcript, tracker, the order building), plus the mock inbox.
 - **Save as fixture**: after Stop, saves the session (raw capture, audio, timeline, events) to `fixtures/live/<name>/` with the expected orders you write in the form. Tick "held out" to save to `fixtures/heldout/` instead (see `fixtures/heldout/README.md`).
 
 The five acted scenarios from the plan (a simple order, Coke changed to Sprite, a late "add a water", the car leaving mid-order, the connection dropping with no reconnect) run typed over the real endpoint with `pnpm feed sim-check`.
