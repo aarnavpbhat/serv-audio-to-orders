@@ -198,7 +198,8 @@ export function RunView({
         {run.error && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">{run.error}</p>}
         {run.status === "queued" && run.queue_position >= 0 && <p className="text-muted-foreground">Queued (position {run.queue_position + 1})</p>}
 
-        <Waveform
+        {!run.has_audio && <p className="rounded-lg bg-muted px-3 py-2 text-[13px] text-muted-foreground">Live session: there is no single audio file. Each order&apos;s audio is kept in the archive.</p>}
+        {run.has_audio && <Waveform
           ref={wave}
           url={`/api/runs/${id}/audio`}
           time={time}
@@ -210,7 +211,7 @@ export function RunView({
             setPlaying(p);
             if (p) setSync(true);
           }}
-        />
+        />}
 
         <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           {/* Orders as an album track list, one "disc" per conversation. */}

@@ -212,4 +212,34 @@ describe("ConversationTracker", () => {
     t.onTick(at(16));
     expect(t.decisions.map((d) => `${d.from}->${d.to}:${d.trigger}`)).toEqual(["IDLE->ACTIVE:crew_greeting", "ACTIVE->CLOSING:crew_end_cue", "CLOSING->FINALIZED:settled"]);
   });
+
+  it("any order of control events, silence and speech is handled without an error (monkey)", () => {
+    const controls = ["vehicle_arrived", "vehicle_departed", "stream_paused", "stream_resumed", "disconnect", "reconnect"] as const;
+    const lines = ["Welcome, what can I get you?", "A cheeseburger please.", "Your total is $2.99, pull forward.", "Thanks!", ""];
+    for (let seed = 1; seed <= 50; seed++) {
+      let x = seed;
+      const random = () => ((x = (x * 1103515245 + 12345) % 2147483648) / 2147483648);
+      const t = tracker();
+      let now = 0;
+      const opened = new Set<string>();
+      const finalized: string[] = [];
+      for (let step = 0; step < 200; step++) {
+        now += random() * 20;
+        const r = random();
+        const actions =
+          r < 0.5
+            ? t.onControl({ type: controls[Math.floor(random() * controls.length)] as (typeof controls)[number], at: at(now) })
+            : r < 0.8
+              ? t.onTick(at(now))
+              : t.onUtterance(utt(random() < 0.5 ? "crew" : "customer", lines[Math.floor(random() * lines.length)] as string, now, 1));
+        for (const a of actions) {
+          if (a.type === "open") opened.add(a.conversationId);
+          if (a.type === "finalize") finalized.push(a.conversationId);
+        }
+        expect(["IDLE", "ACTIVE", "CLOSING", "FINALIZED"]).toContain(t.status.state);
+      }
+      // Only a conversation that was opened is ever finalized.
+      for (const id of finalized) expect(opened.has(id)).toBe(true);
+    }
+  });
 });

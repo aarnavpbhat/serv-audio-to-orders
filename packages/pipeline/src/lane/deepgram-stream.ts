@@ -6,7 +6,9 @@
  *   channel with diarization, and roles assigned online from past lines only.
  * - Only finalized results become utterances; interim text goes to the UI.
  * - During pauses a KeepAlive holds the connection; after DEEPGRAM_IDLE_CLOSE_S
- *   it is closed to save credit and reopened on the next audio.
+ *   it is closed to save credit and reopened on the next audio. Audio that just
+ *   stops (no pause event, e.g. the car left) counts as a pause after quietPauseS,
+ *   so Deepgram never times the connection out (NET-0001).
  * - On provider errors: reconnect with backoff, buffer up to 30 s meanwhile,
  *   then send the buffer; audio that could not be kept is reported as a gap.
  * - Deepgram's times count only audio sent on that connection; every send is
@@ -80,6 +82,8 @@ export interface DeepgramLiveOptions {
   /** Close the connection after this long paused (seconds); reopen on resume. */
   idleCloseS?: number;
   keepAliveS?: number;
+  /** No audio for this long (seconds) is treated as a pause. Deepgram drops a silent socket after about 10 s. */
+  quietPauseS?: number;
   /** Audio buffered per lane while (re)connecting; older audio is dropped and reported. */
   maxBufferS?: number;
   log?: (msg: string) => void;
@@ -128,6 +132,7 @@ class DeepgramStream implements TranscriptStream {
   private closed = false;
   private keepAlive: ReturnType<typeof setInterval> | null = null;
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
+  private quietTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly pending = new Map<number, LiveWord[]>();
   private readonly inProgress = new Map<number, number>();
   /** Deepgram numbers speakers per connection, so role history restarts with each one. */
@@ -239,6 +244,17 @@ class DeepgramStream implements TranscriptStream {
     this.trimBuffer();
     if (this.socket) this.sendBuffer();
     else void this.connect().then(() => this.sendBuffer());
+    this.armQuiet();
+  }
+
+  /** Restart the no-audio watch: when it fires, the stream is treated as paused. */
+  private armQuiet(): void {
+    if (this.quietTimer) clearTimeout(this.quietTimer);
+    this.quietTimer = setTimeout(() => {
+      this.quietTimer = null;
+      this.pause();
+    }, (this.opts.quietPauseS ?? 3) * 1000);
+    this.quietTimer.unref?.();
   }
 
   /** Keep at most maxBufferS of audio waiting; report anything dropped as a transcript gap. */
@@ -399,6 +415,8 @@ class DeepgramStream implements TranscriptStream {
     if (!this.paused) return;
     this.paused = false;
     this.stopKeepAlive();
+    // Resumed but no audio follows: pause again before Deepgram times the socket out.
+    if (!this.closed) this.armQuiet();
   }
 
   private stopKeepAlive(): void {
@@ -429,6 +447,8 @@ class DeepgramStream implements TranscriptStream {
   close(): void {
     this.closed = true;
     this.stopKeepAlive();
+    if (this.quietTimer) clearTimeout(this.quietTimer);
+    this.quietTimer = null;
     const s = this.socket;
     this.socket = null;
     // Mark before closing so our own close is never mistaken for a dropped connection.

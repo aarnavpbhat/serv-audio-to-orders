@@ -81,6 +81,8 @@ interface Conversation {
   index: number;
   /** Wall time the conversation opened (processing). */
   openedWallMs: number;
+  /** When the tracker opened it, on the stream clock. */
+  openedAt: string;
   /** First order id is minted at open (ULID); split parts and later versions reuse theirs. */
   orderIds: string[];
   groupId: string | null;
@@ -416,6 +418,7 @@ export class LaneSession {
             id: a.conversationId,
             index: this.conversations.size,
             openedWallMs: this.now(),
+            openedAt: a.at,
             orderIds: [newId("ord")],
             groupId: null,
             version: 0,
@@ -447,10 +450,36 @@ export class LaneSession {
       .map((id) => this.byId.get(id))
       .filter((u): u is Utterance => u !== undefined)
       .sort((x, y) => x.start_s - y.start_s);
-    // Nothing heard at all: no order. Lines all heard as crew still go on: the role pass
-    // (runFinalize) decides whether the customer's voice was put under the crew's label.
+    // Nothing heard at all. A car that came and went is still sent (E1: abandoned, no_speech, no
+    // model call); anything else sends nothing (E2). Lines all heard as crew still go on: the role
+    // pass (runFinalize) decides whether the customer's voice was put under the crew's label.
     if (!utts.length) {
-      this.log(`${this.key}: ${a.conversationId} closed with no speech; no order`);
+      if (!a.vehicle.length) {
+        this.log(`${this.key}: ${a.conversationId} closed with no speech; no order`);
+        return;
+      }
+      const startS = this.laneS(Date.parse(conv.openedAt));
+      const segment: Segment = {
+        segment_id: `seg_${conv.index + 1}`,
+        index: conv.index,
+        start_s: startS,
+        end_s: Math.max(startS, this.laneS(Date.parse(a.at))),
+        utterance_ids: [],
+        non_customer_ids: [],
+        has_greeting: false,
+        has_closing: false,
+        truncated_start: false,
+        truncated_end: false,
+        trailing_silence_s: 0,
+        language: null,
+        non_english: false,
+        mean_word_conf: 1,
+        crosstalk_suspected: false,
+      };
+      const args: FinalizeArgs = { segment, vehicle: a.vehicle, stream: a.stream, silence: a.silence, flags: [...a.flags, "no_speech"] };
+      conv.finalized = args;
+      conv.segment = segment;
+      conv.chain = conv.chain.then(() => this.runFinalize(conv, args, null, []));
       return;
     }
     const durS = this.laneS(this.audioEndMs || this.clockMs);
@@ -509,7 +538,7 @@ export class LaneSession {
 
   private async runFinalize(conv: Conversation, args: FinalizeArgs, reason: "reopened_late_addition" | "late_evidence" | null, events: OrderEvent[] | null): Promise<void> {
     const rolesLowAgreement = events ? false : await this.rolePass(args.segment);
-    if (!args.segment.utterance_ids.some((id) => this.byId.get(id)?.speaker === "customer")) {
+    if (!args.flags.includes("no_speech") && !args.segment.utterance_ids.some((id) => this.byId.get(id)?.speaker === "customer")) {
       this.log(`${this.key}: ${conv.id} has no customer speech after the role pass; no order`);
       return;
     }
