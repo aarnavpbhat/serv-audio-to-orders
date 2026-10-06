@@ -19,6 +19,7 @@ import { parseArgs } from "node:util";
 import { getConfig, parseChannelMap, servSettings } from "@serv/config";
 import { ConfigError, createEngine, type EngineOptions, type ExtractorKind, type TranscriberKind } from "./engine";
 import { dataCommand } from "./data/cli";
+import { readRawSession } from "./data/raw-sink";
 import { formatReport, runEval } from "./eval/run-eval";
 import { IngestError } from "./ingest/probe";
 import { createToken, issueTicket, listTokens, revokeToken } from "./input/auth/tokens";
@@ -172,6 +173,10 @@ async function rawReplayCommand(sessionId: string | undefined, values: Record<st
   const engine = createEngine({ transcriber: "script", extractor: "fuzzy", log: () => {} });
   const token = (values.token as string | undefined) ?? process.env.INGEST_TOKEN;
   if (!token) throw new ConfigError("No ingest token: pass --token or set INGEST_TOKEN (the token's store must match the captured session)");
+  // A capture belongs to one store: never replay it under another store's token.
+  const { manifest } = await readRawSession(engine.data, sessionId);
+  const tokenRow = listTokens(engine.db).find((t) => t.token_id === token.split("_")[1]);
+  if (tokenRow && tokenRow.store_id !== manifest.store_id) throw new ConfigError(`Session ${sessionId} was captured for ${manifest.store_id}; this token is for ${tokenRow.store_id}`);
   const speed = !values.speed || values.speed === "max" ? ("max" as const) : Number(values.speed);
   const r = await replayRawOverWs(engine.data, sessionId, { url: (values.url as string | undefined) ?? engine.cfg.ingest.publicUrl, token, speed });
   console.log(`replayed ${r.messages} messages (${Math.round(r.bytes / 1024)} KB)${r.incomplete ? "; the capture has an incomplete part (the server stopped mid-session)" : ""}; closes: ${r.closes.map((c) => c.code).join(", ") || "-"}`);
