@@ -38,6 +38,17 @@ export class LaneManager {
     await this.bySession.get(id)?.handle(m);
   }
 
+  /** Operator stop (E3) by session id; false if no lane knows it. */
+  async stop(sessionId: string, mode: "end" | "discard", at: string): Promise<boolean> {
+    const lane = this.bySession.get(sessionId);
+    return lane ? lane.stop(sessionId, mode, at) : false;
+  }
+
+  /** Every session an operator can stop, across lanes. */
+  sessions(): { sessionId: string; storeId: string; laneId: string; open: boolean; sourceType: string; openedAt: string; audioMinutes: number }[] {
+    return [...this.lanes.values()].flatMap((l) => l.stoppable.map((s) => ({ ...s, storeId: l.storeId, laneId: l.laneId })));
+  }
+
   lane(storeId: string, laneId: string): LaneSession | undefined {
     return this.lanes.get(laneKey(storeId, laneId));
   }

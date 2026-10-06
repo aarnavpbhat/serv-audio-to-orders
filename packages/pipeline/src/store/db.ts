@@ -123,7 +123,7 @@ export function openDb(file: string): DB {
 
 // ------------------------------------------------------------------ runs
 
-export type RunStatus = "queued" | "running" | "completed" | "failed";
+export type RunStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
 
 export interface RunRow {
   id: string;

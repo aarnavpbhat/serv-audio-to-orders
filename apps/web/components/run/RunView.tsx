@@ -178,6 +178,16 @@ export function RunView({
                 {sync ? "Replaying live" : "Live replay"}
               </Toggle>
               <Badge value={run.status} />
+              {run.has_audio && (run.status === "queued" || run.status === "running") && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  title="Stop this run. Orders already sent stay sent; the open conversation is dropped."
+                  onClick={() => void fetch(`/api/runs/${id}/cancel`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })}
+                >
+                  Cancel
+                </Button>
+              )}
               <ol className="ml-auto flex items-center gap-1 text-[11px]">
                 {STAGES.slice(0, -1).map((s, i) => {
                   const done = i < stageIdx;

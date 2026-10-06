@@ -15,6 +15,7 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 const BASE_URL = `http://localhost:${PORT}`;
 // The monkey test drives the simulator against its own feed service (free script
 // transcriber, fuzzy extractor: no API calls) and reads both servers' logs.
+const LIVE = /(monkey|stop)\.spec/;
 const FEED_PORT = Number(process.env.E2E_FEED_PORT ?? 8797);
 export const LOG_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), ".e2e-logs");
 mkdirSync(LOG_DIR, { recursive: true });
@@ -42,16 +43,19 @@ export default defineConfig({
   // The 1 CI retry is for DETECTION, not tolerance: a test that only passes on
   // retry is flaky. Quarantine it and fix it.
   retries: process.env.CI ? 1 : 0,
+  // A cold Next.js dev server compiles each route on first hit; fewer workers keep CI from timing out on it.
+  workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: BASE_URL,
     trace: "on-first-retry",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] }, testIgnore: /monkey/ },
+    { name: "chromium", use: { ...devices["Desktop Chrome"] }, testIgnore: LIVE },
     {
-      name: "monkey",
-      testMatch: /monkey/,
+      // Specs that stream to the feed service through the simulator, with a silent fake mic.
+      name: "live",
+      testMatch: LIVE,
       use: {
         ...devices["Desktop Chrome"],
         permissions: ["microphone"],

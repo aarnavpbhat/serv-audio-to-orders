@@ -204,4 +204,40 @@ describe("endpoint limits", () => {
     const dev = await start({ enableDevRoutes: true, resolveFixture: () => null });
     expect((await connect(`${dev.url}?lane=lane_5&fixture=../../etc/passwd`, bearer(token))).status).toBe(400);
   });
+
+  describe("operator stop (dev routes, E3)", () => {
+    const stopReq = (port: number, id: string, body: unknown, headers: Record<string, string> = { "content-type": "application/json" }) =>
+      fetch(`http://127.0.0.1:${port}/dev/sessions/${id}/stop`, { method: "POST", headers, body: JSON.stringify(body) });
+
+    it("closes the client's socket with 4000 and tells the lanes; a second stop does nothing", async () => {
+      const stops: [string, string][] = [];
+      const { s, url, got } = await start({ enableDevRoutes: true, sessions: { list: () => [{ sessionId: "x" }], stop: async (id, mode) => (stops.push([id, mode]), true) } });
+      const { ws } = await connect(`${url}?lane=lane_1`, bearer(token));
+      await wait(30);
+      const open = got.find((m) => m.kind === "session_open");
+      const id = open?.kind === "session_open" ? open.session.sessionId : "";
+      const code = closed(ws);
+      const res = await stopReq(s.address.port, id, { mode: "end" });
+      expect(await res.json()).toEqual({ stopped: true, mode: "end" });
+      expect(await code).toBe(CLOSE.stopped);
+      await wait(30);
+      expect(got.filter((m) => m.kind === "session_close")).toHaveLength(1);
+      expect((await stopReq(s.address.port, id, { mode: "end" })).status).toBe(200);
+      expect(stops).toEqual([
+        [id, "end"],
+        [id, "end"],
+      ]);
+      expect(await (await fetch(`http://127.0.0.1:${s.address.port}/dev/sessions`)).json()).toEqual({ sessions: [{ sessionId: "x" }] });
+    });
+
+    it("refuses a bad mode, a non-JSON body, and everything without dev routes", async () => {
+      const control = { list: () => [], stop: async () => true };
+      const on = await start({ enableDevRoutes: true, sessions: control });
+      expect((await stopReq(on.s.address.port, "ses_1", { mode: "explode" })).status).toBe(400);
+      expect((await stopReq(on.s.address.port, "ses_1", { mode: "end" }, { "content-type": "text/plain" })).status).toBe(400);
+      const off = await start({ enableDevRoutes: false, sessions: control });
+      expect((await stopReq(off.s.address.port, "ses_1", { mode: "end" })).status).toBe(404);
+      expect((await fetch(`http://127.0.0.1:${off.s.address.port}/dev/sessions`)).status).toBe(404);
+    });
+  });
 });

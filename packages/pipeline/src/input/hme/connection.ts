@@ -139,6 +139,14 @@ export class HmeConnection {
     }
   }
 
+  /** Operator stop: kill the decoder now (nothing more is wanted from it) and close the session. */
+  abort(): void {
+    if (this.closed) return;
+    this.closed = true;
+    this.decoder.close();
+    this.emit({ kind: "session_close", sessionId: this.session.sessionId, at: new Date(this.now()).toISOString(), reason: "remote_close" });
+  }
+
   /** Flush the decoder and close the session. */
   async close(reason: "remote_close" | "error" | "eof"): Promise<void> {
     if (this.closed) return;

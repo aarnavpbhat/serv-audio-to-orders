@@ -8,6 +8,7 @@ import { events, repoRoot, testEngine } from "../test-helpers";
 import type { StreamingTranscriber } from "./types";
 import { LaneManager } from "./manager";
 import { replayFile } from "./replay";
+import { FuzzyExtractor } from "../extract/fuzzy-extractor";
 import { ScriptStreamingTranscriber } from "./script-transcriber";
 
 const audio = (id: string) => path.join(repoRoot, `fixtures/audio/${id}.mono.clean.mp3`);
@@ -197,6 +198,60 @@ describe("guessed roles", () => {
 
     it("no vehicle event and no speech: nothing opens, nothing is sent", async () => {
       expect((await drive([[5, "stream_paused"]])).orders).toEqual([]);
+    });
+  });
+
+  describe("operator stop (E3)", () => {
+    const at = (s: number) => new Date(Date.parse("2026-10-03T18:40:00Z") + s * 1000).toISOString();
+    async function lane() {
+      const engine = testEngine();
+      engine.extractor = new FuzzyExtractor();
+      const manager = new LaneManager({ engine, transcriber: new ScriptStreamingTranscriber(), runId: "run_stop", deliver: false });
+      const open = (id: string, t: number) =>
+        manager.handle({ kind: "session_open", session: { sessionId: id, storeId: "s", laneId: "l", sourceType: "hme_ws", audio: { sampleRate: 16000, channels: 1 }, timeBasis: "receive_clock", anchorAt: at(t), codecIn: "pcm_s16le" } });
+      const say = (id: string, t: number, speaker: "crew" | "customer", text: string) => manager.handle({ kind: "script_line", line: { sessionId: id, speaker, text, at: at(t) } });
+      await open("ses_1", 0);
+      await say("ses_1", 2, "crew", "Welcome, what can I get for you today?");
+      await say("ses_1", 5, "customer", "Can I get a cheeseburger?");
+      const orders = () => [...manager.lanes.values()][0]?.orders ?? [];
+      // The free keyword extractor files short lines under needs_review: count every line heard.
+      const heard = () => orders().map((o) => [...o.order.items, ...o.order.needs_review].map((i) => i.catalog_id));
+      return { manager, open, say, orders, heard };
+    }
+
+    it("End mid-conversation sends the order now, flagged ended_by_operator; a second stop does nothing", async () => {
+      const { manager, orders, heard } = await lane();
+      expect(await manager.stop("ses_1", "end", at(7))).toBe(true);
+      expect(orders().map((o) => o.order.flags.includes("ended_by_operator"))).toEqual([true]);
+      expect(heard()).toEqual([["cheeseburger"]]);
+      expect(await manager.stop("ses_1", "end", at(8))).toBe(true);
+      await manager.handle({ kind: "session_close", sessionId: "ses_1", at: at(8), reason: "remote_close" });
+      await manager.handle({ kind: "tick", at: at(400) });
+      expect(orders()).toHaveLength(1);
+    });
+
+    it("Discard drops the open conversation: no order, ever", async () => {
+      const { manager, orders } = await lane();
+      expect(await manager.stop("ses_1", "discard", at(7))).toBe(true);
+      await manager.handle({ kind: "session_close", sessionId: "ses_1", at: at(7), reason: "remote_close" });
+      await manager.handle({ kind: "tick", at: at(400) });
+      await manager.end();
+      expect(orders()).toEqual([]);
+    });
+
+    it("works during reconnect backoff, and the lane takes a new connection right after", async () => {
+      const { manager, open, say, orders, heard } = await lane();
+      await manager.handle({ kind: "session_close", sessionId: "ses_1", at: at(6), reason: "remote_close" });
+      expect(manager.sessions().map((s) => [s.sessionId, s.open])).toEqual([["ses_1", false]]);
+      expect(await manager.stop("ses_1", "end", at(8))).toBe(true);
+      expect(orders()).toHaveLength(1);
+      expect(manager.sessions()).toEqual([]);
+      await open("ses_2", 20);
+      await say("ses_2", 22, "crew", "Welcome, what can I get for you today?");
+      await say("ses_2", 25, "customer", "A medium fries please.");
+      expect(await manager.stop("ses_2", "end", at(27))).toBe(true);
+      expect(heard()).toEqual([["cheeseburger"], ["fries"]]);
+      expect(await manager.stop("ses_unknown", "end", at(30))).toBe(false);
     });
   });
 });

@@ -23,6 +23,16 @@ export interface ReplayRunOptions extends ReplayOptions {
   record?: boolean;
   /** Lane updates (the CLI feeds the web app's live view with them). */
   onUpdate?: LaneOptions["onUpdate"];
+  /** Cancel: stop reading the file, drop the open conversation, mark the run cancelled. */
+  signal?: AbortSignal;
+}
+
+/** A run stopped by its Cancel button; orders already sent stay sent. */
+export class RunCancelledError extends Error {
+  constructor(runId: string) {
+    super(`run ${runId} was cancelled`);
+    this.name = "RunCancelledError";
+  }
 }
 
 export interface ReplayResult {
@@ -59,7 +69,17 @@ export async function replayFile(engine: Engine, file: string, opts: ReplayRunOp
   updateRun(db, runId, { status: "running", stage: "transcribe", transcriber: stt, extractor: engine.extractor.name });
   try {
     const manager = new LaneManager({ engine, transcriber: opts.transcriber, runId, deliver: opts.deliver !== false, ...(opts.record ? { record: true } : {}), ...(opts.onUpdate ? { onUpdate: opts.onUpdate } : {}) });
-    for await (const m of source.messages()) await manager.handle(m);
+    for await (const m of source.messages()) {
+      if (opts.signal?.aborted) break;
+      await manager.handle(m);
+    }
+    if (opts.signal?.aborted) {
+      const at = new Date().toISOString();
+      for (const s of manager.sessions()) await manager.stop(s.sessionId, "discard", at);
+      await manager.end();
+      updateRun(db, runId, { status: "cancelled", stage: "done", error: null });
+      throw new RunCancelledError(runId);
+    }
     updateRun(db, runId, { stage: "extract" });
     await manager.end();
 
@@ -97,7 +117,7 @@ export async function replayFile(engine: Engine, file: string, opts: ReplayRunOp
     updateRun(db, runId, { timings: { ...timings, ...latencySummary(closeLatencyMs) } });
     return { run_id: runId, transcript, segmentation, orders, versions, decisions: lanes.flatMap((l) => l.decisions), deliveries, usage, timings, closeLatencyMs };
   } catch (e) {
-    updateRun(db, runId, { status: "failed", error: (e as Error).message });
+    if (!(e instanceof RunCancelledError)) updateRun(db, runId, { status: "failed", error: (e as Error).message });
     throw e;
   }
 }
