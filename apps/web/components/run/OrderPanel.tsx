@@ -14,6 +14,8 @@ export interface PanelOrder {
   status: string | null;
   review: Review | null;
   outcome_evidence: OutcomeEvidence[];
+  order_version?: number;
+  correction_reason?: string | null;
   group_id: string | null;
   items: OrderItem[];
   needs_review: NeedsReviewItem[];
@@ -69,6 +71,12 @@ export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "f
     <div className={phase === "waiting" ? "opacity-45" : ""}>
       <div className="flex flex-wrap items-center gap-2 px-2 pb-1.5">
         <span className="font-mono text-[11px] text-muted-foreground">{order.order_id}</span>
+        {(order.order_version ?? 1) > 1 && (
+          <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]" title="Corrections keep the order_id and raise the version">
+            v{order.order_version}
+            {order.correction_reason ? ` · ${order.correction_reason.replace(/_/g, " ")}` : ""}
+          </span>
+        )}
         {phase === "final" && order.status && <Badge value={order.status} />}
         {phase === "final" && order.review?.required && <Badge value="review" label={`Review: ${order.review.reasons.map((r) => r.replace(/_/g, " ")).join(", ")}`} />}
         {phase === "live" && (

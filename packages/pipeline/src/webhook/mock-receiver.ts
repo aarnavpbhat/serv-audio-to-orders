@@ -1,7 +1,8 @@
 /**
  * The mock receiver's logic, shared by the Next.js route (/api/mock-webhook)
  * and the tests. Verifies the signature and timestamp, dedupes on webhook-id,
- * stores payloads, and can be toggled to fail with 500, 429 or a timeout.
+ * stores payloads, keeps the highest version per order_id (as Serv should),
+ * and can be toggled to fail with 500, 429 or a timeout.
  */
 import { sleep } from "../lib/retry";
 import { getMockSettings, setMockSettings, type DB } from "../store/db";
@@ -67,5 +68,24 @@ export async function handleMockWebhook(db: DB, secret: string, req: MockRequest
     return { status: 200, headers: {}, json: { received: true, duplicate: true } };
   }
   record(200, false, "ok");
-  return { status: 200, headers: {}, json: { received: true } };
+  const kept = keepHighestVersion(db, webhookId ?? "", req.body, now());
+  return { status: 200, headers: {}, json: { received: true, ...(kept ? { kept_version: kept } : {}) } };
+}
+
+/** Store the payload unless a newer version of the same order is already held. Returns the version now kept. */
+function keepHighestVersion(db: DB, webhookId: string, body: string, at: number): number | null {
+  let p: { order_id?: unknown; order_version?: unknown; status?: unknown };
+  try {
+    p = JSON.parse(body) as typeof p;
+  } catch {
+    return null;
+  }
+  if (typeof p.order_id !== "string" || typeof p.order_version !== "number") return null;
+  db.prepare(
+    `INSERT INTO mock_orders (order_id, order_version, webhook_id, status, body, received_at) VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(order_id) DO UPDATE SET order_version = excluded.order_version, webhook_id = excluded.webhook_id, status = excluded.status, body = excluded.body, received_at = excluded.received_at
+     WHERE excluded.order_version > mock_orders.order_version`,
+  ).run(p.order_id, p.order_version, webhookId, typeof p.status === "string" ? p.status : null, body, at);
+  const row = db.prepare(`SELECT order_version FROM mock_orders WHERE order_id = ?`).get(p.order_id) as { order_version: number } | undefined;
+  return row?.order_version ?? null;
 }

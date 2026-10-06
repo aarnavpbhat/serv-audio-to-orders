@@ -8,7 +8,8 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 |---|---|---|
 | 0. Freeze v1 | main | Done: PR #1 merged, `v1.0.0` tagged, `release/v1` and `v2` created |
 | 1. Outcome and review model | v2-step/01-outcomes | Done |
-| 2. Versioned corrections | v2-step/02-versions | Next |
+| 2. Versioned corrections | v2-step/02-versions | Done |
+| 3. Input layer and replay | v2-step/03-input-layer | Next |
 
 ## Decisions not covered by the plan
 
@@ -26,6 +27,14 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 2. Versioned corrections
+
+- Outbox rows for version N start as `waiting` while any earlier version of the order is not delivered, failed or dead. When a version finishes, the next waiting one is released and sent (the worker also picks it up if the process stops).
+- `correctedPayload()` (`webhook/corrections.ts`) builds the next version: same `order_id`, `order_version + 1`, `supersedes_version`, `correction_reason`, `order.updated`.
+- The mock receiver keeps the highest version per `order_id` (`mock_orders` table) and shows it as "Kept Orders".
+- The run view shows one card per order (its latest version) with a `vN` badge.
+- Done when: a forced v2 waits for v1, is delivered after it, with no duplicates (`webhook.test.ts`, "versioned corrections").
 
 ### 1. Outcome and review model
 
