@@ -88,7 +88,7 @@ export function testEngine(data: Partial<DataStoreOptions> = {}): Engine {
     extractor: new OracleExtractor(path.join(repoRoot, "fixtures")),
     judge: null,
     gemini: null,
-    deliverer: new Deliverer(db, { url: "http://127.0.0.1:9/unused", secret: "whsec_dGVzdC1zZWNyZXQtMTIzNDU2Nzg=", timeoutMs: 100, fastScheduleS: [], slowScheduleS: [], userAgent: "test" }),
+    deliverer: new Deliverer(db, { url: "http://127.0.0.1:9/unused", secret: "whsec_dGVzdC1zZWNyZXQtMTIzNDU2Nzg=", timeoutMs: 100, fastScheduleS: [], slowScheduleS: [], userAgent: "test" }), // fake test secret, not a credential: gitleaks:allow
     data: new DataStore(db, blobs, { pipelineVersion: "test", budgetBytes: 50 * 1024 ** 3, retention: "keep_all", ...data }),
     placeholders: false,
     log: () => {},
