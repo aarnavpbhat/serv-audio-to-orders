@@ -385,7 +385,8 @@ export class LaneSession {
       .map((id) => this.byId.get(id))
       .filter((u): u is Utterance => u !== undefined)
       .sort((x, y) => x.start_s - y.start_s);
-    if (!utts.some((u) => u.speaker === "customer")) {
+    // Guessed roles are checked again after the LLM role pass, so a mislabelled customer is not lost.
+    if (!utts.some((u) => u.speaker === "customer" || u.speaker_guessed)) {
       // A car that never spoke (or only crew lines): no order, as in v1.
       this.log(`${this.key}: ${a.conversationId} closed with no customer speech; no order`);
       return;
@@ -436,6 +437,10 @@ export class LaneSession {
 
   private async runFinalize(conv: Conversation, args: FinalizeArgs, reason: "reopened_late_addition" | "late_evidence" | null, events: OrderEvent[] | null): Promise<void> {
     const rolesLowAgreement = events ? false : await this.rolePass(args.segment);
+    if (!args.segment.utterance_ids.some((id) => this.byId.get(id)?.speaker === "customer")) {
+      this.log(`${this.key}: ${conv.id} has no customer speech after the role pass; no order`);
+      return;
+    }
     const transcript = this.transcript();
     const sessionId = this.utteranceSession.get(args.segment.utterance_ids[0] ?? "") ?? [...this.sessions.keys()][0] ?? "";
     const s = this.sessions.get(sessionId);
