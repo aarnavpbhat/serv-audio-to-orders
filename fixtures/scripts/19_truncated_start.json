@@ -63,7 +63,7 @@
   "expected": {
     "orders": [
       {
-        "status": "incomplete",
+        "status": "completed",
         "items": [
           {
             "catalog_id": "sprite",
@@ -80,7 +80,8 @@
         "flags": [
           "truncated_start"
         ],
-        "group": null
+        "group": null,
+        "review": []
       }
     ]
   },

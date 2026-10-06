@@ -151,7 +151,8 @@
         "flags": [
           "split_order"
         ],
-        "group": "A"
+        "group": "A",
+        "review": []
       },
       {
         "status": "completed",
@@ -174,7 +175,8 @@
         "flags": [
           "split_order"
         ],
-        "group": "A"
+        "group": "A",
+        "review": []
       }
     ]
   }

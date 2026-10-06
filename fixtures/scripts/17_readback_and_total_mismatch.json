@@ -82,7 +82,7 @@
   "expected": {
     "orders": [
       {
-        "status": "needs_review",
+        "status": "completed",
         "items": [
           {
             "catalog_id": "sweet_tea",
@@ -101,7 +101,11 @@
           "readback_mismatch",
           "total_mismatch"
         ],
-        "group": null
+        "group": null,
+        "review": [
+          "readback_mismatch",
+          "total_mismatch"
+        ]
       }
     ]
   }

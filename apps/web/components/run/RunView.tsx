@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { replay } from "@serv/pipeline/build/replay";
 import { Catalog } from "@serv/pipeline/menu/catalog";
 import { FuzzyMatcher } from "@serv/pipeline/menu/fuzzy";
+import { emptySignals } from "@serv/pipeline/postprocess/outcome";
 import { postprocess } from "@serv/pipeline/postprocess/postprocess";
 import type { Segment } from "@serv/pipeline/schemas/index";
 import { Button } from "@/components/ui/Button";
@@ -41,7 +42,7 @@ export function RunView({
   initial: RunDetail;
   menu: unknown;
   thresholds: { recognition: number; commitment: number };
-  site: { location: SiteValue; lane: SiteValue; webhook: SiteValue };
+  site: { store: SiteValue; lane: SiteValue; webhook: SiteValue };
 }) {
   const [run, setRun] = useState(initial);
   const [time, setTime] = useState(0);
@@ -93,6 +94,7 @@ export function RunView({
           non_english: flags.has("non_english"),
           low_audio_quality: flags.has("low_audio_quality"),
           crosstalk_suspected: flags.has("crosstalk_suspected"),
+          signals: emptySignals(),
         },
         {
           catalog,
@@ -101,6 +103,7 @@ export function RunView({
           taxRate: 0,
           totalTolerance: 0.05,
           placeholders: flags.has("placeholder_values"),
+          reviewCap: { maxQuantity: Number.POSITIVE_INFINITY, maxTotal: Number.POSITIVE_INFINITY },
           newOrderId: (() => {
             let k = 0;
             return () => finals[k++]?.order_id ?? `${first.order_id}_${k}`;
@@ -108,7 +111,8 @@ export function RunView({
           newGroupId: () => first.payload.group_id ?? "group",
         },
       );
-      return built.map((o) => ({ ...o, status: null }));
+      // The live preview shows items only; status and review are decided once, at finalize.
+      return built.map((o) => ({ ...o, status: null, review: null, outcome_evidence: [] }));
     },
     [catalog, matcher, thresholds, time],
   );
@@ -279,7 +283,7 @@ export function RunView({
           <h2 className="section-title mb-2">Details</h2>
           <dl className="grid gap-x-8 gap-y-2 text-[12px] sm:grid-cols-2 lg:grid-cols-3">
             <Note k="Run id" v={<span className="font-mono">{run.id}</span>} />
-            <Note k="Location" v={<span className="font-mono">{site.location.value}</span>} placeholder={site.location.placeholder ? site.location.note : null} />
+            <Note k="Store" v={<span className="font-mono">{site.store.value}</span>} placeholder={site.store.placeholder ? site.store.note : null} />
             <Note k="Lane" v={<span className="font-mono">{site.lane.value}</span>} placeholder={site.lane.placeholder ? site.lane.note : null} />
             <Note k="Webhook" v={<span className="break-all font-mono">{site.webhook.value}</span>} placeholder={site.webhook.placeholder ? site.webhook.note : null} />
             {run.transcript && (

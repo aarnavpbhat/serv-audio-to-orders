@@ -166,7 +166,8 @@
         "not_ordered": [],
         "needs_review": [],
         "flags": [],
-        "group": null
+        "group": null,
+        "review": []
       }
     ]
   }

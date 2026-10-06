@@ -93,7 +93,10 @@
         "flags": [
           "missing_required_slot"
         ],
-        "group": null
+        "group": null,
+        "review": [
+          "missing_required_slot"
+        ]
       }
     ]
   }

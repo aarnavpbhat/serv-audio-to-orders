@@ -7,6 +7,7 @@ import { Deliverer, parseRetryAfter, type DeliveryConfig } from "../webhook/deli
 import { handleMockWebhook } from "../webhook/mock-receiver";
 import { generateSecret, sign, signedHeaders, verify } from "../webhook/signing";
 import type { OrderPayload } from "../schemas";
+import { samplePayload } from "./sample";
 
 const secret = generateSecret();
 let db: DB;
@@ -14,32 +15,7 @@ let server: Server;
 let url: string;
 let forcedStatus: number | null = null;
 
-function payload(orderId: string): OrderPayload {
-  return {
-    schema_version: "1.0",
-    event_type: "order.completed",
-    order_id: orderId,
-    order_version: 1,
-    group_id: null,
-    location_id: "store_demo_001",
-    lane_id: "lane_1",
-    status: "completed",
-    started_at: "2026-10-03T18:41:01.200Z",
-    ended_at: "2026-10-03T18:42:24.880Z",
-    timestamp_source: "env",
-    audio: { source_file: "x.mp3", offset_start_s: 1, offset_end_s: 2 },
-    items: [],
-    needs_review: [],
-    not_ordered: [],
-    combo_opportunities: [],
-    customer_declined_combo: false,
-    flags: [],
-    totals: { computed: 0, spoken_by_crew: null, currency: "USD" },
-    overall_confidence: 1,
-    transcript: [],
-    processing: { stt: "test", extractor: "test", menu_version: "sandbox-1", pipeline_version: "0.1.0", latency_ms: 1 },
-  };
-}
+const payload = (orderId: string): OrderPayload => samplePayload(orderId);
 
 const cfg = (): DeliveryConfig => ({
   url,

@@ -8,9 +8,10 @@ import { replay } from "../build/replay";
 import { compareOrders, passed } from "../eval/compare";
 import { loadFixtureScripts } from "../fixtures/load";
 import { postprocess } from "../postprocess/postprocess";
-import { END_CUES, matchesAny } from "../segment/cues";
+import { emptySignals } from "../postprocess/outcome";
+import { CREW_CHATTER_CUES, END_CUES, matchesAny } from "../segment/cues";
 import type { FixtureScript } from "../schemas";
-import { catalog, ppOptions, repoRoot, seg } from "../test-helpers";
+import { catalog, cueUtt, ppOptions, repoRoot, seg } from "../test-helpers";
 
 const scripts = loadFixtureScripts(path.join(repoRoot, "fixtures/scripts"));
 const uIndex = (id: string) => Number(id.slice(1));
@@ -31,6 +32,14 @@ function contextFor(script: FixtureScript, orderIdx: number) {
     truncated_end: isLast && script.render.tail_silence_s < 1,
     non_english: script.language !== "en",
     low_audio_quality: script.render.noise === "heavy",
+    // Four seconds per turn: only the order of cues matters to the outcome rules.
+    signals: {
+      ...emptySignals(),
+      utterances: turns.map((t, i) => ({
+        ...cueUtt(`u${first + i}`, t.speaker === "customer" ? "customer" : "crew", t.text, (first + i) * 4),
+        chatter: t.speaker === "crew2" || matchesAny(t.text, CREW_CHATTER_CUES),
+      })),
+    },
   });
 }
 

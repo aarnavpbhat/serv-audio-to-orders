@@ -96,7 +96,10 @@
         "flags": [
           "low_audio_quality"
         ],
-        "group": null
+        "group": null,
+        "review": [
+          "low_audio_quality"
+        ]
       }
     ]
   },

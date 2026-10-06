@@ -6,9 +6,10 @@ import { addUsage, emptyUsage, type ExtractResult, type LlmUsage } from "./extra
 import { ingest } from "./ingest/ingest";
 import { snrDb } from "./ingest/probe";
 import { newId } from "./lib/ids";
+import { emptySignals, type OutcomeSignals } from "./postprocess/outcome";
 import { postprocess, type SegmentContext } from "./postprocess/postprocess";
-import type { Order, OrderEvent, OrderPayload, Segment, Segmentation, Transcript } from "./schemas";
-import { segmentTranscript } from "./segment/segment";
+import type { Order, OrderEvent, OrderPayload, OutcomeEvidence, Segment, Segmentation, TimeBasis, Transcript, Utterance } from "./schemas";
+import { isChatter, segmentTranscript } from "./segment/segment";
 import { insertOrder, insertRun, outboxForRun, updateRun, type OutboxRow } from "./store/db";
 import type { TranscribeUsage } from "./transcribe/types";
 import { toPayload } from "./webhook/payload";
@@ -58,7 +59,30 @@ export interface AudioQuality {
   levelsDb?: number[];
 }
 
-export function segmentContext(seg: Segment, q: AudioQuality): SegmentContext {
+/** Silences this long inside a conversation are recorded as context (never as an outcome on their own). */
+export const SILENCE_CONTEXT_S = 10;
+
+/** Outcome signals from a conversation's utterances: cues plus long silences as context. */
+export function transcriptSignals(utts: Utterance[], trailingSilenceS: number, extra: Partial<OutcomeSignals> = {}): OutcomeSignals {
+  const silence: OutcomeEvidence[] = [];
+  for (let i = 1; i < utts.length; i++) {
+    const gap = (utts[i]?.start_s ?? 0) - (utts[i - 1]?.end_s ?? 0);
+    if (gap >= SILENCE_CONTEXT_S) silence.push({ type: "silence", at: utts[i - 1]?.end_utc ?? "", duration_s: Math.round(gap * 10) / 10, context_only: true });
+  }
+  const last = utts.at(-1);
+  if (last && trailingSilenceS >= SILENCE_CONTEXT_S) silence.push({ type: "silence", at: last.end_utc, duration_s: Math.round(trailingSilenceS * 10) / 10, context_only: true });
+  return {
+    ...emptySignals(),
+    ...extra,
+    utterances: utts.map((u) => ({ id: u.id, speaker: u.speaker, text: u.text, start_s: u.start_s, start_utc: u.start_utc, chatter: isChatter(u) })),
+    silence: [...silence, ...(extra.silence ?? [])],
+  };
+}
+
+/** File recordings carry their start time as metadata (env, filename or mtime). */
+export const fileTimeBasis = (_t: Transcript): TimeBasis => "recording_metadata";
+
+export function segmentContext(seg: Segment, q: AudioQuality, utts: Utterance[] = []): SegmentContext {
   // ASR confidence stays high on loud, steady noise, so the measured noise floor counts too.
   const snr = q.levelsDb ? snrDb(q.levelsDb, seg.start_s, seg.end_s) : null;
   return {
@@ -72,12 +96,21 @@ export function segmentContext(seg: Segment, q: AudioQuality): SegmentContext {
     non_english: seg.non_english,
     low_audio_quality: seg.mean_word_conf < q.lowAudioQualityMeanConf || (snr !== null && snr < q.lowAudioSnrDb),
     crosstalk_suspected: seg.crosstalk_suspected,
+    signals: transcriptSignals(utts, seg.trailing_silence_s),
   };
+}
+
+/** Channel roles for the payload: from CHANNEL_MAP when channels are separate, else one mixed channel. */
+export function channelRoles(channels: number, map: Record<number, "crew" | "customer"> | null | undefined): ("customer" | "crew" | "mixed")[] {
+  if (!map || channels < 2) return ["mixed"];
+  return Array.from({ length: channels }, (_, i) => map[i] ?? "mixed");
 }
 
 export async function runPipeline(engine: Engine, file: string, opts: RunOptions = {}, onStage?: (s: Stage) => void): Promise<RunResult> {
   const { cfg, db, log } = engine;
   const runId = opts.runId ?? newId("run");
+  const sessionId = newId("ses");
+  const receivedAt = new Date().toISOString();
   const abs = path.resolve(file);
   const timings: Record<string, number> = {};
   const t0 = performance.now();
@@ -137,11 +170,12 @@ export async function runPipeline(engine: Engine, file: string, opts: RunOptions
     for (const seg of segmentation.segments) {
       const ts = performance.now();
       const skip = new Set(seg.non_customer_ids);
-      const utterances = seg.utterance_ids.filter((id) => !skip.has(id)).map((id) => byId.get(id)).filter((u) => u !== undefined);
+      const all = seg.utterance_ids.map((id) => byId.get(id)).filter((u) => u !== undefined);
+      const utterances = all.filter((u) => !skip.has(u.id));
       const ex = await engine.extractor.extract({ segment: seg, utterances, catalog: engine.catalog, audioFile: abs });
       llm = addUsage(llm, ex.usage);
       const state = replay(ex.events, engine.catalog);
-      const ctx = segmentContext(seg, { lowAudioQualityMeanConf: cfg.lowAudioQualityMeanConf, lowAudioSnrDb: cfg.lowAudioSnrDb, levelsDb: input.levels_db });
+      const ctx = segmentContext(seg, { lowAudioQualityMeanConf: cfg.lowAudioQualityMeanConf, lowAudioSnrDb: cfg.lowAudioSnrDb, levelsDb: input.levels_db }, all);
       // ASR language tags miss short or mixed-language turns; the model's reading counts too.
       if (ex.customer_language && !/^en\b/i.test(ex.customer_language)) ctx.non_english = true;
       const orders = postprocess(state, ctx, {
@@ -151,6 +185,7 @@ export async function runPipeline(engine: Engine, file: string, opts: RunOptions
         taxRate: cfg.taxRate.value,
         totalTolerance: cfg.totalTolerance,
         placeholders: engine.placeholders,
+        reviewCap: cfg.reviewCap,
         newOrderId: () => newId("ord"),
         newGroupId: () => newId("grp"),
       });
@@ -158,8 +193,18 @@ export async function runPipeline(engine: Engine, file: string, opts: RunOptions
       for (const order of orders) {
         const payload = toPayload(order, {
           transcript,
-          locationId: cfg.locationId.value,
+          storeId: cfg.storeId.value,
           laneId: cfg.laneId.value,
+          sessionId,
+          timeBasis: fileTimeBasis(transcript),
+          receivedAt,
+          finalizedAt: new Date().toISOString(),
+          source: {
+            type: "file_replay",
+            codecIn: transcript.audio.codec,
+            channels: transcript.audio.channels,
+            channelRoles: channelRoles(transcript.audio.channels, channelMap),
+          },
           stt: engine.transcriber.name,
           extractor: engine.extractor.name,
           menuVersion: engine.catalog.version,

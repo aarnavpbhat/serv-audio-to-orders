@@ -135,7 +135,8 @@
         ],
         "needs_review": [],
         "flags": [],
-        "group": null
+        "group": null,
+        "review": []
       }
     ]
   }

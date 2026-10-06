@@ -1,0 +1,36 @@
+# v2 progress
+
+Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at the top of each section.
+
+## Status
+
+| Step | Branch | State |
+|---|---|---|
+| 0. Freeze v1 | main | Done: PR #1 merged, `v1.0.0` tagged, `release/v1` and `v2` created |
+| 1. Outcome and review model | v2-step/01-outcomes | Done |
+| 2. Versioned corrections | v2-step/02-versions | Next |
+
+## Decisions not covered by the plan
+
+- **Branch names.** Git cannot hold a branch `v2` and branches under `v2/` at once, so step branches are `v2-step/NN-name` instead of `v2/NN-name`.
+- **CI triggers.** The workflow ran only on PRs into `main`. It now also runs on PRs into `v2` and on pushes to `main` and `v2`, so every step PR is checked.
+- **Review reason for D13.** The plan's reason list has no name for the safety cap, so it is `safety_cap`. Limits are `REVIEW_MAX_QUANTITY` (10) and `REVIEW_MAX_TOTAL` (150).
+- **Outcome evidence shape.** Each entry has a `type` (`spoken_cue`, `vehicle_event`, `stream_event`, `silence`, `order_state`, `human_review`) and, for spoken cues, a `kind` (`closing`, `customer_done`, `departure_said`, `cancel`, `next_car_greeting`). This extends the plan's example without changing its fields.
+- **Next car's arrival counts as departure.** In a single lane, the next car reaching the speaker post means this one left, so a later `vehicle_arrived` is departure evidence, alongside `vehicle_departed` and the crew saying the car left.
+- **A closing cue needs an ordered item first.** A close with nothing ordered (and no cancel) is `undetermined`.
+- **Truncated audio.** `incomplete` is gone. A truncated start with a closing cue is `completed` with the `truncated_start` flag; a truncated end with no close is `undetermined` with `truncated_end`.
+- **Fixture 07 (abandoned).** With audio only it has no evidence of departure, so it is now `undetermined`. Its expected block also has `status_with_vehicle_events: "abandoned"`, used once replays send vehicle events (step 6).
+- **Removed flag.** `needs_review_present` is replaced by the review reason `unclear_items`.
+- **New flags.** `stream_gap`, `stream_interrupted`, `transcript_gap`, `audio_dropped`, `capture_paused`, `audio_rate_exceeded`, added with schema v2.0 so later steps do not change the schema again.
+- **`STORE_ID`.** Replaces `LOCATION_ID` (the old name still works). `.env.example` is outside what I can edit in this setup, so new variables are listed in the README instead.
+- **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
+
+## Step notes
+
+### 1. Outcome and review model
+
+- Status values: `completed`, `cancelled`, `abandoned`, `undetermined`. Review is `{ required, reasons }` and can sit on any status.
+- Outcome and review rules live in `packages/pipeline/src/postprocess/outcome.ts` (pure). The payload mapper only formats.
+- Webhook schema 2.0: `order.finalized` for version 1, `order.updated` for later versions; `store_id`, `session_id`, `times`, `audio_ref`, `source`, `outcome_evidence`, `review`, `supersedes_version`, `correction_reason`.
+- Ceiling eval (script transcriber, oracle extractor, free): 24/24 fixtures, status 100%, review 100%.
+- Not yet done (later steps): README and `examples/` still describe schema 1.0 until the docs step.
