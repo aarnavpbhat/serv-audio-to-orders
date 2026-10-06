@@ -56,6 +56,18 @@ describe("ConversationTracker", () => {
     expect(t.onTick(at(30))).toEqual([]);
   });
 
+  it("a customer 'thanks' after finalizing stays with that car and opens nothing", () => {
+    const t = tracker();
+    ordered(t);
+    t.onTick(at(15.1));
+    expect(t.status.state).toBe("FINALIZED");
+    expect(t.onUtterance(utt("customer", "Thank you, bye!", 16, 1))).toEqual([]);
+    expect(t.status.state).toBe("FINALIZED");
+    expect(t.decisions.at(-1)?.trigger).toBe("ack_after_finalize");
+    // A real late addition still reopens.
+    expect(types(t.onUtterance(utt("customer", "Oh wait, can I add a water?", 18)))).toEqual(["reopen"]);
+  });
+
   it("customer 'that's it' plus a crew answer closes", () => {
     const t = tracker();
     t.onUtterance(utt("crew", "Welcome, what can I get for you?", 0));
