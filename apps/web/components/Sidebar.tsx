@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -10,6 +11,7 @@ import { Separator } from "@/components/ui/Separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/Tooltip";
 import { cn } from "@/lib/utils";
 import { Artwork } from "./Artwork";
+import { ThemeToggle } from "./ThemeToggle";
 import { ChartIcon, CheckIcon, Equalizer, InboxIcon, LiveIcon, MicIcon, SearchIcon, WaveIcon } from "./Icons";
 
 interface RecentRun {
@@ -53,12 +55,10 @@ export function Sidebar({ keys, geminiModel, devRoutes }: { keys: { deepgram: bo
 
   return (
     <aside className="flex h-full w-[232px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground backdrop-blur-2xl backdrop-saturate-150">
-      <Link href="/" className="flex items-center gap-2 px-5 pb-3 pt-5">
-        <span className="grid size-6 place-items-center rounded-md bg-gradient-to-br from-[#ff5f6d] to-brand text-white">
-          <WaveIcon className="size-3.5" />
-        </span>
-        <span className="text-[15px] font-semibold tracking-tight">Serv</span>
-        <span className="text-[15px] text-muted-foreground">Orders</span>
+      <Link href="/" className="flex items-center gap-2.5 px-5 pb-3 pt-5" aria-label="Serv Audio to Orders">
+        {/* servtech.co's white logo; the light theme turns it black (--c-logo-filter). */}
+        <Image src="/serv-logo-white.png" alt="Serv" width={644} height={204} priority className="h-[18px] w-auto [filter:var(--c-logo-filter)]" />
+        <span className="text-[14px] text-muted-foreground">Audio to Orders</span>
       </Link>
 
       <form onSubmit={search} className="relative px-3 pb-3">
@@ -107,6 +107,9 @@ export function Sidebar({ keys, geminiModel, devRoutes }: { keys: { deepgram: bo
       <div className="space-y-1 px-5 py-3 text-[11px] text-muted-foreground">
         <Provider ok={keys.deepgram} label="Deepgram Nova-3" />
         <Provider ok={keys.gemini} label={`Gemini ${geminiModel.replace(/^gemini-/, "")}`} />
+        <div className="pt-2">
+          <ThemeToggle />
+        </div>
       </div>
     </aside>
   );

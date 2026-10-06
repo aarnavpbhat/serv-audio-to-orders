@@ -2,56 +2,83 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
- * Apple Music desktop look on top of shadcn/ui. The --c-* palette is the
- * source of truth; shadcn's semantic tokens (background, primary, muted...)
- * are mapped onto it so library components and our own markup share one
- * theme. Dark mode follows the OS, as macOS apps do.
+ * Serv's palette (docs/brand.md has the source of every value): taken from
+ * servtech.co's stylesheet, never approximated. Dark is the default, as on
+ * the site (its landing colors); light uses Serv's own :root tokens. Values
+ * marked "derived" are tints of a Serv value, for surfaces Serv does not define.
+ * The --c-* palette is the source of truth; shadcn's semantic tokens below map
+ * onto it. Status colors (badges) stay separate from the brand accent.
  */
-:root {
-  --c-window: #ffffff;
-  --c-sidebar: rgba(242, 242, 245, 0.82);
-  --c-toolbar: rgba(255, 255, 255, 0.78);
-  --c-ink: #1d1d1f;
-  --c-muted: rgba(60, 60, 67, 0.6);
-  --c-faint: rgba(60, 60, 67, 0.3);
-  --c-line: rgba(0, 0, 0, 0.08);
-  --c-stripe: rgba(0, 0, 0, 0.028);
-  --c-fill: rgba(120, 120, 128, 0.12);
-  --c-fill-strong: rgba(120, 120, 128, 0.2);
-  --c-raised: #ffffff;
-  --c-accent: #fa233b;
-  --c-accent-soft: rgba(250, 35, 59, 0.1);
-  --c-crew: #5e5ce6;
-  --c-customer: #0a9b8a;
-  --c-lcd: rgba(0, 0, 0, 0.035);
-  --c-destructive: #ff3b30;
-  --shadow-art: 0 10px 30px -12px rgba(0, 0, 0, 0.35);
-  color-scheme: light;
+:root,
+[data-theme="dark"] {
+  --c-window: #0a0a0c; /* landing-bg */
+  --c-ink: #e8e8e8; /* landing-fg */
+  --c-muted: rgb(232 232 232 / 0.62); /* derived: landing-fg */
+  --c-faint: rgb(232 232 232 / 0.34); /* derived: landing-fg */
+  --c-line: #ffffff26; /* hairline */
+  --c-stripe: rgb(255 255 255 / 0.03); /* derived */
+  --c-fill: rgb(255 255 255 / 0.08); /* derived */
+  --c-fill-strong: rgb(255 255 255 / 0.14); /* derived */
+  --c-raised: color-mix(in oklab, #0a0a0c, #ffffff 3.5%); /* derived: landing-bg (keeps accent-bright text at 4.5:1) */
+  --c-sidebar: rgb(10 10 12 / 0.8); /* bg-landing-bg/80 (the site's nav) */
+  --c-toolbar: rgb(10 10 12 / 0.8); /* bg-landing-bg/80 */
+  --c-accent: #5a7fae; /* accent-bright */
+  --c-accent-soft: rgb(90 127 174 / 0.18); /* derived: accent-bright */
+  --c-primary: #132a49; /* landing-accent */
+  --c-primary-hover: #1e3f6b; /* landing-accent-hover */
+  --c-primary-ink: #e8e8e8; /* landing-fg */
+  --c-destructive: oklch(70.4% 0.191 22.216); /* .dark --destructive */
+  --c-crew: #a5a3ff;
+  --c-customer: #5ef0dc;
+  --c-lcd: rgb(255 255 255 / 0.05); /* derived */
+  /* Role dots on cover art (always dark, so the same in both themes). */
+  --c-crew-art: #a5a3ff;
+  --c-customer-art: #5ef0dc;
+  --c-logo-filter: none; /* the white logo as is */
+  --shadow-art: 0 10px 30px -12px rgb(0 0 0 / 0.8);
+  /* Cover art: two-tone gradients from Serv's own colors only. */
+  --art-0a: #132a49;
+  --art-0b: #5a7fae;
+  --art-1a: #0a0a0c;
+  --art-1b: #1e3f6b;
+  --art-2a: oklch(24% 0.07 260);
+  --art-2b: oklch(55% 0.16 250);
+  --art-3a: #1e3f6b;
+  --art-3b: #5a7fae;
+  --art-4a: oklch(32% 0.07 260);
+  --art-4b: oklch(55% 0.16 250);
+  --art-5a: #132a49;
+  --art-5b: #1e3f6b;
+  color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --c-window: #1f1f1f;
-    --c-sidebar: rgba(40, 40, 42, 0.78);
-    --c-toolbar: rgba(31, 31, 31, 0.8);
-    --c-ink: #f5f5f7;
-    --c-muted: rgba(235, 235, 245, 0.6);
-    --c-faint: rgba(235, 235, 245, 0.3);
-    --c-line: rgba(255, 255, 255, 0.09);
-    --c-stripe: rgba(255, 255, 255, 0.035);
-    --c-fill: rgba(120, 120, 128, 0.24);
-    --c-fill-strong: rgba(120, 120, 128, 0.36);
-    --c-raised: #2a2a2c;
-    --c-accent: #fa2d48;
-    --c-accent-soft: rgba(250, 45, 72, 0.16);
-    --c-crew: #7d7aff;
-    --c-customer: #30d1bd;
-    --c-lcd: rgba(255, 255, 255, 0.05);
-    --c-destructive: #ff453a;
-    --shadow-art: 0 10px 30px -12px rgba(0, 0, 0, 0.8);
-    color-scheme: dark;
-  }
+[data-theme="light"] {
+  --c-window: oklch(96.8% 0.006 250); /* :root --background */
+  --c-ink: oklch(18% 0.03 260); /* --foreground */
+  --c-muted: oklch(50% 0.03 258); /* --muted-foreground */
+  --c-faint: oklch(50% 0.03 258 / 0.5); /* derived: --muted-foreground */
+  --c-line: oklch(92% 0.01 255); /* --border */
+  --c-stripe: oklch(18% 0.03 260 / 0.03); /* derived: --foreground */
+  --c-fill: oklch(18% 0.03 260 / 0.06); /* derived: --foreground */
+  --c-fill-strong: oklch(18% 0.03 260 / 0.1); /* derived: --foreground */
+  --c-raised: oklch(100% 0 0); /* --card */
+  --c-sidebar: oklch(98.4% 0.003 247.858); /* --sidebar */
+  --c-toolbar: oklch(98.4% 0.003 247.858 / 0.85); /* derived: --sidebar */
+  --c-accent: oklch(51% 0.16 250); /* derived: --ljs-blue (55%) darkened to 51% for 4.5:1 text contrast */
+  --c-accent-soft: oklch(55% 0.16 250 / 0.1); /* bg-[var(--ljs-blue)]/10 */
+  --c-primary: oklch(24% 0.07 260); /* --serv-navy (--primary) */
+  --c-primary-hover: oklch(32% 0.07 260); /* --serv-navy-soft */
+  --c-primary-ink: oklch(99% 0.003 250); /* --primary-foreground */
+  --c-destructive: oklch(55% 0.22 27); /* derived: --destructive (58%) darkened to 55% for 4.5:1 text contrast */
+  --c-crew: #5e5ce6;
+  --c-customer: #0a9b8a;
+  --c-lcd: oklch(18% 0.03 260 / 0.035); /* derived */
+  --c-logo-filter: brightness(0); /* the white logo in black, for light backgrounds */
+  --shadow-art: 0 10px 30px -12px rgb(0 0 0 / 0.35);
+  color-scheme: light;
 }
 
 /* shadcn/ui semantic tokens, mapped onto the palette above. */
@@ -62,8 +89,8 @@
   --card-foreground: var(--c-ink);
   --popover: var(--c-raised);
   --popover-foreground: var(--c-ink);
-  --primary: var(--c-accent);
-  --primary-foreground: #ffffff;
+  --primary: var(--c-primary);
+  --primary-foreground: var(--c-primary-ink);
   --secondary: var(--c-fill);
   --secondary-foreground: var(--c-ink);
   --muted: var(--c-fill);
@@ -74,11 +101,11 @@
   --border: var(--c-line);
   --input: var(--c-fill-strong);
   --ring: var(--c-accent);
-  --radius: 0.5rem;
+  --radius: 0.25rem; /* Serv --radius */
   --sidebar: var(--c-sidebar);
   --sidebar-foreground: var(--c-ink);
-  --sidebar-primary: var(--c-accent);
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary: var(--c-primary);
+  --sidebar-primary-foreground: var(--c-primary-ink);
   --sidebar-accent: var(--c-fill);
   --sidebar-accent-foreground: var(--c-ink);
   --sidebar-border: var(--c-line);
@@ -86,10 +113,10 @@
 }
 
 @theme inline {
-  /* Apple's system UI font (San Francisco on macOS and iOS). */
-  --font-sans: -apple-system, BlinkMacSystemFont, system-ui, "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-heading: -apple-system, BlinkMacSystemFont, system-ui, "SF Pro Display", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  /* Serv's default family (Inter), self-hosted by next/font; its fallbacks as on servtech.co. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -118,7 +145,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Apple Music extras that have no shadcn equivalent. */
+  /* Extras that have no shadcn equivalent. */
   --color-window: var(--c-window);
   --color-toolbar: var(--c-toolbar);
   --color-ink: var(--c-ink);
@@ -129,9 +156,12 @@
   --color-fill-strong: var(--c-fill-strong);
   --color-raised: var(--c-raised);
   --color-brand: var(--c-accent);
+  --color-primary-hover: var(--c-primary-hover);
   --color-brand-soft: var(--c-accent-soft);
   --color-crew: var(--c-crew);
   --color-customer: var(--c-customer);
+  --color-crew-art: var(--c-crew-art);
+  --color-customer-art: var(--c-customer-art);
   --color-lcd: var(--c-lcd);
   --shadow-art: var(--shadow-art);
 
