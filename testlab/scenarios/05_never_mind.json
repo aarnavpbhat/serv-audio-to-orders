@@ -1,0 +1,60 @@
+{
+  "id": "never_mind",
+  "number": 5,
+  "title": "Never mind",
+  "checks": "The customer cancels the whole order: sent as cancelled.",
+  "minutes": 1,
+  "lines": [
+    {
+      "role": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?"
+    },
+    {
+      "role": "customer",
+      "text": "Can I get a double cheeseburger and a large onion rings?"
+    },
+    {
+      "role": "crew",
+      "text": "A double cheeseburger and large onion rings. Anything else?"
+    },
+    {
+      "role": "customer",
+      "text": "Actually, never mind, cancel all of that. Sorry."
+    },
+    {
+      "role": "crew",
+      "text": "No problem, have a good day."
+    }
+  ],
+  "actions": [
+    {
+      "at": "start",
+      "do": "car_arrived"
+    },
+    {
+      "at": "end",
+      "do": "car_left"
+    }
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "cancelled",
+        "items": [],
+        "not_ordered": [
+          {
+            "catalog_id": "dbl_cheese",
+            "reason": "cancelled"
+          },
+          {
+            "catalog_id": "onion_rings",
+            "reason": "cancelled"
+          }
+        ],
+        "needs_review": [],
+        "flags": [],
+        "review": []
+      }
+    ]
+  }
+}

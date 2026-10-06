@@ -1,0 +1,70 @@
+{
+  "id": "change_of_mind",
+  "number": 2,
+  "title": "Change of mind",
+  "checks": "The customer swaps a Coke for a Sprite: the Sprite is ordered, the Coke is listed as not ordered.",
+  "minutes": 1,
+  "lines": [
+    {
+      "role": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?"
+    },
+    {
+      "role": "customer",
+      "text": "Can I get a hamburger and a large Coke?"
+    },
+    {
+      "role": "customer",
+      "text": "Actually, make that a Sprite instead of the Coke."
+    },
+    {
+      "role": "crew",
+      "text": "A hamburger and a large Sprite. Anything else?"
+    },
+    {
+      "role": "customer",
+      "text": "That's all."
+    },
+    {
+      "role": "crew",
+      "text": "Thank you, please pull forward."
+    }
+  ],
+  "actions": [
+    {
+      "at": "start",
+      "do": "car_arrived"
+    },
+    {
+      "at": "end",
+      "do": "car_left"
+    }
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "hamburger",
+            "quantity": 1
+          },
+          {
+            "catalog_id": "sprite",
+            "quantity": 1,
+            "size": "large"
+          }
+        ],
+        "not_ordered": [
+          {
+            "catalog_id": "coke",
+            "reason": "replaced"
+          }
+        ],
+        "needs_review": [],
+        "flags": [],
+        "review": []
+      }
+    ]
+  }
+}

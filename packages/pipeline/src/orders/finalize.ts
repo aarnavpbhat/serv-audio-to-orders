@@ -184,7 +184,8 @@ export async function finalizeConversation(engine: Engine, input: FinalizeInput)
       finalizedAt: new Date(now()).toISOString(),
       archiveUri,
       source: input.session.source,
-      stt: engine.transcriber.name,
+      // The model that transcribed this conversation (live or file), as the transcript records it.
+      stt: input.transcript.stt || engine.transcriber.name,
       extractor: engine.extractor.name,
       menuVersion: engine.catalog.version,
       pipelineVersion: cfg.pipelineVersion,

@@ -86,7 +86,7 @@ export function Sidebar({ keys, geminiModel, devRoutes }: { keys: { deepgram: bo
       </form>
 
       <nav className="flex flex-col gap-px px-3">
-        {[...NAV, ...(devRoutes ? [{ href: "/simulator", label: "Simulator", icon: MicIcon }, { href: "/review", label: "Review", icon: CheckIcon }] : [])].map((n) => {
+        {[...NAV, ...(devRoutes ? [{ href: "/testlab", label: "Test Lab", icon: MicIcon }, { href: "/review", label: "Review", icon: CheckIcon }] : [])].map((n) => {
           const active = n.href === "/" ? path === "/" || path.startsWith("/runs") : path.startsWith(n.href);
           return (
             <Button key={n.href} asChild variant="ghost" size="sm" className={cn("h-7 justify-start gap-2.5 px-2 text-[13px] font-normal", active && "bg-fill-strong font-medium hover:bg-fill-strong")}>

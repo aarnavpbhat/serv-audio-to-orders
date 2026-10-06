@@ -24,4 +24,6 @@ export { synthNoise } from "./fixtures/noise";
 export { resolveReview, ReviewResolution, ReviewConflictError } from "./review/resolve";
 export { flaggedClip, flaggedLineIds, CLIP_PAD_S } from "./review/clip";
 export { groundTruthFor, scoreOrders, type GroundTruth, type TruthRow } from "./eval/ground-truth";
+export { loadScenarios, actionsAt, Scenario, type ScenarioLine, type ScenarioAction } from "./testlab/scenario";
+export { perfectRun, scoreRun, freePlayExpected, ScoreRequestBody, type Scorecard, type Attribution, type ProducedOrder } from "./testlab/score";
 export type { FolderReport } from "./eval/heldout";

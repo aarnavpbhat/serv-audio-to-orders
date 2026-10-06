@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Switch } from "@/components/ui/Switch";
 import { cn } from "@/lib/utils";
 import { emptyLane } from "@/lib/live";
+import { micProblem, startCapture, type Capture } from "@/lib/sim-capture";
 import { SimLink, type LinkNote, type LinkState, type SimCodec } from "@/lib/sim-link";
 import { LaneView } from "../live/LaneView";
 import { StopButtons } from "../live/StopButtons";
@@ -65,7 +66,7 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
   const labels = useRef<{ start_ms: number; end_ms: number; speaker: "crew" }[]>([]);
 
   const linkRef = useRef<SimLink | null>(null);
-  const audio = useRef<{ ctx: AudioContext; stream: MediaStream | null } | null>(null);
+  const audio = useRef<Capture | null>(null);
   // The worklet callback reads the latest switches through this ref.
   const flags = useRef({ car, paused, audioMode, inputMode, maxMinutes, silenceS, sent: 0, lastLoud: 0, lastMeter: 0, stopping: false });
   // The server's id for this simulator's session, so End and Discard reach the right one.
@@ -83,10 +84,8 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
   const stop = useCallback((note?: LinkNote) => {
     linkRef.current?.close();
     linkRef.current = null;
-    const a = audio.current;
+    audio.current?.stop();
     audio.current = null;
-    a?.stream?.getTracks().forEach((t) => t.stop());
-    void a?.ctx.close();
     setRunning(false);
     setPaused(false);
     setCar(false);
@@ -121,45 +120,31 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
   );
 
   async function startAudio(l: SimLink): Promise<void> {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: false, autoGainControl: true } });
-    // The device's own rate: some browsers (Firefox) refuse to connect a mic to a context at
-    // another rate. The worklet resamples to 16 kHz itself.
-    const ctx = new AudioContext();
-    await ctx.audioWorklet.addModule("/sim-worklet.js");
-    const node = new AudioWorkletNode(ctx, "sim-capture");
-    ctx.createMediaStreamSource(stream).connect(node);
-    const mute = ctx.createGain();
-    mute.gain.value = 0;
-    node.connect(mute).connect(ctx.destination);
-    if (noise !== "off") {
-      const res = await fetch(`/api/dev/noise?level=${noise}`);
-      const src = ctx.createBufferSource();
-      src.buffer = await ctx.decodeAudioData(await res.arrayBuffer());
-      src.loop = true;
-      src.connect(node);
-      src.start();
-    }
-    audio.current = { ctx, stream };
     flags.current.lastLoud = Date.now();
-    node.port.onmessage = (e: MessageEvent<{ pcm: Int16Array; db: number }>) => {
-      const f = flags.current;
-      const now = Date.now();
-      if (e.data.db > SILENCE_DB) f.lastLoud = now;
-      if (now - f.lastMeter > 100) {
-        f.lastMeter = now;
-        setLevelDb(e.data.db);
-        setSentS(f.sent / 16_000);
-      }
-      // Credit guards: stop after the minute limit, or after this long with no sound.
-      if (f.stopping) return;
-      if (now - f.lastLoud > f.silenceS * 1000) return void finish("end", { tone: "info", text: `Ended after ${f.silenceS} s with no sound from the mic, to save Deepgram credit. Speak, or raise the limit, then press Start.` });
-      if (f.sent / 16_000 > f.maxMinutes * 60) return void finish("end", { tone: "info", text: `Ended at the ${f.maxMinutes} minute limit, to save Deepgram credit.` });
-      const send = !f.paused && (f.audioMode === "continuous" || f.car);
-      if (send && l.open) {
-        l.sendAudio(e.data.pcm);
-        f.sent += e.data.pcm.length;
-      }
-    };
+    const capture = await startCapture({
+      echoCancellation: true,
+      ...(noise !== "off" ? { noise } : {}),
+      onFrame: (pcm, db) => {
+        const f = flags.current;
+        const now = Date.now();
+        if (db > SILENCE_DB) f.lastLoud = now;
+        if (now - f.lastMeter > 100) {
+          f.lastMeter = now;
+          setLevelDb(db);
+          setSentS(f.sent / 16_000);
+        }
+        // Credit guards: end the session after the minute limit, or after this long with no sound.
+        if (f.stopping) return;
+        if (now - f.lastLoud > f.silenceS * 1000) return void finish("end", { tone: "info", text: `Ended after ${f.silenceS} s with no sound from the mic, to save Deepgram credit. Speak, or raise the limit, then press Start.` });
+        if (f.sent / 16_000 > f.maxMinutes * 60) return void finish("end", { tone: "info", text: `Ended at the ${f.maxMinutes} minute limit, to save Deepgram credit.` });
+        const send = !f.paused && (f.audioMode === "continuous" || f.car);
+        if (send && l.open) {
+          l.sendAudio(pcm);
+          f.sent += pcm.length;
+        }
+      },
+    });
+    audio.current = capture;
   }
 
   async function start(): Promise<void> {
@@ -322,14 +307,6 @@ function Note({ note }: { note: LinkNote }) {
   return <span className={cn(note.tone === "error" ? "font-medium text-destructive" : "text-muted-foreground")}>{note.text}</span>;
 }
 
-/** Microphone setup failures in plain words. */
-function micProblem(e: unknown): string {
-  const name = (e as Error).name;
-  if (name === "NotAllowedError") return "Microphone access was blocked. Allow it in the browser's site settings, then press Start.";
-  if (name === "NotFoundError") return "No microphone was found. Connect one, then press Start.";
-  if (name === "NotReadableError") return "The microphone is in use by another app. Close it, then press Start.";
-  return `The microphone could not start (${(e as Error).message}). Try text mode, or reload the page.`;
-}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
