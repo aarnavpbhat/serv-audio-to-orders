@@ -98,7 +98,8 @@ export interface FinalizeInput {
   /** Order ids to keep (first minted when the conversation opened; split parts follow). */
   orderIds?: string[];
   groupId?: string | null;
-  version?: number;
+  /** Version for the conversation's orders: one number, or the last version per order id (new ids start at 1). */
+  version?: number | Map<string, number>;
   correctionReason?: CorrectionReason | null;
   archiveUri?: string | null;
   deliver: boolean;
@@ -156,8 +157,13 @@ export async function finalizeConversation(engine: Engine, input: FinalizeInput)
   const latency = Math.round((input.latencyBaseMs ?? 0) + (performance.now() - t0));
   const results: RunOrder[] = [];
   const sends: Promise<OutboxRow>[] = [];
-  const version = input.version ?? 1;
+  const versionOf = (orderId: string) => {
+    const v = input.version;
+    if (v instanceof Map) return (v.get(orderId) ?? 0) + 1;
+    return v ?? 1;
+  };
   for (const order of orders) {
+    const version = versionOf(order.order_id);
     const payload = toPayload(order, {
       transcript: input.transcript,
       storeId: input.session.storeId,
@@ -176,7 +182,7 @@ export async function finalizeConversation(engine: Engine, input: FinalizeInput)
       latencyMs: latency,
       nonCustomerIds: skip,
       orderVersion: version,
-      correctionReason: input.correctionReason ?? null,
+      correctionReason: version > 1 ? (input.correctionReason ?? null) : null,
     });
     const warnings = [...ex.warnings, ...state.warnings];
     insertOrder(db, {
