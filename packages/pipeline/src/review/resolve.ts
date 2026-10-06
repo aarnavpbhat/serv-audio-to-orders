@@ -62,7 +62,7 @@ export async function resolveReview(engine: Engine, orderId: string, raw: Review
   const needsReview: OrderPayload["needs_review"] = [];
   const notOrdered = [...prev.not_ordered];
   for (const line of prev.needs_review) {
-    if (!(line.line_id in input.items)) {
+    if (!Object.hasOwn(input.items, line.line_id)) {
       needsReview.push(line);
       continue;
     }
