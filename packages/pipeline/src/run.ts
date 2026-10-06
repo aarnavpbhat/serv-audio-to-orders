@@ -63,7 +63,7 @@ export async function runPipeline(engine: Engine, file: string, opts: RunOptions
   let transcriber: StreamingTranscriber = engine.streaming;
   let files: FileOrLiveTranscriber | null = null;
   // A per-run transcriber when this run's channel map, start time or refresh differ from the engine's defaults.
-  if (!engine.streaming.name.startsWith("script") && engine.streaming instanceof FileOrLiveTranscriber) {
+  if (engine.streaming instanceof FileOrLiveTranscriber) {
     files = new FileOrLiveTranscriber(engine.transcriber, engine.streaming.live, {
       channelMap,
       audioStartUtc: opts.audioStartUtc ?? cfg.audioStartUtc.value,

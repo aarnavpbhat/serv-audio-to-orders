@@ -41,6 +41,9 @@ describe("FileOrLiveTranscriber", () => {
     const { t, liveOpen, prerecorded } = setup();
     t.open(session({ sourceRef: undefined, sourceType: "hme_ws" }), { utterance: () => {} });
     expect(liveOpen).toHaveBeenCalledTimes(1);
+    // A network session never reads a file, even one that names it.
+    t.open(session({ sourceType: "hme_ws" }), { utterance: () => {} });
+    expect(liveOpen).toHaveBeenCalledTimes(2);
     expect(prerecorded.transcribe).not.toHaveBeenCalled();
   });
 

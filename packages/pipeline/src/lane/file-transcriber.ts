@@ -56,7 +56,8 @@ export class FileOrLiveTranscriber implements StreamingTranscriber {
   }
 
   open(session: StreamSession, handlers: TranscriptHandlers): TranscriptStream {
-    if (!session.sourceRef) return this.live.open(session, handlers);
+    // Only a replay this process started reads a file; a network session never does, whatever it names.
+    if (!session.sourceRef || session.sourceType !== "file_replay") return this.live.open(session, handlers);
     const key = `${session.storeId}:${session.laneId}:${session.sourceRef}`;
     const seen = (session.sourceOffsetS && this.emitted.get(key)) || new Set<string>();
     this.emitted.set(key, seen);
