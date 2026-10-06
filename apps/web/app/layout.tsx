@@ -1,3 +1,4 @@
+import { getConfig } from "@serv/config";
 import type { Metadata } from "next";
 import { Sidebar } from "@/components/Sidebar";
 import { TooltipProvider } from "@/components/ui/Tooltip";
@@ -18,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="overflow-hidden">
         <TooltipProvider delayDuration={400}>
           <div className="flex h-full">
-            <Sidebar keys={s.keys} geminiModel={s.geminiModel} />
+            <Sidebar keys={s.keys} geminiModel={s.geminiModel} devRoutes={getConfig().enableDevRoutes} />
             <main className="relative min-w-0 flex-1 overflow-y-auto">{children}</main>
           </div>
         </TooltipProvider>

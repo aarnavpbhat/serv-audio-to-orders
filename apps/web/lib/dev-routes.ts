@@ -10,9 +10,27 @@ import { NotFoundError } from "@/lib/error-handler";
 const LOCAL = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
 
 export function isLocalRequest(req: Request): boolean {
-  const host = req.headers.get("host") ?? "";
+  return isLocalHeaders(req.headers);
+}
+
+/** Same check from request headers (server components get headers, not a Request). */
+export function isLocalHeaders(headers: { get(name: string): string | null }): boolean {
+  const host = headers.get("host") ?? "";
   const name = host.startsWith("[") ? host.slice(0, host.indexOf("]") + 1) : host.split(":")[0];
-  return LOCAL.has(name ?? "") && !req.headers.get("x-forwarded-for");
+  return LOCAL.has(name ?? "") && loopbackOnly(headers.get("x-forwarded-for"));
+}
+
+const LOOPBACK = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
+
+/**
+ * Next.js sets x-forwarded-for to the socket address on every request, so the
+ * header alone means nothing. Every hop must be loopback: a proxy in front of
+ * the app adds the real client's address, which is refused.
+ */
+function loopbackOnly(xff: string | null): boolean {
+  if (xff === null) return true;
+  const hops = xff.split(",").map((h) => h.trim());
+  return hops.length > 0 && hops.every((h) => LOOPBACK.has(h));
 }
 
 /** Throws 404 (not 403, so the route's existence is not revealed) unless dev routes are on and the request is local. */

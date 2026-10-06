@@ -18,3 +18,5 @@ export { usageOf as dataUsage, type Usage as DataUsage } from "./data/store";
 export { liveAfter, liveRecent, type LiveEvent } from "./lane/live-feed";
 export type { LaneUpdate, DraftLine } from "./lane/lane";
 export type { TrackerDecision } from "./lane/tracker";
+export { saveLiveFixture, SaveFixtureInput, ExpectedOrder, type SavedFixture } from "./sim/save-fixture";
+export { synthNoise } from "./fixtures/noise";
