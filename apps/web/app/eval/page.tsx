@@ -3,7 +3,7 @@ import { Badge } from "@/components/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Progress } from "@/components/ui/Progress";
 import { CheckIcon, XIcon } from "@/components/Icons";
-import { readEvalReport } from "@/lib/data";
+import { readEvalReport, readHeldoutReport } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +22,7 @@ export default function EvalPage() {
     );
   }
   const s = r.summary;
+  const held = readHeldoutReport();
   const metrics: [string, string, number | null][] = [
     ["Fixtures passed", `${s.fixtures_passed}/${s.fixtures}`, s.fixtures ? s.fixtures_passed / s.fixtures : null],
     ["Item precision", pct(s.item_precision), s.item_precision],
@@ -95,6 +96,33 @@ export default function EvalPage() {
           </div>
         </section>
       )}
+
+      <section>
+        <div className="mb-2 flex items-baseline gap-2">
+          <h2 className="section-title">Held-Out Set</h2>
+          <span className="text-[12px] text-muted-foreground">real voices, expected orders checked by hand, never used for tuning</span>
+        </div>
+        {held ? (
+          <>
+            <p className="mb-2 text-[12px] text-muted-foreground">
+              {held.config.transcriber} + {held.config.extractor} · {new Date(held.generated_at).toLocaleString()} · {held.usage.deepgram_minutes} Deepgram min
+            </p>
+            <Metrics
+              metrics={[
+                ["Recordings passed", `${held.summary.passed}/${held.summary.fixtures}`, held.summary.fixtures ? held.summary.passed / held.summary.fixtures : null],
+                ["Item precision", pct(held.summary.item_precision), held.summary.item_precision],
+                ["Item recall", pct(held.summary.item_recall), held.summary.item_recall],
+                ["Status accuracy", pct(held.summary.status_accuracy), held.summary.status_accuracy],
+              ]}
+            />
+          </>
+        ) : (
+          <p className="text-[13px] text-muted-foreground">
+            Not run yet. Record conversations in the simulator (tick &ldquo;held out&rdquo;) or import phone recordings with <code className="font-mono">pnpm pipeline heldout import</code>, write their expected orders, then run{" "}
+            <code className="font-mono">pnpm pipeline heldout eval --transcriber deepgram --yes</code>.
+          </p>
+        )}
+      </section>
 
       <div className="grid items-start gap-10 xl:grid-cols-2">
         <section>

@@ -18,8 +18,9 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 8. Live UI | v2-step/08-live-ui | Done: PR #10 |
 | 9. Live simulator | v2-step/09-simulator | Done: PR #11 |
 | 10. Review screen | v2-step/10-review-screen | Done: PR #12 |
-| 11. Eval v2 | v2-step/11-eval | PR #13 |
-| 12. Human-voiced held-out set | v2-step/12-heldout | Next |
+| 11. Eval v2 | v2-step/11-eval | Done: PR #13 |
+| 12. Human-voiced held-out set | v2-step/12-heldout | PR #14 (tooling; recordings need people) |
+| 13. Retire the batch path | v2-step/13-retire-batch | Next |
 
 ## Decisions not covered by the plan
 
@@ -70,9 +71,29 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **Ticket matching uses items, not just time.** Within ±90 s on the same store and lane, pairs are taken by most items in common, then closest in time, across all orders at once. Time alone mispaired split payments (two tickets at the same moment) and back-to-back cars, and blamed the extraction for it.
 - **Close latency in the eval is an estimate.** At max speed the wall clock means nothing, so the eval adds the tracker's lag on recording time (conversation end to finalize) to the measured processing time. The real 1x number came from step 6: p50 5.6 s, p95 47.1 s.
 - **Shutdown drains closing sessions.** A session whose socket closed just before shutdown was still decoding when the service stopped, so its last audio and its close were lost. Row 36's last codec (FLAC) failed now and then because of it. The server now waits for draining sessions.
+- **The held-out set is tooling only so far.** Recording 8 to 12 conversations with real voices needs people, and scoring them needs about 10 Deepgram minutes, beyond the one lane stream the plan allows without asking. So this step builds import, scoring and the report, and leaves the recordings and the one real run to Aarnav. `fixtures/heldout/README.md` says how.
+- **FLAC is written through a temp file.** Written to a pipe, ffmpeg could not go back and fill in the stream length, so the file had no duration. ffprobe refused it, which broke replaying saved fixtures, and archived order audio had no length either.
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 12. Human-voiced held-out set (tooling)
+
+- `eval/heldout.ts`:
+  - folder fixtures (`fixtures/heldout/<name>/` and `fixtures/live/<name>/`: `audio.flac`, `expected.json`, `timeline.json`)
+  - `importRecording` turns a phone recording into 16 kHz mono FLAC, with an expected.json to fill in by hand
+  - `runFolderEval` replays each recording through the lane and scores orders, items and status
+  - it writes `eval/heldout-report.json`, never the main report
+- Commands:
+  - `pnpm pipeline heldout import <file> --name <id>`
+  - `pnpm pipeline heldout eval --transcriber deepgram`, which shows the minutes first; `--yes` runs it
+  - `--live` scores simulator recordings instead
+- `/eval` has a Held-Out Set section, which explains how to record it until it has been run.
+- Guard: the main eval never reads `fixtures/heldout`. A test checks that.
+- **Not done (needs people):**
+  - record the conversations (simulator with "held out" ticked, or phone imports)
+  - write and check the expected orders
+  - run the eval once with Deepgram and Gemini
 
 ### 11. Eval v2
 
