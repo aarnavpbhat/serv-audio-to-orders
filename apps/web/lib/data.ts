@@ -83,6 +83,8 @@ export interface RunDetail {
   queue_position: number;
   transcriber: string | null;
   extractor: string | null;
+  /** False for live lanes: their audio is in the archive per order, not one file. */
+  has_audio: boolean;
   options: Record<string, unknown> | null;
   transcript: Transcript | null;
   segmentation: Segmentation | null;
@@ -106,6 +108,7 @@ export function getRunDetail(id: string): RunDetail | null {
     queue_position: queuePosition(id),
     transcriber: r.transcriber,
     extractor: r.extractor,
+    has_audio: !!r.file_path,
     options: parse(r.options),
     transcript: parse(r.transcript),
     segmentation: parse(r.segmentation),
@@ -142,7 +145,8 @@ function latestVersions(rows: store.OrderRow[]): { latest: store.OrderRow; all: 
 }
 
 export function runAudioPath(id: string): string | null {
-  return store.getRun(db(), id)?.file_path ?? null;
+  // Live lanes have no file (empty path).
+  return store.getRun(db(), id)?.file_path || null;
 }
 
 export function readEvalReport(): EvalReport | null {

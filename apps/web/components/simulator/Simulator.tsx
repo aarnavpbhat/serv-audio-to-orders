@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Switch } from "@/components/ui/Switch";
 import { cn } from "@/lib/utils";
 import { emptyLane } from "@/lib/live";
-import { SimLink, type LinkState, type SimCodec } from "@/lib/sim-link";
+import { SimLink, type LinkNote, type LinkState, type SimCodec } from "@/lib/sim-link";
 import { LaneView } from "../live/LaneView";
 import { useLiveFeed } from "../live/use-live-feed";
 import { MockInbox } from "../MockInbox";
@@ -52,12 +52,12 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
   const [silenceS, setSilenceS] = useState(30);
 
   const [running, setRunning] = useState(false);
-  const [link, setLink] = useState<{ state: LinkState; detail?: string }>({ state: "idle" });
+  const [link, setLink] = useState<{ state: LinkState; note?: LinkNote }>({ state: "idle" });
   const [car, setCar] = useState(false);
   const [paused, setPaused] = useState(false);
   const [levelDb, setLevelDb] = useState(-120);
   const [sentS, setSentS] = useState(0);
-  const [stopNote, setStopNote] = useState<string | null>(null);
+  const [stopNote, setStopNote] = useState<LinkNote | null>(null);
   const [session, setSession] = useState<{ since: number; until: number | null } | null>(null);
   const [crewHeld, setCrewHeld] = useState(false);
   const labels = useRef<{ start_ms: number; end_ms: number; speaker: "crew" }[]>([]);
@@ -70,7 +70,7 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
     Object.assign(flags.current, { car, paused, audioMode, inputMode, maxMinutes, silenceS });
   }, [car, paused, audioMode, inputMode, maxMinutes, silenceS]);
 
-  const stop = useCallback((note?: string) => {
+  const stop = useCallback((note?: LinkNote) => {
     linkRef.current?.close();
     linkRef.current = null;
     const a = audio.current;
@@ -88,8 +88,9 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
 
   async function startAudio(l: SimLink): Promise<void> {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: false, autoGainControl: true } });
-    // A 16 kHz context: the browser resamples the mic to the canonical rate.
-    const ctx = new AudioContext({ sampleRate: 16_000 });
+    // The device's own rate: some browsers (Firefox) refuse to connect a mic to a context at
+    // another rate. The worklet resamples to 16 kHz itself.
+    const ctx = new AudioContext();
     await ctx.audioWorklet.addModule("/sim-worklet.js");
     const node = new AudioWorkletNode(ctx, "sim-capture");
     ctx.createMediaStreamSource(stream).connect(node);
@@ -116,8 +117,8 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
         setSentS(f.sent / 16_000);
       }
       // Credit guards: stop after the minute limit, or after this long with no sound.
-      if (now - f.lastLoud > f.silenceS * 1000) return stop(`Stopped: no audio for ${f.silenceS} s`);
-      if (f.sent / 16_000 > f.maxMinutes * 60) return stop(`Stopped: ${f.maxMinutes} minute limit`);
+      if (now - f.lastLoud > f.silenceS * 1000) return stop({ tone: "info", text: `Stopped after ${f.silenceS} s with no sound from the mic, to save Deepgram credit. Speak, or raise the limit, then press Start.` });
+      if (f.sent / 16_000 > f.maxMinutes * 60) return stop({ tone: "info", text: `Stopped at the ${f.maxMinutes} minute limit, to save Deepgram credit.` });
       const send = !f.paused && (f.audioMode === "continuous" || f.car);
       if (send && l.open) {
         l.sendAudio(e.data.pcm);
@@ -132,7 +133,7 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
     flags.current.sent = 0;
     setSentS(0);
     setSession({ since: Date.now(), until: null });
-    const l = new SimLink({ storeId, laneId, codec, autoReconnect, onState: (state, detail) => setLink({ state, ...(detail ? { detail } : {}) }) });
+    const l = new SimLink({ storeId, laneId, codec, autoReconnect, onState: (state, note) => setLink({ state, ...(note ? { note } : {}) }) });
     linkRef.current = l;
     setRunning(true);
     await l.connect();
@@ -140,7 +141,7 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
       try {
         await startAudio(l);
       } catch (e) {
-        stop(`Microphone unavailable: ${(e as Error).message}`);
+        stop({ tone: "error", text: micProblem(e) });
       }
     }
   }
@@ -256,8 +257,8 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
         </div>
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-muted-foreground">
-          <span className={cn("rounded-md px-2 py-0.5 font-semibold capitalize", LINK_TONE[link.state])}>{link.state}</span>
-          {link.detail && <span>{link.detail}</span>}
+          <span className={cn("rounded-md px-2 py-0.5 font-semibold capitalize", LINK_TONE[link.state === "down" && link.note?.tone !== "error" ? "idle" : link.state])}>{link.state}</span>
+          {link.note && <Note note={link.note} />}
           {inputMode === "mic" && running && <LevelMeter db={levelDb} />}
           {inputMode === "mic" && (
             <span>
@@ -271,7 +272,7 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
             min, or
             <Input type="number" min={5} max={600} value={silenceS} onChange={(e) => setSilenceS(Math.max(5, Number(e.target.value) || 30))} className="h-7 w-14" aria-label="Silence limit" />s with no audio
           </span>
-          {stopNote && <span className="font-medium text-foreground">{stopNote}</span>}
+          {stopNote && <Note note={stopNote} />}
         </div>
 
         {inputMode === "text" && <TextLine disabled={!open} onSend={(speaker, text) => linkRef.current?.sendLine(speaker, text)} />}
@@ -284,6 +285,20 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
       <MockInbox />
     </div>
   );
+}
+
+/** Info notes are quiet; errors stand out and say what to do. */
+function Note({ note }: { note: LinkNote }) {
+  return <span className={cn(note.tone === "error" ? "font-medium text-destructive" : "text-muted-foreground")}>{note.text}</span>;
+}
+
+/** Microphone setup failures in plain words. */
+function micProblem(e: unknown): string {
+  const name = (e as Error).name;
+  if (name === "NotAllowedError") return "Microphone access was blocked. Allow it in the browser's site settings, then press Start.";
+  if (name === "NotFoundError") return "No microphone was found. Connect one, then press Start.";
+  if (name === "NotReadableError") return "The microphone is in use by another app. Close it, then press Start.";
+  return `The microphone could not start (${(e as Error).message}). Try text mode, or reload the page.`;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

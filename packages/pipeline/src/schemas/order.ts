@@ -33,6 +33,8 @@ export const FLAGS = [
   "capture_paused",
   /** The lane sent audio faster than its declared format allows. */
   "audio_rate_exceeded",
+  /** A car arrived and left and nobody spoke (decision E1). */
+  "no_speech",
 ] as const;
 export const Flag = z.enum(FLAGS);
 export type Flag = z.infer<typeof Flag>;

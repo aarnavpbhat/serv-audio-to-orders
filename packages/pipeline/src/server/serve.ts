@@ -7,6 +7,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import type { Engine } from "../engine";
+import type { SourceMessage } from "../input/types";
 import { newId } from "../lib/ids";
 import { ntpOffsetMs } from "../lib/sntp";
 import { liveWriter } from "../lane/live-feed";
@@ -113,11 +114,15 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
   const usage = engine.data.usage(true);
   if (usage.state !== "ok") log({ event: "disk_budget", state: usage.state, used_bytes: usage.total, budget_bytes: usage.budget });
 
+  // One lane's failure is logged, never an unhandled rejection that would stop every lane.
+  const handle = (m: SourceMessage): void => {
+    manager.handle(m).catch((e: unknown) => log({ severity: "ERROR", event: "lane_error", kind: m.kind, message: (e as Error).message }));
+  };
   const server = new IngestServer({
     db,
     host: opts.host ?? cfg.ingest.host,
     port: opts.port ?? cfg.ingest.port,
-    onMessage: (m) => void manager.handle(m),
+    onMessage: (m) => handle(m),
     onRateExceeded: (storeId, laneId) => manager.lane(storeId, laneId)?.flag("audio_rate_exceeded"),
     ...(sink
       ? {
@@ -137,7 +142,7 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
   await server.listen();
 
   // Live lanes run on the wall clock: timers (settle, idle, grace) advance even with no audio.
-  const ticker = setInterval(() => void manager.handle({ kind: "tick", at: new Date().toISOString() }), 250);
+  const ticker = setInterval(() => handle({ kind: "tick", at: new Date().toISOString() }), 250);
   ticker.unref?.();
   log({ event: "ingest_listening", host: server.address.host, port: server.address.port, dev_routes: devRoutes, transcriber: engine.streaming.name });
 

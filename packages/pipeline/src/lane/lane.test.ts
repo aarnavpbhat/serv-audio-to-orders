@@ -161,4 +161,42 @@ describe("guessed roles", () => {
       ["crew", false],
     ]);
   });
+
+  describe("a car with no speech (E1, E2)", () => {
+    const at = (s: number) => new Date(Date.parse("2026-10-03T18:40:00Z") + s * 1000).toISOString();
+    async function drive(controls: [number, "vehicle_arrived" | "vehicle_departed" | "stream_paused"][]) {
+      const engine = testEngine();
+      let extractions = 0;
+      engine.extractor = { name: "stub", extract: async () => (extractions++, { events: [], usage: emptyUsage("none"), warnings: [], raw: null, repaired: false, fallback: false }) };
+      const manager = new LaneManager({ engine, transcriber: new ScriptStreamingTranscriber(), runId: "run_quiet", deliver: false });
+      await manager.handle({ kind: "session_open", session: { sessionId: "ses_q", storeId: "s", laneId: "l", sourceType: "hme_ws", audio: { sampleRate: 16000, channels: 1 }, timeBasis: "receive_clock", anchorAt: at(0), codecIn: "pcm_s16le" } });
+      for (const [t, type] of controls) await manager.handle({ kind: "control", event: { sessionId: "ses_q", at: at(t), type } });
+      await manager.handle({ kind: "tick", at: at(60) });
+      await manager.end();
+      return { orders: [...manager.lanes.values()][0]?.orders ?? [], extractions };
+    }
+
+    it("arrives and leaves: one abandoned order, no items, no_speech, no review, no model call", async () => {
+      const { orders, extractions } = await drive([
+        [2, "vehicle_arrived"],
+        [9, "vehicle_departed"],
+      ]);
+      expect(shape(orders)).toEqual([{ status: "abandoned", review: { required: false, reasons: [] }, flags: ["no_speech"], items: [] }]);
+      expect(orders[0]?.payload.outcome_evidence.map((e) => e.type === "vehicle_event" && e.event)).toContain("vehicle_departed");
+      expect(extractions).toBe(0);
+    });
+
+    it("arrives, then the stream pauses: nothing is sent", async () => {
+      const { orders, extractions } = await drive([
+        [2, "vehicle_arrived"],
+        [5, "stream_paused"],
+      ]);
+      expect(orders).toEqual([]);
+      expect(extractions).toBe(0);
+    });
+
+    it("no vehicle event and no speech: nothing opens, nothing is sent", async () => {
+      expect((await drive([[5, "stream_paused"]])).orders).toEqual([]);
+    });
+  });
 });

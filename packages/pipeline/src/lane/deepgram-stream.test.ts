@@ -192,6 +192,24 @@ describe("Deepgram live adapter", () => {
     expect(sockets).toHaveLength(2);
   });
 
+  it("audio that stops with no pause event is treated as a pause, so Deepgram never times out the socket", async () => {
+    vi.useFakeTimers();
+    const { sockets, stream } = setup();
+    stream.push(frame(0));
+    await vi.advanceTimersByTimeAsync(0);
+    const s = sockets[0] as FakeSocket;
+    // Deepgram closes a socket that gets nothing for about 10 s.
+    await vi.advanceTimersByTimeAsync(9_000);
+    expect(s.json[0]).toBe("Finalize");
+    expect(s.json).toContain("KeepAlive");
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(s.closed).toBe(true);
+    stream.push(frame(60));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(sockets).toHaveLength(2);
+    stream.close();
+  });
+
   it("an unexpected close reconnects and sends the buffered audio", async () => {
     const { sockets, stream } = setup();
     stream.push(frame(0));
