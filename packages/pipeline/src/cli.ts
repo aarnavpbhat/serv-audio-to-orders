@@ -19,6 +19,7 @@ import { parseArgs } from "node:util";
 import { getConfig, parseChannelMap, servSettings } from "@serv/config";
 import { ConfigError, createEngine, type EngineOptions, type ExtractorKind, type TranscriberKind } from "./engine";
 import { dataCommand } from "./data/cli";
+import { runActedScenarios } from "./sim/acted-scenarios";
 import { readRawSession } from "./data/raw-sink";
 import { formatReport, runEval } from "./eval/run-eval";
 import { IngestError } from "./ingest/probe";
@@ -49,6 +50,7 @@ Commands
   token create          Create an ingest token: --store <id> --lanes <a,b> [--note text] (printed once)
   token list            List ingest tokens (never the secrets)
   token revoke <id>     Revoke a token; its live sessions are closed (4401)
+  feed sim-check        Run the simulator's five acted scenarios in text mode over the real endpoint
   feed replay-raw <s>   Replay a captured session byte for byte to the endpoint (--token, --url, --speed)
   data <command>        The long-term data store: find, usage, verify, prune, delete, label (pnpm data for help)
 
@@ -167,6 +169,16 @@ async function wsReplayCommand(ref: string, values: Record<string, unknown>): Pr
     ...(fixtureId && existsSync(path.join(cfg.paths.fixturesDir, "audio", `${fixtureId}.timeline.json`)) ? { fixtureId } : {}),
   });
   console.log(`sent ${r.messages} messages (${Math.round(r.bytes / 1024)} KB, ${scenario.codec}) over ${r.sessions} connection(s); closes: ${r.closes.map((c) => c.code).join(", ") || "-"}`);
+}
+
+/** The simulator's five acted scenarios in text mode over the real endpoint (free with the keyword extractor). */
+async function simCheckCommand(values: Record<string, unknown>): Promise<void> {
+  const engine = createEngine({ transcriber: "script", ...engineOpts(values), log: () => {} });
+  const results = await runActedScenarios(engine, { checkItems: engine.extractor.name.startsWith("gemini"), log: (m) => console.log(m) });
+  for (const r of results) for (const o of r.orders) console.log(`  ${r.id}: ${o.order_id} v${o.version} ${o.status} [${o.items.join(", ")}]${o.flags.length ? ` flags ${o.flags.join(", ")}` : ""}`);
+  const ledger = engine.gemini?.ledger();
+  console.log(`${results.filter((r) => r.pass).length}/${results.length} pass with ${engine.extractor.name}; LLM ${engine.gemini?.totals.calls ?? 0} calls${ledger ? `; Gemini today ${ledger.requests}/${engine.cfg.geminiDailyCap}` : ""}`);
+  if (results.some((r) => !r.pass)) process.exitCode = 1;
 }
 
 async function rawReplayCommand(sessionId: string | undefined, values: Record<string, unknown>): Promise<void> {
@@ -317,6 +329,7 @@ async function main(): Promise<void> {
     case "feed": {
       if (arg === "serve") return serveCommand(engineOpts(values));
       if (arg === "replay-raw") return rawReplayCommand(positionals[2], values);
+      if (arg === "sim-check") return simCheckCommand(values);
       if (arg !== "replay" || !positionals[2]) throw new ConfigError("Usage: pnpm feed replay <fixture-id|file> [--speed 1|4|max] [--scenario name] [--via direct|ws]\n       pnpm feed serve");
       if (values.via === "ws") return wsReplayCommand(positionals[2], values);
       if (values.via && values.via !== "direct") throw new ConfigError(`--via must be direct or ws, got ${values.via}`);
