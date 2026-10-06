@@ -1,6 +1,6 @@
 # Gone standard CI gate (gone-standards patterns/testing/ci.yml @1.0.0), adapted
-# for a pnpm workspace. Runs on PRs into main and v2 and on pushes to main and
-# v2. Mark "Typecheck",
+# for a pnpm workspace. Runs on PRs into main, v2 and v2.1 and on pushes to
+# them. Mark "Typecheck",
 # "Lint + unit/route tests" and "Playwright e2e" as required status checks in
 # branch protection on main (and dev if it is added).
 #
@@ -10,9 +10,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [dev, main, v2]
+    branches: [dev, main, v2, v2.1]
   push:
-    branches: [main, v2]
+    branches: [main, v2, v2.1]
 
 jobs:
   typecheck:
