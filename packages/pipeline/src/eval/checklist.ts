@@ -1,4 +1,7 @@
-/** The edge case checklist from the handoff doc. Rows 27 and 28 are checked by the webhook self-check. */
+/**
+ * The edge case checklist: rows 1 to 28 from the handoff doc (27 and 28 by the
+ * webhook self-check), rows 29 to 41 from the v2 plan (live-path checks).
+ */
 export const CHECKLIST: { row: number; title: string }[] = [
   { row: 1, title: "Simple order" },
   { row: 2, title: "Combo with slot fill" },
@@ -28,4 +31,17 @@ export const CHECKLIST: { row: number; title: string }[] = [
   { row: 26, title: "Heavy noise" },
   { row: 27, title: "Webhook failure (500 then 200)" },
   { row: 28, title: "Webhook rate limit (429 + Retry-After)" },
+  { row: 29, title: "Stream pauses after a closing cue" },
+  { row: 30, title: "Stream pauses mid-order, no cue" },
+  { row: 31, title: "Disconnect 10 s, reconnect" },
+  { row: 32, title: "Disconnect longer than grace" },
+  { row: 33, title: "Vehicle departs before closing" },
+  { row: 34, title: "60 s silence mid-order, no events" },
+  { row: 35, title: "Late addition after close" },
+  { row: 36, title: "Each wire codec" },
+  { row: 37, title: "Replay of an old recording" },
+  { row: 38, title: "Vehicle events present" },
+  { row: 39, title: "Unclear item in a finished order" },
+  { row: 40, title: "Two lanes at once" },
+  { row: 41, title: "Window change in POS ticket" },
 ];

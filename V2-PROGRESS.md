@@ -10,7 +10,8 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 1. Outcome and review model | v2-step/01-outcomes | Done |
 | 2. Versioned corrections | v2-step/02-versions | Done |
 | 3. Input layer and replay | v2-step/03-input-layer | Done |
-| 4. Clocks and IDs | v2-step/04-clocks-ids | Next |
+| 4. Clocks and IDs | v2-step/04-clocks-ids | Done |
+| 5. Conversation tracker | v2-step/05-tracker | Next |
 
 ## Decisions not covered by the plan
 
@@ -35,6 +36,15 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 4. Clocks and IDs
+
+- Sessions anchor at their own sample 0 and every reconnect re-anchors; utterances, conversations and payloads are on recording time. Replays carry `sourceOffsetS` so the free transcriber finds its place in the file whatever the anchor.
+- `lib/safe-id.ts`: store, lane and session ids must match `^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$` before they are used in a path or payload. The lane manager refuses sessions that do not.
+- `input/merge.ts`: several sources as one time-ordered stream (two lanes at once).
+- Checklist rows 29 to 41 added; the live checks in `eval/live-checks.ts` run with `pnpm eval --via lane`.
+- Done when: rows 37 (old recording keeps its original times) and 40 (two lanes at once, no mixing) pass.
+- Still to do in step 8: log the clock offset at startup when the endpoint uses `receive_clock`, and re-anchor resumed bursts in paused mode from their own timestamps.
 
 ### 3. Input layer and replay (direct)
 

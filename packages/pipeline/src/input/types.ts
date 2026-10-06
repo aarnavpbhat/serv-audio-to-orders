@@ -38,8 +38,13 @@ export interface StreamSession {
   anchorAt: string;
   /** What arrived on the wire, for the record. */
   codecIn: string;
-  /** Replay only: the file being replayed (lets the free script transcriber find its timeline). */
+  /**
+   * Replay only, set by FileReplaySource and never from the network: the file being
+   * replayed and where in it this session starts (lets the free script transcriber
+   * find its timeline).
+   */
   sourceRef?: string;
+  sourceOffsetS?: number;
 }
 
 export interface AudioFrame {

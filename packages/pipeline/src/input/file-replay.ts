@@ -107,6 +107,7 @@ export class FileReplaySource implements AudioSource {
         anchorAt: at(t0),
         codecIn: "pcm_s16le",
         sourceRef: this.file,
+        sourceOffsetS: t0,
       } satisfies StreamSession,
     }));
     const sessionAt = (t: number) => [...sessions].reverse().find((s) => s.t0 <= t);
