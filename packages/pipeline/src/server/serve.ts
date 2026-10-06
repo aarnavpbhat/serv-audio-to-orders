@@ -12,7 +12,7 @@ import { ntpOffsetMs } from "../lib/sntp";
 import { LaneManager } from "../lane/manager";
 import type { LaneSession, LaneUpdate } from "../lane/lane";
 import { insertRun, updateRun } from "../store/db";
-import { RawWriter, recoverOpenParts } from "../store/raw-capture";
+import { RawCaptureSink } from "../data/raw-sink";
 import { IngestServer } from "./ingest-server";
 
 export interface ServeOptions {
@@ -22,8 +22,14 @@ export interface ServeOptions {
   onUpdate?: (lane: LaneSession, update: LaneUpdate) => void;
   /** Override ENABLE_DEV_ROUTES (tests and the eval's in-process checks). */
   devRoutes?: boolean;
-  /** Raw capture root (default DATA_DIR/raw). Null turns capture off. */
-  rawRoot?: string | null;
+  /**
+   * Keep everything in the data store (default true): raw capture of every
+   * message, order audio, Deepgram messages, session events. False for the
+   * eval's in-process checks.
+   */
+  record?: boolean;
+  /** Raw capture staging root (default DATA_DIR/staging/raw). */
+  stagingRoot?: string;
   log?: (line: Record<string, unknown>) => void;
   /** Skip the NTP offset check (tests). */
   skipClockCheck?: boolean;
@@ -69,11 +75,13 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
     return id;
   };
 
+  const record = opts.record ?? true;
   const manager = new LaneManager({
     engine,
     transcriber: engine.streaming,
     runId: runFor,
     deliver: opts.deliver ?? true,
+    record,
     onUpdate: (lane, u) => {
       // Keep the run record current so the existing run view shows live lanes.
       if (u.type === "order" || (u.type === "tracker" && u.decision.to === "FINALIZED")) {
@@ -83,12 +91,21 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
     },
   });
 
-  const rawRoot = opts.rawRoot === undefined ? path.join(cfg.paths.dataDir, "raw") : opts.rawRoot;
-  if (rawRoot) {
-    const n = recoverOpenParts(rawRoot);
+  const sink = record
+    ? new RawCaptureSink({
+        data: engine.data,
+        staging: opts.stagingRoot ?? path.join(cfg.paths.dataDir, "staging", "raw"),
+        // Disk guard: capture stops at 95% of the budget; the open conversation says so.
+        onPaused: (storeId, laneId) => manager.lane(storeId, laneId)?.flag("capture_paused"),
+        log,
+      })
+    : null;
+  if (sink) {
+    const n = await sink.recover();
     if (n) log({ event: "raw_capture_recovered", parts: n });
   }
-  const writers = new Map<string, RawWriter>();
+  const usage = engine.data.usage(true);
+  if (usage.state !== "ok") log({ event: "disk_budget", state: usage.state, used_bytes: usage.total, budget_bytes: usage.budget });
 
   const server = new IngestServer({
     db,
@@ -96,20 +113,13 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
     port: opts.port ?? cfg.ingest.port,
     onMessage: (m) => void manager.handle(m),
     onRateExceeded: (storeId, laneId) => manager.lane(storeId, laneId)?.flag("audio_rate_exceeded"),
-    capture: rawRoot
-      ? (s, kind, bytes, at) => {
-          let w = writers.get(s.sessionId);
-          if (!w) {
-            w = new RawWriter(RawWriter.sessionDir(rawRoot, s.storeId, s.laneId, s.sessionId));
-            writers.set(s.sessionId, w);
-          }
-          w.write(kind, bytes, at);
+    ...(sink
+      ? {
+          onSessionOpened: (s) => sink.open(s),
+          capture: (s, kind, bytes, at) => sink.write(s.sessionId, kind, bytes, at),
+          onSessionClosed: (sessionId) => sink.close(sessionId),
         }
-      : undefined,
-    onSessionClosed: (sessionId) => {
-      writers.get(sessionId)?.close();
-      writers.delete(sessionId);
-    },
+      : {}),
     allowQueryToken: cfg.ingest.allowQueryToken,
     enableDevRoutes: devRoutes,
     resolveFixture: devRoutes && engine.streaming.name.startsWith("script") ? fixtureResolver(cfg.paths.fixturesDir) : undefined,
@@ -130,7 +140,7 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
     stop: async () => {
       clearInterval(ticker);
       await server.close();
-      for (const w of writers.values()) w.close();
+      await sink?.flush();
       await manager.end();
       for (const id of runs.values()) updateRun(db, id, { status: "completed", stage: "done" });
       await engine.deliverer.settle();

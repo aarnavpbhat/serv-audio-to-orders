@@ -20,6 +20,8 @@ export interface ReplayRunOptions extends ReplayOptions {
   mode?: "tracker" | "batch";
   deliver?: boolean;
   runId?: string;
+  /** Keep order audio, provider messages and session events in the data store, as the live server does. */
+  record?: boolean;
 }
 
 export interface ReplayResult {
@@ -54,7 +56,7 @@ export async function replayFile(engine: Engine, file: string, opts: ReplayRunOp
   }
   updateRun(db, runId, { status: "running", stage: "transcribe", transcriber: opts.transcriber.name, extractor: engine.extractor.name });
   try {
-    const manager = new LaneManager({ engine, transcriber: opts.transcriber, runId, deliver: opts.deliver !== false, ...(opts.mode ? { mode: opts.mode } : {}) });
+    const manager = new LaneManager({ engine, transcriber: opts.transcriber, runId, deliver: opts.deliver !== false, ...(opts.mode ? { mode: opts.mode } : {}), ...(opts.record ? { record: true } : {}) });
     for await (const m of source.messages()) await manager.handle(m);
     updateRun(db, runId, { stage: "extract" });
     await manager.end();

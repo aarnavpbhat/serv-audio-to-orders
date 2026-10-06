@@ -152,8 +152,13 @@ export function recoverOpenParts(root: string, onRoll?: (info: RollInfo) => void
 
 /** Read a finished part back: every message, byte for byte, in order. */
 export function readPart(file: string, index: string): { line: RawIndexLine; bytes: Uint8Array }[] {
-  const data = zstdDecompressSync(readFileSync(file));
-  return readFileSync(index, "utf8")
+  return decodePart(readFileSync(file), readFileSync(index, "utf8"));
+}
+
+/** A finished part's bytes (zstd) and index text -> its messages, in order. */
+export function decodePart(zst: Uint8Array, index: string): { line: RawIndexLine; bytes: Uint8Array }[] {
+  const data = zstdDecompressSync(zst);
+  return index
     .split("\n")
     .filter(Boolean)
     .map((l) => JSON.parse(l) as RawIndexLine)

@@ -11,12 +11,13 @@ import type { RoleJudge } from "../transcribe/types";
 import { FuzzyExtractor } from "./fuzzy-extractor";
 import { LlmExtraction, extractionJsonSchema } from "./llm-schema";
 import { BOUNDARY_PROMPT, LINE_ROLES_PROMPT, PROMPT_VERSION, ROLE_PROMPT, SYSTEM_PROMPT, buildUserPrompt, formatUtterances, repairPrompt } from "./prompt";
-import { addUsage, emptyUsage, type ExtractInput, type ExtractResult, type Extractor, type LlmUsage } from "./types";
+import { addUsage, emptyUsage, type ExtractInput, type ExtractResult, type Extractor, type LlmCallRecord, type LlmUsage } from "./types";
 import { validateEvents } from "./validate";
 
 interface CallResult {
   text: string;
   usage: LlmUsage;
+  record: LlmCallRecord;
 }
 
 /** Per-request deadline; a hung call is retried as transient, then the caller falls back. */
@@ -197,12 +198,24 @@ export class GeminiClient {
       .update(JSON.stringify({ m: this.model, t: this.thinking, s: opts.system, c: contents, j: opts.schema ?? null }))
       .digest("hex")
       .slice(0, 24);
+    const record = (text: string, usage: LlmUsage, cached: boolean): LlmCallRecord => ({
+      request_hash: key,
+      site: opts.site,
+      model: usage.model,
+      prompt_version: PROMPT_VERSION,
+      system_sha256: createHash("sha256").update(opts.system).digest("hex"),
+      contents: [...(opts.history ?? []), { role: "user" as const, text: opts.user }],
+      response_text: text,
+      usage,
+      cached,
+      at: new Date().toISOString(),
+    });
     const file = this.cacheDir ? path.join(this.cacheDir, `${key}.json`) : null;
     if (file && existsSync(file)) {
       const hit = JSON.parse(readFileSync(file, "utf8")) as { text: string; model: string };
       const usage = { ...emptyUsage(hit.model), cached_calls: 1 };
       Object.assign(this.totals, addUsage(this.totals, usage));
-      return { text: hit.text, usage };
+      return { text: hit.text, usage, record: record(hit.text, usage, true) };
     }
 
     const started = Date.now();
@@ -266,7 +279,7 @@ export class GeminiClient {
       mkdirSync(path.dirname(file), { recursive: true });
       writeFileSync(file, JSON.stringify({ text, model, prompt_version: PROMPT_VERSION }));
     }
-    return { text, usage };
+    return { text, usage, record: record(text, usage, false) };
   }
 }
 
@@ -300,6 +313,7 @@ export class GeminiExtractor implements Extractor {
     let repaired = false;
     let lastText = "";
     let lastError = "";
+    const calls: LlmCallRecord[] = [];
 
     for (let attempt = 0; attempt < 2; attempt++) {
       const history = attempt === 0 ? undefined : [{ role: "user" as const, text: user }, { role: "model" as const, text: lastText }];
@@ -311,9 +325,10 @@ export class GeminiExtractor implements Extractor {
         if (!(e instanceof GeminiBudgetError) && !(e instanceof GeminiSafetyBlockedError) && !(e instanceof Error && isRetryableError(e))) throw e;
         const why = e instanceof GeminiBudgetError || e instanceof GeminiSafetyBlockedError ? e.message : `Gemini unavailable after retries (${errorStatus(e) ?? "network"}).`;
         const fb = await this.fallback.extract(input);
-        return { ...fb, usage, warnings: [`${why} Used fuzzy fallback; everything is in needs_review.`], raw: lastText, repaired, fallback: true };
+        return { ...fb, usage, warnings: [`${why} Used fuzzy fallback; everything is in needs_review.`], raw: lastText, repaired, fallback: true, calls };
       }
       usage = addUsage(usage, call.usage);
+      calls.push(call.record);
       lastText = call.text;
       let parsed: z.infer<typeof LlmExtraction>;
       try {
@@ -330,12 +345,12 @@ export class GeminiExtractor implements Extractor {
         repaired = true;
         continue;
       }
-      return { events: v.events, usage: { ...usage, model: this.client.resolvedModel ?? usage.model }, warnings: v.warnings, raw: parsed, repaired, fallback: false, customer_language: parsed.customer_language };
+      return { events: v.events, usage: { ...usage, model: this.client.resolvedModel ?? usage.model }, warnings: v.warnings, raw: parsed, repaired, fallback: false, customer_language: parsed.customer_language, calls };
     }
 
     // Repair failed: fall back to keyword + fuzzy matching (everything lands in needs_review).
     const fb = await this.fallback.extract(input);
-    return { ...fb, usage, warnings: [`LLM output unusable after repair (${lastError.slice(0, 200)}); used fuzzy fallback`], raw: lastText, repaired, fallback: true };
+    return { ...fb, usage, warnings: [`LLM output unusable after repair (${lastError.slice(0, 200)}); used fuzzy fallback`], raw: lastText, repaired, fallback: true, calls };
   }
 }
 

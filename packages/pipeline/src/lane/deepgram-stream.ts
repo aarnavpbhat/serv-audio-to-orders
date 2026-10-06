@@ -118,6 +118,9 @@ class DeepgramStream implements TranscriptStream {
   private processedTo = 0;
   /** Session seconds of audio sent so far. */
   private sentTo = 0;
+  /** Every message on the current connection, handed to handlers.raw when it closes (data store). */
+  private connection = 0;
+  private rawMessages: unknown[] = [];
 
   constructor(
     private readonly session: StreamSession,
@@ -164,6 +167,8 @@ class DeepgramStream implements TranscriptStream {
           s.on("close", (e) => this.onClose(s, e));
           s.connect();
           await s.waitForOpen();
+          this.flushRaw();
+          this.connection++;
           this.socket = s;
           // Deepgram's clock restarts with each connection.
           this.dgSamples = 0;
@@ -184,7 +189,13 @@ class DeepgramStream implements TranscriptStream {
     return this.connecting;
   }
 
+  private flushRaw(): void {
+    if (this.rawMessages.length && this.handlers.raw) this.handlers.raw(this.connection, this.rawMessages);
+    this.rawMessages = [];
+  }
+
   private onClose(s: LiveSocket, e: { code?: number; reason?: string }): void {
+    if (this.socket === s) this.flushRaw();
     if (this.closedByUs && this.socket === s) {
       this.closedByUs();
       return;
@@ -244,6 +255,7 @@ class DeepgramStream implements TranscriptStream {
   }
 
   private onMessage(m: LiveMessage): void {
+    if (this.handlers.raw) this.rawMessages.push(m);
     if (m.type === "SpeechStarted") {
       for (const ch of m.channel.slice(0, 1)) if (!this.inProgress.has(ch)) this.inProgress.set(ch, this.toSession(m.timestamp));
       return;
@@ -390,6 +402,7 @@ class DeepgramStream implements TranscriptStream {
     // Mark before closing so our own close is never mistaken for a dropped connection.
     this.closedByUs ??= () => {};
     s?.close();
+    this.flushRaw();
   }
 
   audioMinutes(): number {

@@ -58,8 +58,9 @@ function setup(channels = 1, roles?: ("customer" | "crew")[]) {
   const utts: StreamUtterance[] = [];
   const interim: string[] = [];
   const gaps: [number, number][] = [];
-  const stream = t.open(session, { utterance: (u) => utts.push(u), interim: (x) => interim.push(x), gap: (a, b) => gaps.push([a, b]) });
-  return { sockets, stream, utts, interim, gaps };
+  const raw: [number, unknown[]][] = [];
+  const stream = t.open(session, { utterance: (u) => utts.push(u), interim: (x) => interim.push(x), gap: (a, b) => gaps.push([a, b]), raw: (n, msgs) => raw.push([n, msgs]) });
+  return { sockets, stream, utts, interim, gaps, raw };
 }
 
 const frame = (offsetS: number, seconds = 1, channels = 1): AudioFrame => ({
@@ -195,6 +196,25 @@ describe("Deepgram live adapter", () => {
     for (let i = 0; i < 35; i++) stream.push(frame(i));
     expect(gaps.length).toBeGreaterThan(0);
     expect(gaps[0]?.[0]).toBe(0);
+  });
+
+  it("hands every provider message to the data store, per connection, when it closes", async () => {
+    const { sockets, stream, raw } = setup();
+    stream.push(frame(0));
+    await tick();
+    const a = sockets[0] as FakeSocket;
+    a.fire(results([word("Hi", 0.1)], false));
+    a.fire(results([word("Hi", 0.1)], true, true));
+    a.drop();
+    stream.push(frame(1));
+    await tick();
+    await tick();
+    (sockets[1] as FakeSocket).fire(results([word("Fries", 1.1)], true, true));
+    stream.close();
+    expect(raw.map(([n, msgs]) => [n, msgs.length])).toEqual([
+      [1, 2],
+      [2, 1],
+    ]);
   });
 
   it("bills audio minutes by samples sent times channels", async () => {

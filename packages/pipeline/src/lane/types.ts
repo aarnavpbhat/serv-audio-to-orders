@@ -36,6 +36,8 @@ export interface TranscriptHandlers {
    * reconnect) or "dropped" (the 30 s buffer overflowed and the oldest audio was dropped).
    */
   gap?(fromS: number, toS: number, reason?: "provider" | "dropped"): void;
+  /** Every provider message on one connection (numbered from 1), when that connection closes. Kept in the data store. */
+  raw?(connection: number, messages: unknown[]): void;
 }
 
 export interface TranscriptStream {

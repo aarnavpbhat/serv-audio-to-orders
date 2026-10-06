@@ -7,7 +7,9 @@ import type { AppliedEvent } from "../build/replay";
 import { replay } from "../build/replay";
 import type { Engine } from "../engine";
 import { snrDb } from "../ingest/probe";
+import { keys } from "../data/store";
 import { newId } from "../lib/ids";
+import { isSafeId } from "../lib/safe-id";
 import { emptySignals, type OutcomeSignals } from "../postprocess/outcome";
 import { postprocess, type SegmentContext } from "../postprocess/postprocess";
 import type { CorrectionReason, Flag, Order, OrderEvent, OrderPayload, Segment, Transcript, Utterance } from "../schemas";
@@ -102,6 +104,8 @@ export interface FinalizeInput {
   version?: number | Map<string, number>;
   correctionReason?: CorrectionReason | null;
   archiveUri?: string | null;
+  /** Archive this order version's audio (the lane's buffer); returns its blob uri, or null when there is none. */
+  archive?: (orderId: string, version: number, partition: { startedAt: string }) => Promise<string | null>;
   deliver: boolean;
   /** Late evidence: build the new version only if the statuses would differ from these. */
   onlyIfStatusChanges?: string[];
@@ -164,6 +168,11 @@ export async function finalizeConversation(engine: Engine, input: FinalizeInput)
   };
   for (const order of orders) {
     const version = versionOf(order.order_id);
+    const startedAt = new Date(Date.parse(input.transcript.audio_start_utc) + seg.start_s * 1000).toISOString();
+    const archiveUri = input.archive ? await input.archive(order.order_id, version, { startedAt }).catch((e: unknown) => {
+      engine.log(`  audio archive failed for ${order.order_id} v${version}: ${(e as Error).message}`);
+      return null;
+    }) : (input.archiveUri ?? null);
     const payload = toPayload(order, {
       transcript: input.transcript,
       storeId: input.session.storeId,
@@ -173,7 +182,7 @@ export async function finalizeConversation(engine: Engine, input: FinalizeInput)
       sessionOffsetS: input.session.sessionOffsetS,
       receivedAt: input.receivedAt,
       finalizedAt: new Date(now()).toISOString(),
-      archiveUri: input.archiveUri ?? null,
+      archiveUri,
       source: input.session.source,
       stt: engine.transcriber.name,
       extractor: engine.extractor.name,
@@ -196,6 +205,7 @@ export async function finalizeConversation(engine: Engine, input: FinalizeInput)
       extraction: JSON.stringify({ raw: ex.raw, repaired: ex.repaired, fallback: ex.fallback, warnings }),
       build_log: JSON.stringify(state.log),
     });
+    await recordLlmCalls(engine, ex, { storeId: input.session.storeId, laneId: input.session.laneId, sessionId: input.session.sessionId, at: payload.times.started_at }, order.order_id, version);
     results.push({ order, payload, events: ex.events, build_log: state.log, warnings, extraction: { raw: ex.raw, repaired: ex.repaired, fallback: ex.fallback, warnings } });
     engine.log(
       `  ${seg.segment_id} -> ${order.order_id} v${version} ${order.status}${order.review.required ? ` review[${order.review.reasons.join(",")}]` : ""} (${order.items.length} items, ${order.needs_review.length} unclear, ${order.not_ordered.length} not ordered)`,
@@ -207,6 +217,24 @@ export async function finalizeConversation(engine: Engine, input: FinalizeInput)
     }
   }
   return { orders: results, sends, usage: ex.usage };
+}
+
+/** Keep every LLM request and answer behind an order version (llm/.../order=<id>/<request_hash>.json). */
+async function recordLlmCalls(engine: Engine, ex: ExtractResult, p: { storeId: string; laneId: string; sessionId: string; at: string }, orderId: string, version: number): Promise<void> {
+  for (const call of ex.calls ?? []) {
+    try {
+      await engine.data.put("llm", keys.llm({ storeId: p.storeId, laneId: p.laneId, at: p.at }, orderId, call.request_hash), JSON.stringify(call), {
+        storeId: p.storeId,
+        laneId: p.laneId,
+        sessionId: isSafeId(p.sessionId) ? p.sessionId : null,
+        orderId,
+        orderVersion: version,
+        modelIds: [call.model],
+      });
+    } catch (e) {
+      engine.log(`  llm record failed for ${orderId}: ${(e as Error).message}`);
+    }
+  }
 }
 
 /** Channel roles for the payload: from a channel map when channels are separate, else one mixed channel. */

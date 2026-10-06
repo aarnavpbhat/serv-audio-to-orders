@@ -10,6 +10,7 @@ interface Props {
     keys: { deepgram: boolean; gemini: boolean };
     geminiModel: string;
     language: string;
+    data: { total: number; budget: number; state: "ok" | "warn" | "paused"; byKind: Record<string, number> };
   };
 }
 
@@ -28,6 +29,7 @@ export function SettingsPanel({ settings }: Props) {
     )),
     <KeyRow key="deepgram" ok={settings.keys.deepgram} label={`Deepgram Nova-3 (${settings.language})`} />,
     <KeyRow key="gemini" ok={settings.keys.gemini} label={`Gemini (${settings.geminiModel}), free tier with daily cap`} />,
+    <DiskRow key="disk" data={settings.data} />,
   ];
   return (
     <section>
@@ -53,6 +55,27 @@ function KeyRow({ ok, label }: { ok: boolean; label: string }) {
       <span className={cn("size-2 shrink-0 rounded-full", ok ? "bg-emerald-500" : "bg-rose-500")} />
       <span className="flex-1">{label}</span>
       <span className="text-muted-foreground">{ok ? "key set" : "no key"}</span>
+    </div>
+  );
+}
+
+const gb = (b: number) => `${(b / 1024 ** 3).toFixed(b < 1024 ** 3 ? 2 : 1)} GB`;
+
+/** Data store usage against DATA_DISK_BUDGET_GB: warn at 80%, capture paused at 95%. */
+function DiskRow({ data }: { data: Props["settings"]["data"] }) {
+  const pct = Math.min(100, Math.round((data.total / Math.max(1, data.budget)) * 100));
+  const note = data.state === "paused" ? "raw capture and audio archiving paused" : data.state === "warn" ? "over 80%, free space soon" : "ok";
+  const detail = Object.entries(data.byKind)
+    .filter(([, b]) => b > 0)
+    .map(([k, b]) => `${k} ${(b / 1024 ** 2).toFixed(1)} MB`)
+    .join(", ");
+  return (
+    <div className="flex items-center gap-3 px-4 py-2" title={detail || "nothing stored yet"}>
+      <span className={cn("size-2 shrink-0 rounded-full", data.state === "ok" ? "bg-emerald-500" : data.state === "warn" ? "bg-amber-500" : "bg-rose-500")} />
+      <span className="flex-1">
+        Data store: {gb(data.total)} of {gb(data.budget)} ({pct}%)
+      </span>
+      <span className="text-muted-foreground">{note}</span>
     </div>
   );
 }

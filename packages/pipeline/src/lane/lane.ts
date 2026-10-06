@@ -18,6 +18,7 @@ import { finalizeConversation, type FinalizeResult, type RunOrder } from "../ord
 import type { BoundaryDecision, Flag, OrderEvent, OrderPayload, OutcomeEvidence, Segment, Segmentation, Transcript, Utterance } from "../schemas";
 import { describe, segmentTranscript } from "../segment/segment";
 import type { OutboxRow } from "../store/db";
+import { LaneRecorder, type SessionEventLine } from "./recorder";
 import { ConversationTracker, type TrackerAction, type TrackerDecision } from "./tracker";
 import type { StreamUtterance, StreamingTranscriber, TranscriptStream } from "./types";
 
@@ -42,6 +43,8 @@ export interface LaneOptions {
   now?: () => number;
   log?: (msg: string) => void;
   onUpdate?: (lane: LaneSession, update: LaneUpdate) => void;
+  /** Keep order audio, Deepgram messages and session events in the data store (the live server). */
+  record?: boolean;
 }
 
 interface SessionState {
@@ -51,6 +54,8 @@ interface SessionState {
   /** (sample offset, wall ms) per received frame, to date when a conversation's audio arrived. */
   receipts: { offset: number; wallMs: number }[];
   open: boolean;
+  /** Tracker decisions made before this session opened (the rest are recorded with it). */
+  decisionsBefore: number;
 }
 
 /** A stream or vehicle event on the lane time axis. */
@@ -115,6 +120,7 @@ export class LaneSession {
   private readonly mode: "tracker" | "batch";
   private streamMinutes = 0;
   private batchSegmentation: Segmentation | null = null;
+  private readonly recorder: LaneRecorder | null;
 
   /** Every order version built, in order. */
   readonly orders: RunOrder[] = [];
@@ -142,6 +148,9 @@ export class LaneSession {
       maxConversationS: t.maxConversationS,
       segment: { ...opts.engine.cfg.segment, lowAudioQualityMeanConf: opts.engine.cfg.lowAudioQualityMeanConf },
     });
+    this.recorder = opts.record
+      ? new LaneRecorder({ data: opts.engine.data, storeId, laneId, keepMs: (t.maxConversationS + t.reopenWindowS + 120) * 1000, log: (m) => this.log(`${this.key}: ${m}`) })
+      : null;
   }
 
   /** Messages are handled strictly in order; returns once this one is done. */
@@ -192,7 +201,9 @@ export class LaneSession {
         if (!s?.open) return;
         const startMs = s.anchorMs + (m.frame.sampleOffset * 1000) / CANONICAL_RATE;
         s.receipts.push({ offset: m.frame.sampleOffset, wallMs: Date.parse(m.frame.receivedAt) });
-        this.meter(startMs, mixdown(m.frame.pcm));
+        const mono = mixdown(m.frame.pcm);
+        this.meter(startMs, mono);
+        this.recorder?.audio(startMs, mono);
         s.stream.push(m.frame);
         const endMs = startMs + ((m.frame.pcm[0]?.length ?? 0) * 1000) / CANONICAL_RATE;
         this.audioEndMs = Math.max(this.audioEndMs, endMs);
@@ -232,6 +243,7 @@ export class LaneSession {
           this.emit({ type: "event", event: "disconnect", at: m.at });
           if (this.mode === "tracker") await this.act(this.tracker.onControl({ type: "disconnect", at: m.at }));
         }
+        this.recordSession(m.sessionId, m.at, m.reason);
         break;
       }
     }
@@ -250,8 +262,9 @@ export class LaneSession {
       interim: (text, sessionId) => this.emit({ type: "interim", text, sessionId }),
       error: (e) => this.log(`${this.key}: transcriber error: ${e.message}`),
       gap: (fromS, toS, reason) => this.gaps.push({ fromMs: anchorMs + fromS * 1000, toMs: anchorMs + toS * 1000, dropped: reason === "dropped" }),
+      ...(this.recorder ? { raw: (n: number, msgs: unknown[]) => this.recorder?.asr(session.sessionId, n, msgs, session.anchorAt, this.opts.transcriber.name) } : {}),
     });
-    this.sessions.set(session.sessionId, { session, stream, anchorMs, receipts: [], open: true });
+    this.sessions.set(session.sessionId, { session, stream, anchorMs, receipts: [], open: true, decisionsBefore: this.tracker.decisions.length });
     this.advance(anchorMs);
     this.emit({ type: "session", sessionId: session.sessionId, open: true, at: session.anchorAt });
     if (reconnect) {
@@ -259,6 +272,18 @@ export class LaneSession {
       this.emit({ type: "event", event: "reconnect", at: session.anchorAt });
       if (this.mode === "tracker") this.queued.push(...this.tracker.onControl({ type: "reconnect", at: session.anchorAt }));
     }
+  }
+
+  /** A closed session's control events and tracker decisions go to the data store. */
+  private recordSession(sessionId: string, closedAt: string, reason: string): void {
+    const s = this.sessions.get(sessionId);
+    if (!this.recorder || !s) return;
+    const lines: SessionEventLine[] = [
+      { at: s.session.anchorAt, type: "session_open", source_type: s.session.sourceType, codec_in: s.session.codecIn, channels: s.session.audio.channels, time_basis: s.session.timeBasis },
+      ...this.events.filter((e) => e.sessionId === sessionId).map((e) => ({ at: new Date(e.atMs).toISOString(), type: e.type })),
+      { at: closedAt, type: "session_close", reason },
+    ];
+    this.recorder.events(sessionId, s.session.anchorAt, lines, this.tracker.decisions.slice(s.decisionsBefore));
   }
 
   /** Seconds on the lane axis (0 = the first session's anchor). */
@@ -453,6 +478,10 @@ export class LaneSession {
     const offsetS = s ? ((this.anchorMs ?? s.anchorMs) - s.anchorMs) / 1000 : 0;
     const startSample = Math.max(0, Math.round((args.segment.start_s + offsetS) * CANONICAL_RATE));
     const receipt = s?.receipts.find((r) => r.offset >= startSample - CANONICAL_RATE * 0.2) ?? s?.receipts[0];
+    // Disk guard: at 95% of the budget, audio archiving stops and the order says so.
+    const paused = this.recorder !== null && this.opts.engine.data.capturePaused();
+    const base = this.anchorMs ?? s?.anchorMs ?? 0;
+    const recorder = this.recorder;
     const done = await finalizeConversation(this.opts.engine, {
       runId: this.runId,
       segment: args.segment,
@@ -460,7 +489,13 @@ export class LaneSession {
       session: sessionFacts(s, sessionId, this.storeId, this.laneId, offsetS, this.codecIn, this.channels),
       levelsDb: this.levels(),
       signals: { vehicle: args.vehicle, stream: args.stream, silence: args.silence },
-      extraFlags: [...args.flags, ...this.gapFlags(args.segment)],
+      extraFlags: [...args.flags, ...this.gapFlags(args.segment), ...(paused ? (["capture_paused"] as Flag[]) : [])],
+      ...(recorder && !paused
+        ? {
+            archive: (orderId: string, version: number, p: { startedAt: string }) =>
+              recorder.archive(base + args.segment.start_s * 1000 - 500, base + args.segment.end_s * 1000 + 500, { orderId, version, sessionId, startedAt: p.startedAt }),
+          }
+        : {}),
       rolesLowAgreement,
       receivedAt: new Date(receipt?.wallMs ?? conv.openedWallMs).toISOString(),
       ...(s?.session.sourceRef ? { audioFile: s.session.sourceRef } : {}),
@@ -563,11 +598,13 @@ export class LaneSession {
   /** End of input: flush the transcriber and finish every open conversation. */
   async end(): Promise<void> {
     await this.chain;
-    for (const s of this.sessions.values()) {
+    const closing: string[] = [];
+    for (const [id, s] of this.sessions) {
       if (!s.open) continue;
       s.open = false;
       await s.stream.end();
       this.streamMinutes += s.stream.audioMinutes();
+      closing.push(id);
     }
     if (this.mode === "batch") {
       this.pending.length = 0;
@@ -575,8 +612,11 @@ export class LaneSession {
       return;
     }
     await this.drain();
-    await this.act(this.tracker.onEnd(new Date(Math.max(this.clockMs, this.audioEndMs)).toISOString()));
+    const endAt = new Date(Math.max(this.clockMs, this.audioEndMs)).toISOString();
+    await this.act(this.tracker.onEnd(endAt));
     await Promise.all([...this.conversations.values()].map((c) => c.chain));
+    for (const id of closing) this.recordSession(id, endAt, "end");
+    await this.recorder?.flush();
   }
 
   private collect(done: FinalizeResult): void {

@@ -9,18 +9,22 @@
  * pnpm pipeline secret               generate a whsec_ signing secret
  * pnpm feed replay <fixture|file>    replay a recording as a live feed (lane path)
  * pnpm feed serve                    run the live endpoint (HME WebSocket) and lanes
+ * pnpm feed replay-raw <session>     replay a captured session byte for byte to the endpoint
  * pnpm pipeline token create|list|revoke   manage ingest tokens
+ * pnpm data find|usage|verify|prune|delete|label   the long-term data store
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { getConfig, parseChannelMap, servSettings } from "@serv/config";
 import { ConfigError, createEngine, type EngineOptions, type ExtractorKind, type TranscriberKind } from "./engine";
+import { dataCommand } from "./data/cli";
+import { readRawSession } from "./data/raw-sink";
 import { formatReport, runEval } from "./eval/run-eval";
 import { IngestError } from "./ingest/probe";
 import { createToken, issueTicket, listTokens, revokeToken } from "./input/auth/tokens";
 import { DEFAULT_SCENARIO, loadScenario } from "./input/scenario";
-import { replayOverWs } from "./input/ws-replay";
+import { replayOverWs, replayRawOverWs } from "./input/ws-replay";
 import { startService } from "./server/serve";
 import { openDb } from "./store/db";
 import { latencySummary, replayFile, type ReplayResult } from "./lane/replay";
@@ -44,6 +48,8 @@ Commands
   token create          Create an ingest token: --store <id> --lanes <a,b> [--note text] (printed once)
   token list            List ingest tokens (never the secrets)
   token revoke <id>     Revoke a token; its live sessions are closed (4401)
+  feed replay-raw <s>   Replay a captured session byte for byte to the endpoint (--token, --url, --speed)
+  data <command>        The long-term data store: find, usage, verify, prune, delete, label (pnpm data for help)
 
 Options
   --transcriber deepgram|script   Default: deepgram if DEEPGRAM_API_KEY is set, else script (fixtures only)
@@ -162,6 +168,20 @@ async function wsReplayCommand(ref: string, values: Record<string, unknown>): Pr
   console.log(`sent ${r.messages} messages (${Math.round(r.bytes / 1024)} KB, ${scenario.codec}) over ${r.sessions} connection(s); closes: ${r.closes.map((c) => c.code).join(", ") || "-"}`);
 }
 
+async function rawReplayCommand(sessionId: string | undefined, values: Record<string, unknown>): Promise<void> {
+  if (!sessionId) throw new ConfigError("Usage: pnpm feed replay-raw <session_id> [--url ws://...] [--token sit_...] [--speed 1|max]");
+  const engine = createEngine({ transcriber: "script", extractor: "fuzzy", log: () => {} });
+  const token = (values.token as string | undefined) ?? process.env.INGEST_TOKEN;
+  if (!token) throw new ConfigError("No ingest token: pass --token or set INGEST_TOKEN (the token's store must match the captured session)");
+  // A capture belongs to one store: never replay it under another store's token.
+  const { manifest } = await readRawSession(engine.data, sessionId);
+  const tokenRow = listTokens(engine.db).find((t) => t.token_id === token.split("_")[1]);
+  if (tokenRow && tokenRow.store_id !== manifest.store_id) throw new ConfigError(`Session ${sessionId} was captured for ${manifest.store_id}; this token is for ${tokenRow.store_id}`);
+  const speed = !values.speed || values.speed === "max" ? ("max" as const) : Number(values.speed);
+  const r = await replayRawOverWs(engine.data, sessionId, { url: (values.url as string | undefined) ?? engine.cfg.ingest.publicUrl, token, speed });
+  console.log(`replayed ${r.messages} messages (${Math.round(r.bytes / 1024)} KB)${r.incomplete ? "; the capture has an incomplete part (the server stopped mid-session)" : ""}; closes: ${r.closes.map((c) => c.code).join(", ") || "-"}`);
+}
+
 /** A fixture id (01_simple, compilation_a) or a path to any audio file. */
 function resolveFixture(fixturesDir: string, ref: string, layout: "mono" | "stereo"): string {
   const local = path.resolve(process.env.INIT_CWD ?? process.cwd(), ref);
@@ -212,6 +232,15 @@ async function main(): Promise<void> {
       note: { type: "string" },
       url: { type: "string" },
       token: { type: "string" },
+      order: { type: "string" },
+      session: { type: "string" },
+      kind: { type: "string" },
+      "older-than": { type: "string" },
+      sample: { type: "string" },
+      version: { type: "string" },
+      verdict: { type: "string" },
+      author: { type: "string" },
+      yes: { type: "boolean" },
       help: { type: "boolean", short: "h" },
     },
   });
@@ -282,8 +311,11 @@ async function main(): Promise<void> {
       return;
     case "token":
       return tokenCommand(arg, positionals[2], values);
+    case "data":
+      return dataCommand(createEngine({ transcriber: "script", extractor: "fuzzy", log: () => {} }), arg, values);
     case "feed": {
       if (arg === "serve") return serveCommand(engineOpts(values));
+      if (arg === "replay-raw") return rawReplayCommand(positionals[2], values);
       if (arg !== "replay" || !positionals[2]) throw new ConfigError("Usage: pnpm feed replay <fixture-id|file> [--speed 1|4|max] [--scenario name] [--via direct|ws]\n       pnpm feed serve");
       if (values.via === "ws") return wsReplayCommand(positionals[2], values);
       if (values.via && values.via !== "direct") throw new ConfigError(`--via must be direct or ws, got ${values.via}`);

@@ -42,6 +42,8 @@ export interface IngestServerOptions {
   onRateExceeded?: (storeId: string, laneId: string) => void;
   /** Raw capture of every incoming message, before decoding. */
   capture?: (session: { sessionId: string; storeId: string; laneId: string }, kind: "binary" | "text", bytes: Uint8Array, receivedAt: number) => void;
+  /** A connection was accepted (raw capture writes its manifest here). */
+  onSessionOpened?: (session: { sessionId: string; storeId: string; laneId: string; tokenId: string; openedAt: number; format: { codec: string; sampleRate: number; channels: number; roles: string[] | null } }) => void;
   onSessionClosed?: (sessionId: string) => void;
   auth?: IngestAuth;
   allowQueryToken: boolean;
@@ -225,6 +227,14 @@ export class IngestServer {
     });
     entry = { ws, conn, tokenId, storeId: params.storeId, laneId: params.laneId, lastPong: Date.now(), closing: false };
     this.live.add(entry);
+    this.opts.onSessionOpened?.({
+      sessionId: conn.session.sessionId,
+      storeId: params.storeId,
+      laneId: params.laneId,
+      tokenId,
+      openedAt: Date.now(),
+      format: { codec: params.codec, sampleRate: params.sampleRate, channels: params.channels, roles: params.channelRoles ?? null },
+    });
     this.opts.log?.({ event: "ingest_session_open", session_id: conn.session.sessionId, store_id: params.storeId, lane_id: params.laneId, codec: params.codec, token_id: tokenId });
 
     ws.on("pong", () => {

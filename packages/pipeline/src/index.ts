@@ -14,3 +14,4 @@ export { IngestError } from "./ingest/probe";
 export { newId } from "./lib/ids";
 export { issueTicket } from "./input/auth/tokens";
 export { isSafeId } from "./lib/safe-id";
+export { usageOf as dataUsage, type Usage as DataUsage } from "./data/store";

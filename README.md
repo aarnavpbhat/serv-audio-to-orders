@@ -46,7 +46,15 @@ pnpm pipeline worker                              # slow-phase retries (the web 
 pnpm pipeline examples                            # regenerate examples/
 pnpm pipeline settings                            # which Serv-dependent values are still placeholders
 pnpm fixtures:build [--all-noise]                 # regenerate fixture audio from fixtures/scripts
+pnpm data usage                                   # data store size against DATA_DISK_BUDGET_GB
+pnpm data find --order <order_id>                 # everything kept for an order: audio, LLM calls, labels, raw capture
+pnpm data verify                                  # re-hash a sample of stored files
+pnpm data prune --kind raw --older-than 90d       # list (add --yes to remove) old files of one kind
+pnpm data delete --store <store_id>               # list (add --yes to remove) a store's files; orders are kept
+pnpm feed replay-raw <session_id> --token sit_... # replay a captured session byte for byte
 ```
+
+The live service (`pnpm feed serve`) keeps every incoming message (zstd parts, rolled every 60 s or 5 MB), each order version's audio as FLAC, every Deepgram message, every Gemini request and answer, and each session's control events under `.data/blobs/`, catalogued in the `artifacts` table. `DATA_DISK_BUDGET_GB` (default 50) sets the budget: the settings panel warns at 80%, and at 95% raw capture and audio archiving pause (orders keep flowing and are flagged `capture_paused`). `RETENTION_POLICY=keep_all` is the only policy; prune and delete are manual.
 
 Start `pnpm dev` before `pnpm pipeline run` so the mock webhook is listening. If it is not, deliveries go through the fast retry phase (about a minute) and are then scheduled for the slow phase.
 
@@ -214,3 +222,14 @@ supports. Before production: confirm HME's connection handshake, then add
 mutual TLS (client certificates), an IP allowlist for HME and store addresses,
 or signed timestamped connect requests. Each plugs into the IngestAuth
 interface. Also needed: a token rotation schedule and managed TLS.
+
+### Long-term data storage
+The sandbox keeps everything (raw capture, conversation audio, Deepgram and
+Gemini responses, orders and versions, delivery attempts, labels) on local
+disk under .data/, indexed in SQLite. This proves the layout, not the
+infrastructure. Before production: move files to object storage (S3, same
+key layout) and metadata to Postgres; add lifecycle tiers (recent data on
+fast storage, older data on archive tiers); encrypt at rest and limit access
+by role; agree a retention policy with Serv, since recordings contain
+customer and crew voices and consent and voice-data rules vary by state;
+support deletion per store on request; add scheduled exports for analytics.
