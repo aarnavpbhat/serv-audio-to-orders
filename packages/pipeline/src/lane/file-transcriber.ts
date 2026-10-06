@@ -37,6 +37,10 @@ export class FileOrLiveTranscriber implements StreamingTranscriber {
     this.name = `${prerecorded.name} (files) / ${live.name} (live)`;
   }
 
+  nameFor(session: Pick<StreamSession, "sourceType" | "sourceRef">): string {
+    return reads(session) ? this.prerecorded.name : this.live.name;
+  }
+
   /** One transcription per file and channel layout, shared by every session that replays it. */
   transcript(file: string, channels: number): Promise<TranscribeResult> {
     const key = `${file}|${channels}`;
@@ -56,8 +60,7 @@ export class FileOrLiveTranscriber implements StreamingTranscriber {
   }
 
   open(session: StreamSession, handlers: TranscriptHandlers): TranscriptStream {
-    // Only a replay this process started reads a file; a network session never does, whatever it names.
-    if (!session.sourceRef || session.sourceType !== "file_replay") return this.live.open(session, handlers);
+    if (!reads(session)) return this.live.open(session, handlers);
     const key = `${session.storeId}:${session.laneId}:${session.sourceRef}`;
     const seen = (session.sourceOffsetS && this.emitted.get(key)) || new Set<string>();
     this.emitted.set(key, seen);
@@ -79,4 +82,9 @@ export class FileOrLiveTranscriber implements StreamingTranscriber {
     );
     return new TimedStream(session, utterances, session.sourceOffsetS ?? 0, seen, handlers);
   }
+}
+
+/** Only a replay this process started reads a file; a network session never does, whatever it names. */
+function reads<S extends Pick<StreamSession, "sourceType" | "sourceRef">>(session: S): session is S & { sourceRef: string } {
+  return !!session.sourceRef && session.sourceType === "file_replay";
 }

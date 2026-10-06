@@ -61,5 +61,12 @@ export interface TranscriptStream {
 
 export interface StreamingTranscriber {
   readonly name: string;
+  /** The model that actually handles this kind of session, when it depends on the source (files vs live). */
+  nameFor?(session: Pick<StreamSession, "sourceType" | "sourceRef">): string;
   open(session: StreamSession, handlers: TranscriptHandlers): TranscriptStream;
+}
+
+/** The transcriber name for a session: only the model that applies to it. */
+export function sttName(t: StreamingTranscriber, session: Pick<StreamSession, "sourceType" | "sourceRef"> | undefined): string {
+  return session && t.nameFor ? t.nameFor(session) : t.name;
 }

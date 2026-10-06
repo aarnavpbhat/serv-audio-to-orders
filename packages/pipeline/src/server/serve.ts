@@ -12,6 +12,7 @@ import { newId } from "../lib/ids";
 import { ntpOffsetMs } from "../lib/sntp";
 import { liveWriter } from "../lane/live-feed";
 import { LaneManager } from "../lane/manager";
+import { sttName } from "../lane/types";
 import { ScriptStreamingTranscriber } from "../lane/script-transcriber";
 import type { LaneSession, LaneUpdate } from "../lane/lane";
 import { insertRun, updateRun } from "../store/db";
@@ -68,14 +69,16 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
   log({ event: "clock_offset", ntp_offset_ms: offset, note: offset === null ? "NTP unreachable; check the server runs NTP" : Math.abs(offset) > 1000 ? "clock is more than 1 s off; fix NTP before trusting order times" : "ok" });
 
   const runs = new Map<string, string>();
+  // Network sessions are always transcribed live (the file model is for replays only).
+  const liveStt = sttName(engine.streaming, { sourceType: "hme_ws" });
   const runFor = (storeId: string, laneId: string): string => {
     const key = `${storeId}:${laneId}`;
     let id = runs.get(key);
     if (!id) {
       id = newId("run");
       runs.set(key, id);
-      insertRun(db, { id, source_file: `live ${storeId}/${laneId}`, file_path: "", options: { via: "hme_ws", transcriber: engine.streaming.name, extractor: engine.extractor.name } });
-      updateRun(db, id, { status: "running", stage: "live", transcriber: engine.streaming.name, extractor: engine.extractor.name });
+      insertRun(db, { id, source_file: `live ${storeId}/${laneId}`, file_path: "", options: { via: "hme_ws", transcriber: liveStt, extractor: engine.extractor.name } });
+      updateRun(db, id, { status: "running", stage: "live", transcriber: liveStt, extractor: engine.extractor.name });
     }
     return id;
   };

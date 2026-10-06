@@ -21,6 +21,7 @@ import { EventLog, OrderCard, type PanelOrder } from "./OrderPanel";
 import { PlayerBar } from "./PlayerBar";
 import { Transcript } from "./Transcript";
 import { Waveform, type WaveformHandle } from "./Waveform";
+import { SectionHeader } from "@/components/SectionHeader";
 
 interface SiteValue {
   value: string;
@@ -216,10 +217,7 @@ export function RunView({
         <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           {/* Orders as an album track list, one "disc" per conversation. */}
           <section className="min-w-0 space-y-7">
-            <div className="flex items-baseline justify-between">
-              <h2 className="section-title">Orders</h2>
-              <span className="text-[12px] text-muted-foreground">{segments.length} conversations</span>
-            </div>
+            <SectionHeader className="mb-0" title="Orders" details={`${segments.length} conversation${segments.length === 1 ? "" : "s"}`} />
             {!segments.length && <p className="text-muted-foreground">Orders appear after segmentation and extraction.</p>}
             {segments.map((seg, si) => {
               const finals = ordersBySeg.get(seg.segment_id) ?? [];
@@ -229,17 +227,21 @@ export function RunView({
               const current = nowSeg?.segment_id === seg.segment_id && playing;
               return (
                 <div key={seg.segment_id}>
-                  <button type="button" onClick={() => seek(seg.start_s)} className="group mb-2 flex w-full items-baseline gap-2 border-b border-line px-2 pb-1.5 text-left">
-                    <span className={cn("text-[14px] font-semibold", current ? "text-brand" : "group-hover:text-brand")}>Conversation {si + 1}</span>
-                    {current && <Equalizer className="text-brand" />}
-                    <span className="text-[12px] text-muted-foreground">
+                  <button type="button" data-section-header onClick={() => seek(seg.start_s)} className="group mb-2 block w-full border-b border-line px-2 pb-1.5 text-left">
+                    <span className="flex items-center gap-2">
+                      <span data-header-title className={cn("text-[14px] font-semibold", current ? "text-brand" : "group-hover:text-brand")}>
+                        Conversation {si + 1}
+                      </span>
+                      {current && <Equalizer className="text-brand" />}
+                      <span className="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground">word conf {seg.mean_word_conf.toFixed(2)}</span>
+                    </span>
+                    <span data-header-details className="block text-[12px] text-muted-foreground">
                       {fmt(seg.start_s)} to {fmt(seg.end_s)}
                       {seg.has_greeting && " · greeting"}
                       {seg.has_closing ? " · closing" : ""}
                       {seg.non_customer_ids.length > 0 && ` · ${seg.non_customer_ids.length} chatter excluded`}
+                      {!seg.has_closing && <span className="text-orange-600 dark:text-orange-400"> · no closing</span>}
                     </span>
-                    {!seg.has_closing && <span className="text-[12px] text-orange-600 dark:text-orange-400">no closing</span>}
-                    <span className="ml-auto font-mono text-[11px] text-muted-foreground">word conf {seg.mean_word_conf.toFixed(2)}</span>
                   </button>
                   <div className="space-y-5">
                     {shown.length === 0 && <div className="px-2 py-2 text-muted-foreground">{run.status === "running" ? "Extracting..." : "No order"}</div>}

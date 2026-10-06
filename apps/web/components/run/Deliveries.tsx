@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { Badge } from "../Badge";
 import { JsonView } from "../JsonView";
+import { SectionHeader } from "@/components/SectionHeader";
 
 export function Deliveries({ orders, onChange }: { orders: OrderView[]; onChange: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
@@ -21,10 +22,7 @@ export function Deliveries({ orders, onChange }: { orders: OrderView[]; onChange
 
   return (
     <section>
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="section-title">Webhook Deliveries</h2>
-        <span className="text-[11.5px] text-muted-foreground">Standard Webhooks signing · retries 1, 2, 4, 8, 16, 32s then 5m to 10h · dead letter after 13 attempts</span>
-      </div>
+      <SectionHeader title="Webhook Deliveries" details="Standard Webhooks signing · retries 1, 2, 4, 8, 16, 32 s then 5 min to 10 h · dead letter after 13 attempts" />
       {!rows.length && <p className="py-3 text-muted-foreground">No deliveries for this run (delivery disabled, or no orders yet).</p>}
       <div className="tracks">
         {rows.map(({ order, d }) => (

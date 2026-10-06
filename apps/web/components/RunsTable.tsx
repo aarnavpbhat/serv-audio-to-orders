@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Artwork } from "./Artwork";
 import { Badge } from "./Badge";
 import { ClockIcon, Equalizer, PlayIcon } from "./Icons";
+import { SectionHeader } from "@/components/SectionHeader";
 
 interface RunSummary {
   id: string;
@@ -57,10 +58,7 @@ export function RunsTable({ query }: { query: string }) {
 
   return (
     <section>
-      <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="section-title">Recent Runs</h2>
-        {shown && <span className="text-[12px] text-muted-foreground">{shown.length} runs{q && ` matching "${query}"`}</span>}
-      </div>
+      <SectionHeader title="Recent Runs" details={shown && <>{shown.length} runs{q && ` matching "${query}"`}</>} />
       {!shown && <p className="py-6 text-muted-foreground">Loading runs...</p>}
       {shown?.length === 0 && (
         <p className="py-6 text-muted-foreground">
