@@ -52,7 +52,7 @@ export const FixtureScript = z.object({
   /** Edge case checklist rows this script covers. */
   covers: z.array(z.number().int()),
   language: z.string().default("en"),
-  /** Behaviour only the live path has (a reopen); the v1 file path skips it. */
+  /** Behaviour only the live path has (a reopen). Kept for the segmentation unit tests, which skip it. */
   live_only: z.boolean().default(false),
   render: z
     .object({

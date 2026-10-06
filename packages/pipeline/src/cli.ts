@@ -63,8 +63,9 @@ Options
   --no-judge                      Disable LLM tie-breakers for segmentation and roles
   --refresh                       Ignore cached Deepgram responses
   --json                          Print full JSON output
+  --live-stt                      Stream files to Deepgram live instead of its prerecorded API (credit on every run)
   eval: --layout mono|stereo (default mono), --only id1,id2, --no-compilations, --deliver, --no-webhook-check,
-        --via file|lane (default file), --scenario <name> (lane only)
+        --scenario <name>. Files replay through the live path at max speed (plan D1).
   feed replay: --speed 1|4|max (default max), --via direct|ws, --scenario <name>, --store <id>, --lane <id>,
         --layout mono|stereo; with --via ws: --url (default INGEST_URL), --token (default INGEST_TOKEN, or a
         dev ticket when ENABLE_DEV_ROUTES=true)
@@ -75,6 +76,7 @@ function engineOpts(v: Record<string, unknown>): EngineOptions {
     ...(v.transcriber ? { transcriber: v.transcriber as TranscriberKind } : {}),
     ...(v.extractor ? { extractor: v.extractor as ExtractorKind } : {}),
     noJudge: v["no-judge"] === true,
+    liveFiles: v["live-stt"] === true,
   };
 }
 
@@ -237,6 +239,7 @@ async function main(): Promise<void> {
       "no-webhook-check": { type: "boolean" },
       once: { type: "boolean" },
       via: { type: "string" },
+      "live-stt": { type: "boolean" },
       scenario: { type: "string" },
       speed: { type: "string" },
       store: { type: "string" },
@@ -287,7 +290,6 @@ async function main(): Promise<void> {
         compilations: !values["no-compilations"],
         deliver: values.deliver === true,
         webhook: !values["no-webhook-check"],
-        via: values.via === "lane" ? "lane" : "file",
         ...(values.scenario ? { scenario: loadScenario(engine.cfg.paths.fixturesDir, values.scenario) } : {}),
       });
       console.log(formatReport(report));

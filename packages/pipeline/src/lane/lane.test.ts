@@ -15,13 +15,20 @@ const shape = (orders: { order: { status: string; items: { catalog_id: string; q
   orders.map((o) => ({ status: o.order.status, review: o.order.review, flags: o.order.flags, items: o.order.items.map((i) => `${i.quantity}x${i.catalog_id}`) }));
 
 describe("replay through the lane", () => {
-  it("matches the v1 file path on the same fixture (plan D1 parity)", async () => {
+  it("pnpm pipeline run is a replay through the lane (plan D1): same orders, conversations and run record", async () => {
     const engine = testEngine();
     const file = audio("18_back_to_back");
-    const v1 = await runPipeline(engine, file, { channelMap: null, audioStartUtc: "2026-10-03T18:40:00Z", deliver: false });
-    const v2 = await replayFile(engine, file, { transcriber: new ScriptStreamingTranscriber(), deliver: false, mode: "batch" });
-    expect(shape(v2.orders)).toEqual(shape(v1.orders));
-    expect(v2.segmentation.segments.map((s) => [s.start_s, s.end_s])).toEqual(v1.segmentation.segments.map((s) => [s.start_s, s.end_s]));
+    const run = await runPipeline(engine, file, { channelMap: null, deliver: false });
+    const lane = await replayFile(engine, file, { transcriber: new ScriptStreamingTranscriber(), deliver: false });
+    expect(shape(run.orders)).toEqual(shape(lane.orders));
+    expect(run.orders).toHaveLength(2);
+    expect(run.segmentation.segments.map((s) => [s.start_s, s.end_s])).toEqual(lane.segmentation.segments.map((s) => [s.start_s, s.end_s]));
+    expect(run.orders.every((o) => o.payload.source.type === "file_replay")).toBe(true);
+  });
+
+  it("an empty or corrupt file fails before anything is sent", async () => {
+    const engine = testEngine();
+    await expect(runPipeline(engine, path.join(repoRoot, "menu/menu.json"), { deliver: false })).rejects.toThrow(/audio/i);
   });
 
   it("stamps recording time and the replay's store and lane on every order", async () => {

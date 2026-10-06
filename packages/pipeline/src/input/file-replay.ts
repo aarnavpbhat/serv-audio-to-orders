@@ -23,6 +23,8 @@ export interface ReplayOptions {
   speed?: number | "max";
   /** Override the recording start (defaults to the fixture's recording_start_utc, then env/filename/mtime). */
   anchorAt?: string;
+  /** Roles of a stereo file's two channels (default customer left, crew right). */
+  channelRoles?: ChannelRole[];
   /** Seconds of clock ticks after the last audio, so open timers can expire (default 5, or 200 after a final disconnect). */
   tailS?: number;
   now?: () => number;
@@ -90,7 +92,7 @@ export class FileReplaySource implements AudioSource {
     const anchorMs = Date.parse(this.opts.anchorAt ?? timeline?.recording_start_utc ?? resolveStartTime(this.file, cfg.audioStartUtc.value).audio_start_utc);
     this.anchorMs = anchorMs;
     const at = (t: number) => iso(anchorMs + Math.round(t * 1000));
-    const roles: ChannelRole[] = channels === 2 ? ["customer", "crew"] : ["mixed"];
+    const roles: ChannelRole[] = channels === 2 ? (this.opts.channelRoles ?? ["customer", "crew"]) : ["mixed"];
 
     const vehicle = vehicleEvents(timeline, sc, this.file);
     const audible = audibleIntervals(durS, sc, timeline);

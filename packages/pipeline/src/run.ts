@@ -1,13 +1,20 @@
-/** One audio file through all stages: ingest -> transcribe -> segment -> extract -> build -> post-process -> deliver. */
+/**
+ * pnpm pipeline run <file> and the web app's runs (plan D1): a file goes
+ * through the live path, replayed at max speed into a lane, so files and live
+ * feeds share one tracker, finalize and delivery. The batch path is retired.
+ */
 import path from "node:path";
+import { DEFAULT_SCENARIO } from "./input/scenario";
+import type { ChannelRole } from "./input/types";
 import type { Engine } from "./engine";
-import { addUsage, emptyUsage, type LlmUsage } from "./extract/types";
-import { ingest } from "./ingest/ingest";
-import { newId } from "./lib/ids";
-import { channelRoles, finalizeConversation, type RunOrder } from "./orders/finalize";
+import type { LlmUsage } from "./extract/types";
+import { probeAudio } from "./ingest/probe";
+import { FileOrLiveTranscriber } from "./lane/file-transcriber";
+import { replayFile } from "./lane/replay";
+import type { StreamingTranscriber } from "./lane/types";
+import type { RunOrder } from "./orders/finalize";
 import type { Segmentation, Transcript } from "./schemas";
-import { segmentTranscript } from "./segment/segment";
-import { insertRun, outboxForRun, updateRun, type OutboxRow } from "./store/db";
+import type { OutboxRow } from "./store/db";
 import type { TranscribeUsage } from "./transcribe/types";
 
 export type { RunOrder } from "./orders/finalize";
@@ -43,106 +50,55 @@ export interface RunResult {
 export type Stage = "ingest" | "transcribe" | "segment" | "extract" | "deliver" | "done";
 
 export async function runPipeline(engine: Engine, file: string, opts: RunOptions = {}, onStage?: (s: Stage) => void): Promise<RunResult> {
-  const { cfg, db, log } = engine;
-  const runId = opts.runId ?? newId("run");
-  const sessionId = newId("ses");
-  const receivedAt = new Date().toISOString();
+  const { cfg } = engine;
   const abs = path.resolve(file);
-  const timings: Record<string, number> = {};
-  const t0 = performance.now();
-  const lap = (name: string, since: number) => (timings[name] = Math.round(performance.now() - since));
-  const stage = (s: Stage) => {
-    updateRun(db, runId, { status: s === "done" ? "completed" : "running", stage: s });
-    onStage?.(s);
-  };
+  onStage?.("ingest");
+  // Empty, silent or corrupt files fail here with a clear IngestError, before any provider is called.
+  const info = await probeAudio(abs);
+  const channelMap = opts.channelMap === undefined ? cfg.channelMap.value : opts.channelMap;
+  const stereo = info.channels > 1 && channelMap !== null;
+  const roles: ChannelRole[] | undefined = stereo ? [channelMap?.[0] ?? "mixed", channelMap?.[1] ?? "mixed"] : undefined;
 
-  if (!opts.runId) {
-    insertRun(db, {
-      id: runId,
-      source_file: path.basename(abs),
-      file_path: abs,
-      options: { transcriber: engine.transcriber.name, extractor: engine.extractor.name, ...opts },
-    });
-  }
-  updateRun(db, runId, { transcriber: engine.transcriber.name, extractor: engine.extractor.name });
-
-  try {
-    stage("ingest");
-    let t = performance.now();
-    const input = await ingest(abs, { audioStartUtc: opts.audioStartUtc ?? cfg.audioStartUtc.value });
-    lap("ingest_ms", t);
-    updateRun(db, runId, { file_hash: input.hash, audio: input.audio });
-
-    stage("transcribe");
-    t = performance.now();
-    const channelMap = opts.channelMap === undefined ? cfg.channelMap.value : opts.channelMap;
-    const tr = await engine.transcriber.transcribe(input, {
+  // Free script transcriber for fixtures; otherwise the provider's prerecorded API for the file (cached).
+  let transcriber: StreamingTranscriber = engine.streaming;
+  let files: FileOrLiveTranscriber | null = null;
+  // A per-run transcriber when this run's channel map, start time or refresh differ from the engine's defaults.
+  if (!engine.streaming.name.startsWith("script") && engine.streaming instanceof FileOrLiveTranscriber) {
+    files = new FileOrLiveTranscriber(engine.transcriber, engine.streaming.live, {
       channelMap,
+      audioStartUtc: opts.audioStartUtc ?? cfg.audioStartUtc.value,
       keyterms: engine.catalog.keyterms(),
       language: cfg.language,
       cacheDir: cfg.paths.cacheDir,
       lowConfWord: cfg.lowConfWord,
       refresh: opts.refresh ?? false,
     });
-    lap("transcribe_ms", t);
-    const transcript = tr.transcript;
-    updateRun(db, runId, { transcript });
-    log(`transcribed ${transcript.utterances.length} utterances (${tr.usage.provider}, ${tr.usage.cached ? "cached" : `${tr.usage.audio_minutes} min billed`})`);
-
-    stage("segment");
-    t = performance.now();
-    const segmentation = await segmentTranscript(transcript, { ...cfg.segment, lowAudioQualityMeanConf: cfg.lowAudioQualityMeanConf }, engine.judge);
-    lap("segment_ms", t);
-    updateRun(db, runId, { segmentation });
-    log(`found ${segmentation.segments.length} conversation(s)`);
-
-    stage("extract");
-    const results: RunOrder[] = [];
-    const sends: Promise<OutboxRow>[] = [];
-    let llm = emptyUsage(engine.gemini?.model ?? "none");
-    const beforeExtract = (timings.ingest_ms ?? 0) + (timings.transcribe_ms ?? 0) + (timings.segment_ms ?? 0);
-    const tExtract = performance.now();
-    for (const seg of segmentation.segments) {
-      const ts = performance.now();
-      const done = await finalizeConversation(engine, {
-        runId,
-        segment: seg,
-        transcript,
-        session: {
-          sessionId,
-          storeId: cfg.storeId.value,
-          laneId: cfg.laneId.value,
-          // File recordings carry their start time as metadata (env, filename or mtime).
-          timeBasis: "recording_metadata",
-          sessionOffsetS: 0,
-          source: { type: "file_replay", codecIn: transcript.audio.codec, channels: transcript.audio.channels, channelRoles: channelRoles(transcript.audio.channels, channelMap) },
-        },
-        levelsDb: input.levels_db,
-        receivedAt,
-        audioFile: abs,
-        deliver: opts.deliver !== false,
-        latencyBaseMs: beforeExtract + (ts - tExtract),
-      });
-      llm = addUsage(llm, done.usage);
-      results.push(...done.orders);
-      sends.push(...done.sends);
-    }
-    timings.extract_ms = Math.round(performance.now() - tExtract);
-
-    stage("deliver");
-    t = performance.now();
-    await Promise.allSettled(sends);
-    lap("deliver_ms", t);
-    timings.total_ms = Math.round(performance.now() - t0);
-
-    const ledger = engine.gemini?.ledger() ?? null;
-    const gemini_today = ledger ? { ...ledger, cap: cfg.geminiDailyCap } : null;
-    const usage: RunUsage = { stt: tr.usage, llm, segmentation_llm_calls: segmentation.llm_calls, gemini_today };
-    updateRun(db, runId, { usage, timings });
-    stage("done");
-    return { run_id: runId, transcript, segmentation, orders: results, deliveries: outboxForRun(db, runId), usage, timings };
-  } catch (e) {
-    updateRun(db, runId, { status: "failed", error: (e as Error).message });
-    throw e;
+    transcriber = files;
   }
+  onStage?.("transcribe");
+  const r = await replayFile(engine, abs, {
+    transcriber,
+    scenario: { ...DEFAULT_SCENARIO, channels: stereo ? "stereo" : "mono" },
+    ...(roles ? { channelRoles: roles } : {}),
+    ...(opts.audioStartUtc ? { anchorAt: opts.audioStartUtc } : {}),
+    ...(opts.runId ? { runId: opts.runId } : {}),
+    deliver: opts.deliver !== false,
+    speed: "max",
+  });
+  onStage?.("done");
+  const billed = (files?.billedMinutes ?? 0) + r.usage.deepgram_minutes;
+  return {
+    run_id: r.run_id,
+    transcript: r.transcript,
+    segmentation: r.segmentation,
+    orders: r.orders,
+    deliveries: r.deliveries,
+    usage: {
+      stt: { provider: transcriber.name, audio_minutes: Math.round(billed * 1000) / 1000, cached: billed === 0, role_llm_calls: 0 },
+      llm: r.usage.llm,
+      segmentation_llm_calls: r.segmentation.llm_calls,
+      gemini_today: r.usage.gemini_today ? { ...r.usage.gemini_today, tier: engine.gemini?.ledger()?.tier ?? "unknown", exhausted: engine.gemini?.ledger()?.exhausted ?? false } : null,
+    },
+    timings: r.timings,
+  };
 }

@@ -13,6 +13,7 @@ import { FuzzyMatcher } from "./menu/fuzzy";
 import type { BoundaryJudge } from "./segment/segment";
 import { openDb, type DB } from "./store/db";
 import { DeepgramStreamingTranscriber, sdkSocketFactory } from "./lane/deepgram-stream";
+import { FileOrLiveTranscriber } from "./lane/file-transcriber";
 import { ScriptStreamingTranscriber } from "./lane/script-transcriber";
 import type { StreamingTranscriber } from "./lane/types";
 import { DeepgramTranscriber } from "./transcribe/deepgram";
@@ -28,6 +29,8 @@ export interface EngineOptions {
   extractor?: ExtractorKind;
   /** Disable the LLM boundary / role tie-breakers. The oracle (ceiling) extractor implies this, so ceiling runs stay free. */
   noJudge?: boolean;
+  /** Stream file replays to Deepgram live instead of its prerecorded API (costs credit on every run; no cache). */
+  liveFiles?: boolean;
   log?: (msg: string) => void;
 }
 
@@ -79,12 +82,23 @@ export function createEngine(opts: EngineOptions = {}): Engine {
   if (transcriberKind === "deepgram") {
     if (!cfg.deepgramApiKey) throw new ConfigError("DEEPGRAM_API_KEY is not set. Add it to .env, or use --transcriber script for fixture audio");
     transcriber = new DeepgramTranscriber(cfg.deepgramApiKey, judge);
-    streaming = new DeepgramStreamingTranscriber(sdkSocketFactory(cfg.deepgramApiKey), {
+    const live = new DeepgramStreamingTranscriber(sdkSocketFactory(cfg.deepgramApiKey), {
       keyterms: loadCatalog(cfg.paths.menu).keyterms(),
       language: cfg.language,
       idleCloseS: cfg.deepgramIdleCloseS,
       log,
     });
+    // Files: prerecorded API, cached (reruns are free). Live connections: streaming.
+    streaming = opts.liveFiles
+      ? live
+      : new FileOrLiveTranscriber(transcriber, live, {
+          channelMap: cfg.channelMap.value,
+          audioStartUtc: cfg.audioStartUtc.value,
+          keyterms: loadCatalog(cfg.paths.menu).keyterms(),
+          language: cfg.language,
+          cacheDir: cfg.paths.cacheDir,
+          lowConfWord: cfg.lowConfWord,
+        });
   } else {
     transcriber = new ScriptTranscriber();
     streaming = new ScriptStreamingTranscriber();
