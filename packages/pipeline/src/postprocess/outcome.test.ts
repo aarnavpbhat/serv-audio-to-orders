@@ -128,6 +128,6 @@ describe("review", () => {
 
   it("stream and transcript flags map to review reasons; undetermined always needs review", () => {
     expect(reviewReasons({ ...base, flags: ["stream_interrupted", "audio_dropped"] })).toEqual(["stream_gap", "transcript_gap"]);
-    expect(reviewReasons({ ...base, status: "undetermined" })).toEqual(["outcome_undetermined"]);
+    expect(reviewReasons({ ...base, status: "undetermined" })).toEqual([]);
   });
 });

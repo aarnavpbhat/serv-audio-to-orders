@@ -1,6 +1,6 @@
 # Serv Audio-to-Orders Sandbox
 
-A live drive-thru order service, built as a sandbox. HME base stations stream lane audio over a WebSocket (or a recording is replayed as if it were live). Each lane's conversations are tracked as they happen, each finished conversation becomes a structured order, and the order is POSTed to a signed webhook within seconds, with corrections sent as new versions. A Next.js app shows it all: lanes live, every past run step by step, Test Lab (guided tests with a scorecard, using a browser base station), a review queue, every order, and the eval.
+A live drive-thru order service, built as a sandbox. HME base stations stream lane audio over a WebSocket (or a recording is replayed as if it were live). Each lane's conversations are tracked as they happen, each finished conversation becomes a structured order, and the order is POSTed to a signed webhook within seconds, with corrections sent as new versions. A Next.js app shows every past run step by step, Test Lab (guided tests with a scorecard, using a browser base station), every order, and the eval. The Live page and the review queue page are disabled for now.
 
 **Core principle: the LLM proposes, code decides.** The model never writes the final order. It emits events (`ADD`, `REPLACE`, `CHANGE_QTY`, `READBACK`, ...) that reference catalog IDs. A pure function, `replay(events)`, validates and applies them to build the order, so corrections, cancellations and readbacks are deterministic and unit-testable.
 
@@ -99,7 +99,7 @@ Every file, whether from `pnpm pipeline run`, a web upload or the eval, is repla
 | `/orders` | Every order (latest version), read only, filtered by status, review flag, store, lane and date |
 | `/testlab` | Dev only. Test Lab: pick a scenario, follow the script on screen, get a scorecard (see "Test Lab" below). `/testlab/history` shows results over time |
 | `/simulator` | Dev only. The manual base station (every control, no script), linked from Test Lab's Advanced section (see "Simulator" below) |
-| `/review` | Dev only. The review queue: flagged orders nobody knows the answer to (see "Review queue" below). The sidebar badge shows how many |
+| `/review` | Disabled for now (answers 404, not in the sidebar). Flagged orders are on `/orders` (filter Flagged); see "Review queue" below |
 | `/eval` | Latest `eval/report.json`: Layer A (heard), Layer B (rung up, against POS tickets), live-path metrics, the checklist, per-fixture diffs, and the held-out set's own report |
 
 Runs execute server-side in an in-process queue; pages poll for status. The webhook retry worker runs inside the Next.js server (`instrumentation.ts`). The live service is a separate process (`pnpm feed serve`); the web app reads what it writes to the shared SQLite database. Dev-only pages and routes answer only with `ENABLE_DEV_ROUTES=true` and a local request.
@@ -172,7 +172,7 @@ V2-PROGRESS.md   how v2 was built, step by step, with every decision the plan le
 
 **Post-process.** Every mention lands in exactly one bucket: `items` (recognition and commitment at or above 0.75), `needs_review` (committed but unsure what, with the top 3 catalog candidates; an item nobody could identify lands here whatever its commitment), or `not_ordered` (cancelled, replaced, declined upsell, out of stock, inquired, uncommitted). Combo opportunities (separate lines that fill every slot of a meal for less) are flagged with the savings, never auto-converted.
 
-**Outcome.** Status is how the visit ended: `completed` (a closing cue after an item), `cancelled`, `abandoned` (the car left: a `vehicle_departed` event, the crew saying so, or the next car arriving), or `undetermined` (no evidence either way). A pause or a dropped connection never sets the outcome by itself (D10). `outcome_evidence` lists what decided it; events that were only context are marked so. Review is separate and can sit on any status: `review.required` with reasons (`unclear_items`, `readback_mismatch`, `total_mismatch`, `missing_required_slot`, `low_audio_quality`, `stream_gap`, `transcript_gap`, `outcome_undetermined`, `roles_guessed_low_agreement`, `safety_cap` for a quantity above 10 or a total above $150). `low_audio_quality` is set when mean word confidence is under `LOW_AUDIO_QUALITY_CONF` (0.8) or the conversation's speech-to-noise-floor ratio is under `LOW_AUDIO_SNR_DB` (15 dB). `non_english` uses Deepgram's language tags or the language the extractor reports.
+**Outcome.** Status is how the visit ended: `completed` (a closing cue after an item), `cancelled`, `abandoned` (the car left: a `vehicle_departed` event, the crew saying so, or the next car arriving), or `undetermined` (no evidence either way). A pause or a dropped connection never sets the outcome by itself (D10). `outcome_evidence` lists what decided it; events that were only context are marked so. Review is separate and can sit on any status: `review.required` with reasons (`unclear_items`, `readback_mismatch`, `total_mismatch`, `missing_required_slot`, `low_audio_quality`, `stream_gap`, `transcript_gap`, `roles_guessed_low_agreement`, `safety_cap` for a quantity above 10 or a total above $150). An `undetermined` outcome alone is not a review reason (E11): the status already says so, and listening rarely settles it. `outcome_undetermined` stays in the schema for older orders but is no longer sent. `low_audio_quality` is set when mean word confidence is under `LOW_AUDIO_QUALITY_CONF` (0.8) or the conversation's speech-to-noise-floor ratio is under `LOW_AUDIO_SNR_DB` (15 dB). `non_english` uses Deepgram's language tags or the language the extractor reports.
 
 **Deliver.** Each order version is written to an SQLite outbox and sent the moment it is built. Version N waits until version N-1 is delivered or dead-lettered, so a receiver sees them in order. Signing follows [Standard Webhooks](https://www.standardwebhooks.com) (verified against the spec's reference vector): `webhook-id` (= `order_id` + version, constant across retries), `webhook-timestamp`, `webhook-signature: v1,<base64 HMAC-SHA256 of id.timestamp.body>`, plus `x-delivery-attempt`. 10s timeout; any 2xx is success. Network errors, timeouts, 408, 429 and 5xx are retried (Retry-After honored); other 4xx are marked failed with the response body. Fast phase about 1, 2, 4, 8, 16, 32s with full jitter, then 5m, 30m, 2h, 5h, 10h, 10h, then dead letter. For a real AWS endpoint (API Gateway in front of a Lambda), only `WEBHOOK_URL` and `WEBHOOK_SECRET` change; the receiver verifies with any Standard Webhooks library.
 
@@ -240,7 +240,7 @@ One deliberate change from the handoff doc: the default STT language is `multi` 
 4. **Scorecard:** Pass or Fail, Expected vs Extracted, and for each difference where it went wrong. The run is replayed with the script's exact words through the same tracker and extractor (in a throwaway database): a mistake only the live run made was **heard wrong** (transcription), one the perfect words also made was **understood wrong** (extraction), and a missing, extra or unreopened order is **timing** (the tracker). Also: word error rate per role, how many lines got the right speaker, and the time from the end of the conversation to the order being sent. Retry, Next test, Save as fixture or Save as held-out.
 5. **History** (`/testlab/history`): pass rate, word error rate, role accuracy and speed per scenario, filtered by tester mode and speech model.
 
-In free play, after End session you pick what was actually ordered from the menu; that answer is the ground truth the run is scored against. Skip it, and anything flagged goes to the review queue.
+In free play, after End session you pick what was actually ordered from the menu; that answer is the ground truth the run is scored against. Skip it, and anything flagged is sent with `review.required` like any live order.
 
 ## Stopping a stream: End session and Discard
 
@@ -255,7 +255,7 @@ Behind both is `POST /api/sessions/:id/stop {"mode": "end" | "discard"}` (dev ro
 
 ## Review queue
 
-The review queue (`/review`) holds one kind of order: one the system flagged (`review.required`, any status) where nobody knows the right answer except by listening (E5). Fixture runs, where the script says what was ordered, never go there; their run page shows Expected vs Extracted instead (E6). Completed orders with no flag are on `/orders`.
+The review queue page (`/review`) is disabled for now; the code stays in `components/review/` and `POST /api/orders/:id/review` still works. When enabled, it holds one kind of order: one the system flagged (`review.required`, any status) where nobody knows the right answer except by listening (E5). Fixture runs, where the script says what was ordered, never go there; their run page shows Expected vs Extracted instead (E6). Completed orders with no flag are on `/orders`.
 
 Each item says why it was flagged in plain words ("We heard a shake but not which one"), plays exactly the flagged lines with 2 s either side (from the order's archived audio, or the run's file), shows those lines and the closest menu candidates, and lets you pick a candidate, mark an item not ordered, change a quantity, or change the outcome. Save sends the next version as `order.updated`; **Looks right** keeps the order as sent, clears the flag with a note, and sends `order.updated` too.
 
@@ -289,6 +289,8 @@ The app uses Serv's own colors, font and logo, taken from servtech.co's styleshe
 | E8 | Brand values | Extracted from servtech.co's CSS and assets, never guessed |
 | E9 | A car arrives, nobody speaks, and it ends with no departure (pause, connection timeout, End session) | Nothing is sent, as in E2. Without a departure the outcome would be `undetermined`, which would put an empty order in review |
 | E10 | The `lane_stream_a` cookie miss | Accepted as a known gap (see Known gaps); the fixture and its expected order are unchanged |
+| E11 | Undetermined orders and review | Still sent as `undetermined` with items and times (Jasper: outcomes only from evidence), but no longer flagged for review on that ground alone; other reasons still apply |
+| E12 | Live and review queue pages | Disabled for now (404, not in the sidebar); the code stays |
 
 ## Synthetic test data
 

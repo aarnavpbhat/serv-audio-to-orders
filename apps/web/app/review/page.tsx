@@ -1,14 +1,10 @@
-import { getConfig } from "@serv/config";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { ReviewList } from "@/components/review/ReviewList";
-import { menuJson, ordersNeedingReview } from "@/lib/data";
-import { isLocalHeaders } from "@/lib/dev-routes";
 
-export const dynamic = "force-dynamic";
-
-/** Dev only: resolve orders that need review; each save sends the next version as order.updated. */
-export default async function ReviewPage() {
-  if (!getConfig().enableDevRoutes || !isLocalHeaders(await headers())) notFound();
-  return <ReviewList orders={ordersNeedingReview()} menu={menuJson()} />;
+// The review queue page is disabled for now (2026-10-06): it answers 404 and is not in the
+// sidebar. Flagged orders are still sent with review.required and listed on /orders (filter
+// "Flagged"), and POST /api/orders/:id/review still resolves one. To bring the page back,
+// restore this file's render of components/review/ReviewList and the Sidebar entry and badge
+// from git history.
+export default function ReviewPage() {
+  notFound();
 }

@@ -192,7 +192,7 @@ describe("post-processing", () => {
     const base = [{ event_id: "e1", type: "ADD" as const, catalog_id: "fries", recognition_confidence: 0.5 }];
     const noCues = seg({ has_closing: false, signals: { ...closingSignals(), utterances: [] } });
     expect(order(base, noCues).status).toBe("undetermined");
-    expect(order(base, noCues).review.reasons).toEqual(["unclear_items", "outcome_undetermined"]);
+    expect(order(base, noCues).review.reasons).toEqual(["unclear_items"]);
     expect(order(base).status).toBe("completed");
     expect(order([...base, { event_id: "e2", type: "CANCEL_ORDER" }], noCues).status).toBe("cancelled");
   });

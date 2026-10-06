@@ -65,9 +65,9 @@ Open http://localhost:3000/testlab (needs terminal B).
 
 The manual simulator (every control, no script) is still at http://localhost:3000/simulator.
 
-## 7. Review and delivery failures (free)
+## 7. Orders and delivery failures (free)
 
-- http://localhost:3000/review: only flagged orders without a known answer (fixture runs are scored on their run page instead). Listen to the flagged lines, pick what each unclear item was or change a quantity, and save (or Looks right) to send `order.updated`. Every order is on http://localhost:3000/orders.
+- http://localhost:3000/orders: every order; filter Flagged for the ones sent with `review.required` (the review queue page is disabled for now).
 - http://localhost:3000/mock-webhook: switch on 500, 429 or timeout, replay a fixture, and watch retries; then `pnpm pipeline resend <order_id>`.
 
 ## 8. Ingest authentication (free)

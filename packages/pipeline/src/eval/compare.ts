@@ -114,8 +114,7 @@ export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: (Order &
   const noisyAlt = opts.vehicleEvents === "noisy" && exp.status_with_vehicle_events === act.status;
   const status = noisyAlt ? act.status : expectedStatus(exp, opts);
   if (status !== act.status) diffs.push(`status: expected ${status}, got ${act.status}`);
-  // An outcome settled by vehicle events no longer needs review for being undetermined.
-  const expReview = sortedJoin(status === "undetermined" ? exp.review : exp.review.filter((r) => r !== "outcome_undetermined"));
+  const expReview = sortedJoin(exp.review);
   const actReview = sortedJoin(act.review.reasons);
   if (expReview !== actReview) diffs.push(`review: expected [${expReview}], got [${actReview}]`);
 

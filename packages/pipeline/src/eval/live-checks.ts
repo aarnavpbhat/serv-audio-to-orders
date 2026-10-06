@@ -82,7 +82,7 @@ async function pauseAfterClose(engine: Engine): Promise<LiveCheck> {
 async function pauseMidOrder(engine: Engine): Promise<LiveCheck> {
   const r = await replay(engine, "01_simple", ({ end }) => ({ pauses: [{ at_s: end("u2") + 0.5, for_s: 60 }] }));
   const o = r.orders[0]?.order;
-  const pass = r.orders.length === 1 && o?.status === "undetermined" && (o.outcome_evidence.every((e) => e.context_only) ?? false) && o.review.reasons.includes("outcome_undetermined");
+  const pass = r.orders.length === 1 && o?.status === "undetermined" && (o.outcome_evidence.every((e) => e.context_only) ?? false) && !o.review.reasons.includes("outcome_undetermined");
   return { row: 30, pass, detail: `${o?.status ?? "no order"}; review ${o?.review.reasons.join(", ") ?? "-"}` };
 }
 

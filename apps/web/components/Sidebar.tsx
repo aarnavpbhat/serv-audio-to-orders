@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/Tooltip
 import { cn } from "@/lib/utils";
 import { Artwork } from "./Artwork";
 import { ThemeToggle } from "./ThemeToggle";
-import { ChartIcon, CheckIcon, Equalizer, InboxIcon, ListIcon, MicIcon, SearchIcon, WaveIcon } from "./Icons";
+import { ChartIcon, Equalizer, InboxIcon, ListIcon, MicIcon, SearchIcon, WaveIcon } from "./Icons";
 
 interface RecentRun {
   id: string;
@@ -33,24 +33,6 @@ export function Sidebar({ keys, geminiModel, devRoutes }: { keys: { deepgram: bo
   const router = useRouter();
   const [q, setQ] = useState("");
   const [recent, setRecent] = useState<RecentRun[]>([]);
-  const [reviewCount, setReviewCount] = useState(0);
-
-  // E5: the review queue's size, as a badge on Review.
-  useEffect(() => {
-    if (!devRoutes) return;
-    let alive = true;
-    const load = async () => {
-      const res = await fetch("/api/review/count", { cache: "no-store" }).catch(() => null);
-      if (alive && res?.ok) setReviewCount(((await res.json()) as { count: number }).count);
-    };
-    const first = setTimeout(() => void load(), 0);
-    const t = setInterval(() => void load(), 5000);
-    return () => {
-      alive = false;
-      clearTimeout(first);
-      clearInterval(t);
-    };
-  }, [devRoutes]);
 
   useEffect(() => {
     let alive = true;
@@ -85,18 +67,13 @@ export function Sidebar({ keys, geminiModel, devRoutes }: { keys: { deepgram: bo
       </form>
 
       <nav className="flex flex-col gap-px px-3">
-        {[...NAV, ...(devRoutes ? [{ href: "/testlab", label: "Test Lab", icon: MicIcon }, { href: "/review", label: "Review", icon: CheckIcon }] : [])].map((n) => {
+        {[...NAV, ...(devRoutes ? [{ href: "/testlab", label: "Test Lab", icon: MicIcon }] : [])].map((n) => {
           const active = n.href === "/" ? path === "/" || path.startsWith("/runs") : path.startsWith(n.href);
           return (
             <Button key={n.href} asChild variant="ghost" size="sm" className={cn("h-7 justify-start gap-2.5 px-2 text-[13px] font-normal", active && "bg-fill-strong font-medium hover:bg-fill-strong")}>
               <Link href={n.href}>
                 <n.icon className="size-4 text-brand" />
                 {n.label}
-                {n.href === "/review" && reviewCount > 0 && (
-                  <span className="ml-auto rounded-full bg-brand px-1.5 text-[10.5px] font-semibold tabular-nums text-background" aria-label={`${reviewCount} orders to review`}>
-                    {reviewCount}
-                  </span>
-                )}
               </Link>
             </Button>
           );

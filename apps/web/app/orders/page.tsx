@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 const STATUSES = ["completed", "cancelled", "abandoned", "undetermined"];
 const SELECT = "h-8 rounded-md border border-input bg-transparent px-2 text-[13px]";
 
-/** Every order (latest version), read-only and filterable. The review queue holds only the flagged ones. */
+/** Every order (latest version), read-only and filterable. Flagged orders are here too (the review page is disabled, E12). */
 export default async function OrdersPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const q = await searchParams;
   const f: OrderFilters = {
@@ -32,7 +32,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
     <div className="mx-auto max-w-[1180px] space-y-6 px-8 pb-16 pt-8">
       <header>
         <h1 className="title-xl">Orders</h1>
-        <p className="mt-0.5 max-w-3xl text-[13px] text-muted-foreground">Every order the pipeline sent, latest version, newest first. Read only: orders that need a person are in Review.</p>
+        <p className="mt-0.5 max-w-3xl text-[13px] text-muted-foreground">Every order the pipeline sent, latest version, newest first. Read only. Filter Review: Flagged for orders that need a person.</p>
       </header>
 
       <form className="flex flex-wrap items-end gap-3 text-[13px]" method="get">

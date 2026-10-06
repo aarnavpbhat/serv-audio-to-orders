@@ -149,7 +149,8 @@ export function reviewReasons(input: ReviewInput): ReviewReason[] {
   const out = new Set<ReviewReason>();
   if (input.unclearItems > 0) out.add("unclear_items");
   for (const [flag, reason] of FLAG_REASONS) if (input.flags.includes(flag)) out.add(reason);
-  if (input.status === "undetermined") out.add("outcome_undetermined");
+  // E11: an undetermined outcome is not a review reason; listening rarely settles it, and the
+  // status already tells the receiver. outcome_undetermined stays in the schema, never emitted.
   if (input.rolesLowAgreement) out.add("roles_guessed_low_agreement");
   if (input.maxQuantity > input.cap.maxQuantity || input.total > input.cap.maxTotal) out.add("safety_cap");
   return [...out];
