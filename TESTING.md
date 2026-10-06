@@ -53,23 +53,21 @@ pnpm feed sim-check                                          # free STT; Gemini 
 
 The replay prints `sent N messages (... KB, mulaw) over 1 connection(s)`; the order shows on `/live`. `sim-check` runs the five acted scenarios in-process and ends `5/5 pass`.
 
-## 6. Simulator in the browser
+## 6. Test Lab in the browser
 
-Open http://localhost:3000/simulator (needs terminal B).
+Open http://localhost:3000/testlab (needs terminal B).
 
-- **Text mode (free STT, Gemini):** type crew and customer lines.
-- **Mic mode (Deepgram live, about 1 to 2 min for all five):** speak each scenario:
-  1. Simple: a cheeseburger and fries; completed, version 1.
-  2. Correction: a hamburger and a Coke, then "make that a Sprite"; Coke is not on the order.
-  3. Late addition: finish, then "and a water"; completed, version 2.
-  4. Car left mid-order (button): abandoned.
-  5. Drop connection, no reconnect: undetermined, flagged `stream_interrupted`.
+- **Setup:** check the microphone, pick who is testing (both parts, robot crew, or two people). Typing instead of speaking (free) is under Advanced.
+- **Run scenarios 1, 4 and 6** (simple order, late add-on, drive off): press Start, read the line on screen, and watch the status chip. Each ends with a scorecard: Pass or Fail, Expected vs Extracted, and for any miss whether it was heard wrong, understood wrong or timing. With the mic each is about a minute of Deepgram.
+- **A wrong run on purpose:** press Skip on the customer's order line; the scorecard fails with "heard wrong".
+- **Stop:** End session sends the open conversation (flag `ended_by_operator`); Discard asks, then sends nothing. The Sessions panel on `/live` does the same for any stream.
+- **History:** http://localhost:3000/testlab/history.
 
-Each order appears in the live panel and the mock inbox.
+The manual simulator (every control, no script) is still at http://localhost:3000/simulator.
 
 ## 7. Review and delivery failures (free)
 
-- http://localhost:3000/review: pick what each unclear item was, confirm, and send `order.updated`.
+- http://localhost:3000/review: only flagged orders without a known answer (fixture runs are scored on their run page instead). Listen to the flagged lines, pick what each unclear item was or change a quantity, and save (or Looks right) to send `order.updated`. Every order is on http://localhost:3000/orders.
 - http://localhost:3000/mock-webhook: switch on 500, 429 or timeout, replay a fixture, and watch retries; then `pnpm pipeline resend <order_id>`.
 
 ## 8. Ingest authentication (free)

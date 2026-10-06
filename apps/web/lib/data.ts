@@ -210,11 +210,13 @@ export function ordersNeedingReview(limit = 100): ReviewOrder[] {
     )
     .all() as { payload: string; run_id: string; created_at: number }[];
   const flagged = rows.map((r) => ({ payload: JSON.parse(r.payload) as OrderPayload, run_id: r.run_id, created_at: r.created_at })).filter((r) => r.payload.review?.required);
-  // E5, E6: only orders nobody knows the answer to; fixture runs are scored against their script instead.
+  // E5, E6: only orders nobody knows the answer to. Fixture runs are scored against their script,
+  // and Test Lab runs against their scenario (or the tester's answer in free play).
   const known = truthRuns([...new Set(flagged.map((r) => r.run_id))]);
+  const scored = testLabScoredLanes();
   const d = db();
   return flagged
-    .filter((r) => !known.has(r.run_id))
+    .filter((r) => !known.has(r.run_id) && !(r.payload.store_id === TESTLAB_STORE && (SCRIPTED_LANE.test(r.payload.lane_id) || scored.has(r.payload.lane_id))))
     .slice(0, limit)
     .map((r) => ({ ...r, clip: !!r.payload.audio_ref.archive_uri || !!store.getRun(d, r.run_id)?.file_path }));
 }
@@ -299,4 +301,14 @@ export function listOrders(f: OrderFilters, limit = 300): OrderListRow[] {
     .filter(({ payload: p }) => p.schema_version === "2.0")
     .filter(({ payload: p }) => (!f.status || p.status === f.status) && (!f.review || p.review.required === (f.review === "yes")) && (!f.store || p.store_id === f.store) && (!f.lane || p.lane_id === f.lane) && (!f.date || day(p.times.started_at) === f.date))
     .slice(0, limit);
+}
+
+/** Test Lab's store; scripted runs use lanes tl_<scenario number>_..., free play tl_free_... */
+const TESTLAB_STORE = "store_testlab";
+const SCRIPTED_LANE = /^tl_\d+_/;
+
+/** Lanes of Test Lab runs that were scored (a free-play run the tester answered has a known answer too). */
+function testLabScoredLanes(): Set<string> {
+  const rows = db().prepare(`SELECT json_extract(detail, '$.laneId') AS lane FROM testlab_results`).all() as { lane: string | null }[];
+  return new Set(rows.map((r) => r.lane).filter((l): l is string => !!l));
 }

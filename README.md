@@ -1,6 +1,6 @@
 # Serv Audio-to-Orders Sandbox
 
-A live drive-thru order service, built as a sandbox. HME base stations stream lane audio over a WebSocket (or a recording is replayed as if it were live). Each lane's conversations are tracked as they happen, each finished conversation becomes a structured order, and the order is POSTed to a signed webhook within seconds, with corrections sent as new versions. A Next.js app shows it all: lanes live, every past run step by step, a browser simulator that acts as a base station, a review screen, and the eval.
+A live drive-thru order service, built as a sandbox. HME base stations stream lane audio over a WebSocket (or a recording is replayed as if it were live). Each lane's conversations are tracked as they happen, each finished conversation becomes a structured order, and the order is POSTed to a signed webhook within seconds, with corrections sent as new versions. A Next.js app shows it all: lanes live, every past run step by step, Test Lab (guided tests with a scorecard, using a browser base station), a review queue, every order, and the eval.
 
 **Core principle: the LLM proposes, code decides.** The model never writes the final order. It emits events (`ADD`, `REPLACE`, `CHANGE_QTY`, `READBACK`, ...) that reference catalog IDs. A pure function, `replay(events)`, validates and applies them to build the order, so corrections, cancellations and readbacks are deterministic and unit-testable.
 
@@ -94,9 +94,12 @@ Every file, whether from `pnpm pipeline run`, a web upload or the eval, is repla
 | `/runs/[id]` orders | Three buckets per order (items, needs review, not ordered), flags, combo opportunities, the event log, raw LLM output. Tick "Replay events with the audio" and the order rebuilds itself as the audio plays (the same pure `replay()` runs in the browser) |
 | `/runs/[id]` deliveries | Every attempt with time, phase, status code and latency; payload viewer; Resend |
 | `/mock-webhook` | Received payloads, signature check result, dedupe, and toggles for 500, 429 (Retry-After) and timeout |
-| `/live` | Every lane as it runs: connection, rolling transcript with interim text, tracker state and timers counting down, the open order building, close decisions with their evidence, orders and webhook status (server-sent events from the live service) |
-| `/simulator` | Dev only. A fake HME base station in the browser: mic or typed lines, car and stream buttons, drop and reconnect, noise, Save as fixture (see "Simulator" below) |
-| `/review` | Dev only. Orders that need a person: pick what each unclear item was, confirm the outcome, and send `order.updated` |
+| `/live` | Every lane as it runs: connection, rolling transcript with interim text, tracker state and timers counting down, the open order building, close decisions with their evidence, orders and webhook status (server-sent events from the live service). With dev routes, a Sessions panel lists every live session with End session and Discard |
+| `/runs/[id]` known answer | Fixture runs only: Expected vs Extracted, side by side with every difference listed, scored automatically (no review prompt) |
+| `/orders` | Every order (latest version), read only, filtered by status, review flag, store, lane and date |
+| `/testlab` | Dev only. Test Lab: pick a scenario, follow the script on screen, get a scorecard (see "Test Lab" below). `/testlab/history` shows results over time |
+| `/simulator` | Dev only. The manual base station (every control, no script), linked from Test Lab's Advanced section (see "Simulator" below) |
+| `/review` | Dev only. The review queue: flagged orders nobody knows the answer to (see "Review queue" below). The sidebar badge shows how many |
 | `/eval` | Latest `eval/report.json`: Layer A (heard), Layer B (rung up, against POS tickets), live-path metrics, the checklist, per-fixture diffs, and the held-out set's own report |
 
 Runs execute server-side in an in-process queue; pages poll for status. The webhook retry worker runs inside the Next.js server (`instrumentation.ts`). The live service is a separate process (`pnpm feed serve`); the web app reads what it writes to the shared SQLite database. Dev-only pages and routes answer only with `ENABLE_DEV_ROUTES=true` and a local request.
@@ -223,6 +226,39 @@ One deliberate change from the handoff doc: the default STT language is `multi` 
 | `DATA_DISK_BUDGET_GB` | 50 | Data store budget: warn at 80%, pause raw capture and audio archiving at 95% |
 | `RETENTION_POLICY` | `keep_all` | The only policy; `pnpm data prune` and `pnpm data delete` are manual |
 
+## Test Lab
+
+`/testlab` (with `ENABLE_DEV_ROUTES=true`, `pnpm dev` and `pnpm feed serve` running) tests the whole live path with your own voice, guided:
+
+1. **Setup** (remembered in your browser): check the microphone (say something; the meter turns green), and pick who is testing.
+   - **Just me, both parts:** you read every line; the script says whose turn it is.
+   - **Just me, robot crew:** the laptop speaks the crew's lines and you answer as the customer. Turn the volume up: echo cancellation is off so the mic hears the laptop, like a headset mix.
+   - **Two people (a friend plays the crew):** sit side by side about an arm's length from the laptop and talk at a normal volume.
+   - Under Advanced, **type instead of speaking**: each line is sent as text, free (no Deepgram).
+2. **Pick a test:** ten scenarios (`testlab/scenarios/*.json`), each with what it checks and how long it takes: simple order, change of mind, a meal's drink choice, a late add-on, never mind, drive off, a connection blip, a lost connection (waits for the 3 minute reconnect grace), a mumbled item, and two cars. Or **free play** with no script.
+3. **Run:** press Start, then read the line on screen. It moves on when the transcript has the line from the right speaker (Space or Next moves on by hand; Skip leaves a line out). The app performs the car and connection actions itself and says so in a banner. End session and Discard are always there; manual controls are under Advanced.
+4. **Scorecard:** Pass or Fail, Expected vs Extracted, and for each difference where it went wrong. The run is replayed with the script's exact words through the same tracker and extractor (in a throwaway database): a mistake only the live run made was **heard wrong** (transcription), one the perfect words also made was **understood wrong** (extraction), and a missing, extra or unreopened order is **timing** (the tracker). Also: word error rate per role, how many lines got the right speaker, and the time from the end of the conversation to the order being sent. Retry, Next test, Save as fixture or Save as held-out.
+5. **History** (`/testlab/history`): pass rate, word error rate, role accuracy and speed per scenario, filtered by tester mode and speech model.
+
+In free play, after End session you pick what was actually ordered from the menu; that answer is the ground truth the run is scored against. Skip it, and anything flagged goes to the review queue.
+
+## Stopping a stream: End session and Discard
+
+Every live stream (Test Lab, the simulator, a WebSocket replay, a real connection) stops in one click, from the page that started it or from the Sessions panel on `/live` (decision E3):
+
+| Action | Open conversation | Webhook | Session marked |
+|---|---|---|---|
+| End session | Finalized now, outcome from evidence (usually `undetermined`), flag `ended_by_operator` | Sent | `ended` |
+| Discard (asks first) | Dropped, no order | None | `discarded`: data kept and tagged, left out of metrics (E4) |
+
+Behind both is `POST /api/sessions/:id/stop {"mode": "end" | "discard"}` (dev routes, local only), forwarded to the feed service. It settles the lane, closes the client socket with `4000 stopped by operator`, closes Deepgram, kills the decoder, and closes the reopen window. Stopping twice, from another tab, or during a reconnect backoff is fine, and a stopped session never reconnects. A queued or running file run has a Cancel button.
+
+## Review queue
+
+The review queue (`/review`) holds one kind of order: one the system flagged (`review.required`, any status) where nobody knows the right answer except by listening (E5). Fixture runs, where the script says what was ordered, never go there; their run page shows Expected vs Extracted instead (E6). Completed orders with no flag are on `/orders`.
+
+Each item says why it was flagged in plain words ("We heard a shake but not which one"), plays exactly the flagged lines with 2 s either side (from the order's archived audio, or the run's file), shows those lines and the closest menu candidates, and lets you pick a candidate, mark an item not ordered, change a quantity, or change the outcome. Save sends the next version as `order.updated`; **Looks right** keeps the order as sent, clears the flag with a note, and sends `order.updated` too.
+
 ## Simulator
 
 `/simulator` (with `ENABLE_DEV_ROUTES=true` and `pnpm feed serve` running) is a fake HME base station in the browser. It connects to the same `/hme/v1/stream` endpoint HME will use, with a one-time ticket, so everything after the input layer is the real pipeline. The browser never sees the provider keys.
@@ -234,6 +270,23 @@ One deliberate change from the handoff doc: the default STT language is `multi` 
 - **Save as fixture**: after Stop, saves the session (raw capture, audio, timeline, events) to `fixtures/live/<name>/` with the expected orders you write in the form. Tick "held out" to save to `fixtures/heldout/` instead (see `fixtures/heldout/README.md`).
 
 The five acted scenarios from the plan (a simple order, Coke changed to Sprite, a late "add a water", the car leaving mid-order, the connection dropping with no reconnect) run typed over the real endpoint with `pnpm feed sim-check`.
+
+## Brand
+
+The app uses Serv's own colors, font and logo, taken from servtech.co's stylesheet and assets (2026-10-05), never approximated: the landing page's colors for the default dark theme (background `#0a0a0c`, text `#e8e8e8`, navy `#132a49`, blue `#5a7fae`), Serv's `:root` tokens for the light theme (`--serv-navy`, `--ljs-blue`), its `.25rem` radius, Inter (its default font, via `next/font`), and its white logo. Every value is in `apps/web/app/globals.css` with its source; values marked derived are tints of a Serv value for surfaces the site does not define, or for 4.5:1 text contrast (checked in both themes by `e2e/brand.spec.ts`). Status colors stay separate from the brand accent. General Sans, the site's headline face, is not bundled (it would mean committing its font files; see Known gaps).
+
+## Decisions (v2.1)
+
+| # | Decision | What was built |
+|---|---|---|
+| E1 | A car arrives and leaves, nobody orders | Sent as `abandoned`, no items, flag `no_speech`, review not required, no model call |
+| E2 | No vehicle event and no speech | Nothing opens, nothing is sent |
+| E3 | Two ways to stop a stream | End session (finalize and send) and Discard (drop, send nothing) |
+| E4 | Data from discarded sessions | Kept, tagged `discarded` in its raw capture manifest, left out of metrics |
+| E5 | Review queue contents | Only flagged orders, any status, and only when no ground truth exists |
+| E6 | Runs with a known answer | Scored automatically against the script; no human review |
+| E7 | Solo testing | Read both parts, or a robot crew that speaks the crew lines while you play the customer |
+| E8 | Brand values | Extracted from servtech.co's CSS and assets, never guessed |
 
 ## Synthetic test data
 
@@ -277,7 +330,11 @@ Close latency with real providers, estimated: p50 3.0 s, p95 45 s. Orders closed
 - **No held-out results yet:** the fixtures that measure the pipeline also guided its prompt, cue-list and tracker fixes, and each real-provider eval is a single run. The tooling for a human-voiced held-out set is in place (`fixtures/heldout/README.md`), but recording 8 to 12 conversations needs people, and scoring them needs about 10 Deepgram minutes. Until then, high fixture scores show the approach can work, not that it generalizes.
 - **HME interface unknown:** the endpoint path, wire format, control messages and authentication are placeholders. The service is built so only `src/input/` changes when HME documents them; nothing has been tested against a real base station.
 - **Close latency when no closing cue is heard:** a conversation that ends without one waits for the 45 s idle timeout (or the next car), because a pause never sets the outcome (D10). Cue-closed orders arrive in about 3 s plus extraction. Vehicle events from HME, or a shorter `IDLE_TIMEOUT_S`, would shorten the tail; the trade-off needs real traffic.
-- **Live speech recognition barely exercised:** Deepgram live has run once (one 23 minute lane stream at 1x). The simulator's mic path and the five acted scenarios with real voices have not been run; the typed versions pass.
+- **Live speech recognition barely exercised:** Deepgram live has run once (one 23 minute lane stream at 1x). Test Lab's ten scenarios pass end to end typed (in CI, in every tester mode), and their expected results pass with the script's exact words through Gemini; nobody has run them with real voices yet.
+- **One real-provider miss on `lane_stream_a`:** in the full 23 minute stream, Deepgram hears car 8's "Maybe a cookie... nah" as "Maybe a Coke. No." (twice, the same both times), so the hesitated cookie is missing from `not_ordered`. The same 28 s clip alone is heard correctly (6 of 6, with or without the word in the keyterms), so it depends on the surrounding audio, not on our keyterms, prompt or tracker. Open decision: accept it, lower the fixture's noise, or change that car's line.
+- **Typed lines under-test transcription:** in Test Lab's typing mode lines skip Deepgram, so the scorecard's word error rate and role accuracy are only meaningful with the microphone.
+- **Dev dependency audit:** `pnpm audit` reports one high advisory in `braces` (stack exhaustion on deeply nested patterns), reached only through dev tooling (`eslint-config-next`, the `shadcn` CLI). No patched version exists yet; production dependencies have no known vulnerabilities.
+- **General Sans not bundled:** servtech.co's headline face comes from Fontshare under its free license, not Google Fonts, so using it means committing font files. The app uses Inter, Serv's default family, until that is decided.
 - **Stereo path untested with Deepgram:** every Deepgram call so far was mono with diarization. The multichannel path is unit-tested (and the stereo scenario passes on the ceiling) but has never been sent to Deepgram; `pnpm eval --layout stereo` would bill the stereo fixtures once.
 - **Tax:** `TAX_RATE=0`. Real spoken totals include tax, so `total_mismatch` will fire on most real orders until the rate is set per site.
 - **No authentication on the web app:** anyone who can reach it can start runs (spending Deepgram credit and Gemini quota), upload files, read every payload, the live view and the mock inbox, and change the mock's failure mode. It binds to 127.0.0.1; keep it there. Dev routes (simulator, review, tickets) also check for a local request, but a reverse proxy on the same machine that forwards `Host: localhost` without `X-Forwarded-For` would expose them, so never enable them behind one.
