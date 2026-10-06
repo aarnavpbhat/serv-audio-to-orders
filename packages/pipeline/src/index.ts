@@ -22,4 +22,6 @@ export type { TrackerDecision } from "./lane/tracker";
 export { saveLiveFixture, SaveFixtureInput, ExpectedOrder, type SavedFixture } from "./sim/save-fixture";
 export { synthNoise } from "./fixtures/noise";
 export { resolveReview, ReviewResolution, ReviewConflictError } from "./review/resolve";
+export { flaggedClip, flaggedLineIds, CLIP_PAD_S } from "./review/clip";
+export { groundTruthFor, scoreOrders, type GroundTruth, type TruthRow } from "./eval/ground-truth";
 export type { FolderReport } from "./eval/heldout";

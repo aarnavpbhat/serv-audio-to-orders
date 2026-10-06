@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/Tooltip
 import { cn } from "@/lib/utils";
 import { Artwork } from "./Artwork";
 import { ThemeToggle } from "./ThemeToggle";
-import { ChartIcon, CheckIcon, Equalizer, InboxIcon, LiveIcon, MicIcon, SearchIcon, WaveIcon } from "./Icons";
+import { ChartIcon, CheckIcon, Equalizer, InboxIcon, ListIcon, LiveIcon, MicIcon, SearchIcon, WaveIcon } from "./Icons";
 
 interface RecentRun {
   id: string;
@@ -24,6 +24,7 @@ interface RecentRun {
 const NAV = [
   { href: "/", label: "Runs", icon: WaveIcon },
   { href: "/live", label: "Live", icon: LiveIcon },
+  { href: "/orders", label: "Orders", icon: ListIcon },
   { href: "/mock-webhook", label: "Mock Webhook", icon: InboxIcon },
   { href: "/eval", label: "Eval", icon: ChartIcon },
 ];
@@ -33,6 +34,24 @@ export function Sidebar({ keys, geminiModel, devRoutes }: { keys: { deepgram: bo
   const router = useRouter();
   const [q, setQ] = useState("");
   const [recent, setRecent] = useState<RecentRun[]>([]);
+  const [reviewCount, setReviewCount] = useState(0);
+
+  // E5: the review queue's size, as a badge on Review.
+  useEffect(() => {
+    if (!devRoutes) return;
+    let alive = true;
+    const load = async () => {
+      const res = await fetch("/api/review/count", { cache: "no-store" }).catch(() => null);
+      if (alive && res?.ok) setReviewCount(((await res.json()) as { count: number }).count);
+    };
+    const first = setTimeout(() => void load(), 0);
+    const t = setInterval(() => void load(), 5000);
+    return () => {
+      alive = false;
+      clearTimeout(first);
+      clearInterval(t);
+    };
+  }, [devRoutes]);
 
   useEffect(() => {
     let alive = true;
@@ -74,6 +93,11 @@ export function Sidebar({ keys, geminiModel, devRoutes }: { keys: { deepgram: bo
               <Link href={n.href}>
                 <n.icon className="size-4 text-brand" />
                 {n.label}
+                {n.href === "/review" && reviewCount > 0 && (
+                  <span className="ml-auto rounded-full bg-brand px-1.5 text-[10.5px] font-semibold tabular-nums text-background" aria-label={`${reviewCount} orders to review`}>
+                    {reviewCount}
+                  </span>
+                )}
               </Link>
             </Button>
           );

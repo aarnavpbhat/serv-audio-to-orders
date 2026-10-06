@@ -1,7 +1,24 @@
 /** Server-side reads shaped for the UI. */
 import { readFileSync } from "node:fs";
 import { getConfig, servSettings } from "@serv/config";
-import { dataUsage, store, type DataUsage, type EvalReport, type FolderReport, type OrderEvent, type OrderPayload, type Segmentation, type Transcript, type AppliedEvent } from "@serv/pipeline";
+import {
+  Catalog,
+  dataUsage,
+  groundTruthFor,
+  scoreOrders,
+  store,
+  type AppliedEvent,
+  type DataUsage,
+  type EvalReport,
+  type FolderReport,
+  type GroundTruth,
+  type Order,
+  type OrderEvent,
+  type OrderPayload,
+  type Segmentation,
+  type Transcript,
+  type TruthRow,
+} from "@serv/pipeline";
 import { queuePosition } from "./jobs";
 
 export function db() {
@@ -85,6 +102,8 @@ export interface RunDetail {
   extractor: string | null;
   /** False for live lanes: their audio is in the archive per order, not one file. */
   has_audio: boolean;
+  /** Expected vs extracted, for runs whose answer is known (fixtures; E6). Null when nobody knows the answer. */
+  truth: TruthRow[] | null;
   options: Record<string, unknown> | null;
   transcript: Transcript | null;
   segmentation: Segmentation | null;
@@ -109,6 +128,7 @@ export function getRunDetail(id: string): RunDetail | null {
     transcriber: r.transcriber,
     extractor: r.extractor,
     has_audio: !!r.file_path,
+    truth: runTruth(r, segmentationOf(r.segmentation), latestVersions(store.ordersForRun(d, id)).map(({ latest }) => latest)),
     options: parse(r.options),
     transcript: parse(r.transcript),
     segmentation: parse(r.segmentation),
@@ -176,6 +196,8 @@ export interface ReviewOrder {
   payload: OrderPayload;
   run_id: string;
   created_at: number;
+  /** Audio to play: the order's archive (live) or its run's file (uploads). */
+  clip?: boolean;
 }
 
 /** Latest version of every order that still needs a person's review, newest first. */
@@ -187,10 +209,14 @@ export function ordersNeedingReview(limit = 100): ReviewOrder[] {
        ORDER BY o.created_at DESC LIMIT 2000`,
     )
     .all() as { payload: string; run_id: string; created_at: number }[];
-  return rows
-    .map((r) => ({ payload: JSON.parse(r.payload) as OrderPayload, run_id: r.run_id, created_at: r.created_at }))
-    .filter((r) => r.payload.review?.required)
-    .slice(0, limit);
+  const flagged = rows.map((r) => ({ payload: JSON.parse(r.payload) as OrderPayload, run_id: r.run_id, created_at: r.created_at })).filter((r) => r.payload.review?.required);
+  // E5, E6: only orders nobody knows the answer to; fixture runs are scored against their script instead.
+  const known = truthRuns([...new Set(flagged.map((r) => r.run_id))]);
+  const d = db();
+  return flagged
+    .filter((r) => !known.has(r.run_id))
+    .slice(0, limit)
+    .map((r) => ({ ...r, clip: !!r.payload.audio_ref.archive_uri || !!store.getRun(d, r.run_id)?.file_path }));
 }
 
 /** The held-out set's own report (scored apart from the main eval), if it has been run. */
@@ -200,4 +226,77 @@ export function readHeldoutReport(): FolderReport | null {
   } catch {
     return null;
   }
+}
+
+const segmentationOf = (s: string | null) => parse<Segmentation>(s);
+
+/** Ground truth per fixture file (scripts and timeline are read once). */
+const truthCache = new Map<string, GroundTruth | null>();
+function truthForFile(file: string | null | undefined): GroundTruth | null {
+  if (!file) return null;
+  if (!truthCache.has(file)) truthCache.set(file, groundTruthFor(getConfig().paths.fixturesDir, file));
+  return truthCache.get(file) ?? null;
+}
+
+/** E6: a run with a known answer (fixture audio) is scored automatically, never sent to a person. */
+export function hasGroundTruth(run: Pick<store.RunRow, "file_path"> | undefined): boolean {
+  return !!truthForFile(run?.file_path);
+}
+
+function runTruth(run: store.RunRow, segmentation: Segmentation | null, latest: store.OrderRow[]): TruthRow[] | null {
+  const truth = truthForFile(run.file_path);
+  if (!truth || !segmentation) return null;
+  const produced = latest.map((o) => {
+    const payload = JSON.parse(o.payload) as OrderPayload;
+    // Only the fields the comparison reads: the payload carries all of them but the segment.
+    return { payload, order: { ...payload, segment_id: o.segment_id } as unknown as Order };
+  });
+  return scoreOrders(Catalog.fromJson(menuJson()), truth, segmentation.segments, produced, { lane: true }).rows;
+}
+
+/** Runs with a known answer, by id (cached per request batch). */
+function truthRuns(runIds: string[]): Set<string> {
+  const d = db();
+  return new Set(runIds.filter((id) => hasGroundTruth(store.getRun(d, id))));
+}
+
+/** E5: the review queue's size (sidebar badge). */
+export function reviewQueueCount(): number {
+  return ordersNeedingReview(1000).length;
+}
+
+export interface OrderFilters {
+  status?: string;
+  review?: "yes" | "no";
+  store?: string;
+  lane?: string;
+  /** YYYY-MM-DD, local day the order started. */
+  date?: string;
+}
+
+export interface OrderListRow {
+  payload: OrderPayload;
+  run_id: string;
+  created_at: number;
+}
+
+/** Every order's latest version, newest first, filtered (the read-only Orders page). */
+export function listOrders(f: OrderFilters, limit = 300): OrderListRow[] {
+  const rows = db()
+    .prepare(
+      `SELECT o.payload, o.run_id, o.created_at FROM orders o
+       JOIN (SELECT order_id, MAX(version) AS v FROM orders GROUP BY order_id) m ON m.order_id = o.order_id AND m.v = o.version
+       ORDER BY o.created_at DESC LIMIT 5000`,
+    )
+    .all() as { payload: string; run_id: string; created_at: number }[];
+  const day = (iso: string) => {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  return rows
+    .map((r) => ({ payload: JSON.parse(r.payload) as OrderPayload, run_id: r.run_id, created_at: r.created_at }))
+    // Orders from before schema 2.0 (v1 sandbox runs) have a different shape; they are not listed.
+    .filter(({ payload: p }) => p.schema_version === "2.0")
+    .filter(({ payload: p }) => (!f.status || p.status === f.status) && (!f.review || p.review.required === (f.review === "yes")) && (!f.store || p.store_id === f.store) && (!f.lane || p.lane_id === f.lane) && (!f.date || day(p.times.started_at) === f.date))
+    .slice(0, limit);
 }

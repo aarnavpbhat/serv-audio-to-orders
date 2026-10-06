@@ -63,7 +63,8 @@ function ItemRow({ n, item, name }: { n: number; item: OrderItem; name: (id: str
   );
 }
 
-export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "final" | "live" | "waiting"; name: (id: string | null) => string }) {
+/** `known`: the run's answer is known (a fixture), so it is scored, never sent to review (E6). */
+export function OrderCard({ order, phase, name, known = false }: { order: PanelOrder; phase: "final" | "live" | "waiting"; name: (id: string | null) => string; known?: boolean }) {
   const flags = order.flags.filter((f) => f !== "placeholder_values");
   const spoken = order.totals.spoken_by_crew;
   const mismatch = spoken !== null && Math.abs(spoken - order.totals.computed) > 0.05;
@@ -78,7 +79,7 @@ export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "f
           </span>
         )}
         {phase === "final" && order.status && <Badge value={order.status} />}
-        {phase === "final" && order.review?.required && <Badge value="review" label={`Review: ${order.review.reasons.map((r) => r.replace(/_/g, " ")).join(", ")}`} />}
+        {phase === "final" && order.review?.required && !known && <Badge value="review" label={`Review: ${order.review.reasons.map((r) => r.replace(/_/g, " ")).join(", ")}`} />}
         {phase === "live" && (
           <span className="flex items-center gap-1.5 text-[11px] font-semibold text-brand">
             <Equalizer /> Building

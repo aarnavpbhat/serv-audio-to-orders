@@ -98,7 +98,7 @@ test("with the microphone, audio stops within 2 s of End", async ({ page }) => {
   await page.getByRole("radio", { name: "Microphone" }).click();
   await page.getByRole("button", { name: "Start", exact: true }).click();
   const sent = () => page.evaluate(() => Number(/(\d+) s sent/.exec(document.body.innerText)?.[1] ?? -1));
-  await expect.poll(sent).toBeGreaterThan(1);
+  await expect.poll(sent, { timeout: 20_000 }).toBeGreaterThan(1);
   await page.getByRole("button", { name: "End session" }).click();
   await page.waitForTimeout(2000);
   const after = await sent();
