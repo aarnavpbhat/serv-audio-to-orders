@@ -167,3 +167,24 @@ export function settings() {
 export function menuJson(): unknown {
   return JSON.parse(readFileSync(getConfig().paths.menu, "utf8"));
 }
+
+export interface ReviewOrder {
+  payload: OrderPayload;
+  run_id: string;
+  created_at: number;
+}
+
+/** Latest version of every order that still needs a person's review, newest first. */
+export function ordersNeedingReview(limit = 100): ReviewOrder[] {
+  const rows = db()
+    .prepare(
+      `SELECT o.payload, o.run_id, o.created_at FROM orders o
+       JOIN (SELECT order_id, MAX(version) AS v FROM orders GROUP BY order_id) m ON m.order_id = o.order_id AND m.v = o.version
+       ORDER BY o.created_at DESC LIMIT 2000`,
+    )
+    .all() as { payload: string; run_id: string; created_at: number }[];
+  return rows
+    .map((r) => ({ payload: JSON.parse(r.payload) as OrderPayload, run_id: r.run_id, created_at: r.created_at }))
+    .filter((r) => r.payload.review?.required)
+    .slice(0, limit);
+}

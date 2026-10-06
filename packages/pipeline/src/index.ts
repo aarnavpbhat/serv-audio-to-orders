@@ -20,3 +20,4 @@ export type { LaneUpdate, DraftLine } from "./lane/lane";
 export type { TrackerDecision } from "./lane/tracker";
 export { saveLiveFixture, SaveFixtureInput, ExpectedOrder, type SavedFixture } from "./sim/save-fixture";
 export { synthNoise } from "./fixtures/noise";
+export { resolveReview, ReviewResolution, ReviewConflictError } from "./review/resolve";

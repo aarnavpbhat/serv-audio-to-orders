@@ -16,8 +16,9 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 7. WebSocket endpoint and ingest auth (Part A) | v2-step/07-ws-endpoint | Done: PR #8 |
 | 7b. Long-term data store (Part B) | v2-step/07b-data-store | Done: PR #9 |
 | 8. Live UI | v2-step/08-live-ui | Done: PR #10 |
-| 9. Live simulator | v2-step/09-simulator | PR #11 |
-| 10. Review screen | v2-step/10-review-screen | Next |
+| 9. Live simulator | v2-step/09-simulator | Done: PR #11 |
+| 10. Review screen | v2-step/10-review-screen | PR #12 |
+| 11. Eval v2 | v2-step/11-eval | Next |
 
 ## Decisions not covered by the plan
 
@@ -61,9 +62,32 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **Saved fixtures come from the raw capture.** Save as fixture rebuilds the audio from what the endpoint received (pauses kept as silence), and copies the raw parts. So it needs the session stopped (the last part is stored at close) and the live service running with capture on. The expected order is written in the form: status plus items from the menu.
 - **Noise for the simulator** is the same synthetic engine, wind and radio mix the fixtures use (`fixtures/noise.ts`), served as a 20 s WAV by a dev route and looped under the mic.
 - **Dev-route guard fix.** Next.js sets `x-forwarded-for` to the socket address on every request, so the guard (which refused any forwarded request) made every dev route answer 404 in a running server. Unit tests had not caught this. The guard now accepts the header only when every hop is loopback.
+- **What resolving a review does.** A picked candidate becomes an item at full confidence, priced from the menu at the size heard (a combo gets its fixed and default slots; a slot the customer must choose stays open). "Not ordered" moves the line to `not_ordered` as `uncommitted`. Totals and the total and slot flags are re-checked; flags about the audio stay. Review is cleared, unless an unclear item was left open.
+- **Optimistic check on resolve.** The person resolves the version they saw. If a newer version exists (a reopen or a late event got there first), the save is refused with 409 and the page asks for a reload.
+- **Every resolution is also a label.** The reviewer's choices are stored as a label on the version they reviewed (verdict `incorrect`, with what they chose), so later evals can use them.
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 10. Review screen
+
+- `/review` is dev only, with Review in the sidebar when dev routes are on. It lists the latest version of every order that still needs review. Each card shows:
+  - what was said
+  - the order as sent
+  - a menu per unclear item: candidates with scores, the whole menu, or "not ordered"
+  - the outcome to confirm or change, a note, and the reviewer's name (remembered in this browser)
+- Saving calls `POST /api/orders/:id/review`, which `review/resolve.ts` handles:
+  - builds the next version (`order.updated`, `correction_reason: human_review`, `supersedes_version`) with `human_review` outcome evidence
+  - stores it and queues it, behind any earlier version still being delivered
+  - writes a label
+- Tests:
+  - pick a candidate: priced, review cleared, label written
+  - drop an item and change the status: sent as v2
+  - a stale version gives 409, an unknown id is refused, and an item left open keeps the review
+  - route status codes
+- Checked by eye against the sandbox database:
+  - the 04_correction run (Coke to Sprite with keyword extraction)
+  - the dropped-connection order from the simulator check
 
 ### 9. Live simulator
 
