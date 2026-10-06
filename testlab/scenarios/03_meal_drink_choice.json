@@ -1,0 +1,79 @@
+{
+  "id": "meal_drink_choice",
+  "number": 3,
+  "title": "Meal with a drink choice",
+  "checks": "A meal's drink slot is filled from the customer's answer.",
+  "minutes": 1,
+  "lines": [
+    {
+      "role": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?"
+    },
+    {
+      "role": "customer",
+      "text": "Can I get a number one meal?"
+    },
+    {
+      "role": "crew",
+      "text": "Sure, what drink would you like with that?"
+    },
+    {
+      "role": "customer",
+      "text": "A Dr Pepper, please."
+    },
+    {
+      "role": "crew",
+      "text": "A number one with a Dr Pepper. Anything else?"
+    },
+    {
+      "role": "customer",
+      "text": "No, thanks."
+    },
+    {
+      "role": "crew",
+      "text": "Please pull forward to the window."
+    }
+  ],
+  "actions": [
+    {
+      "at": "start",
+      "do": "car_arrived"
+    },
+    {
+      "at": "end",
+      "do": "car_left"
+    }
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "combo_1",
+            "quantity": 1,
+            "size": "medium",
+            "components": [
+              {
+                "slot": "entree",
+                "catalog_id": "big_sandbox"
+              },
+              {
+                "slot": "side",
+                "catalog_id": "fries"
+              },
+              {
+                "slot": "drink",
+                "catalog_id": "dr_pepper"
+              }
+            ]
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [],
+        "review": []
+      }
+    ]
+  }
+}

@@ -1,6 +1,8 @@
 /** Wires config, catalog, providers, store and webhook into one object the CLI and the web app share. */
 import path from "node:path";
 import { anyPlaceholders, getConfig, type SandboxConfig } from "@serv/config";
+import { LocalBlobStore } from "./data/blob-store";
+import { DataStore } from "./data/store";
 import { FuzzyExtractor } from "./extract/fuzzy-extractor";
 import { GeminiClient, GeminiExtractor, GeminiJudge } from "./extract/gemini";
 import { OracleExtractor } from "./extract/oracle";
@@ -10,6 +12,10 @@ import { loadCatalog } from "./menu/load";
 import { FuzzyMatcher } from "./menu/fuzzy";
 import type { BoundaryJudge } from "./segment/segment";
 import { openDb, type DB } from "./store/db";
+import { DeepgramStreamingTranscriber, sdkSocketFactory } from "./lane/deepgram-stream";
+import { FileOrLiveTranscriber } from "./lane/file-transcriber";
+import { ScriptStreamingTranscriber } from "./lane/script-transcriber";
+import type { StreamingTranscriber } from "./lane/types";
 import { DeepgramTranscriber } from "./transcribe/deepgram";
 import { ScriptTranscriber } from "./transcribe/script";
 import type { Transcriber } from "./transcribe/types";
@@ -21,8 +27,10 @@ export type ExtractorKind = "gemini" | "fuzzy" | "oracle";
 export interface EngineOptions {
   transcriber?: TranscriberKind;
   extractor?: ExtractorKind;
-  /** Disable the LLM boundary / role tie-breakers. */
+  /** Disable the LLM boundary / role tie-breakers. The oracle (ceiling) extractor implies this, so ceiling runs stay free. */
   noJudge?: boolean;
+  /** Stream file replays to Deepgram live instead of its prerecorded API (costs credit on every run; no cache). */
+  liveFiles?: boolean;
   log?: (msg: string) => void;
 }
 
@@ -32,10 +40,14 @@ export interface Engine {
   matcher: FuzzyMatcher;
   db: DB;
   transcriber: Transcriber;
+  /** Live path: one streaming connection per session (Deepgram live, or the free script transcriber). */
+  streaming: StreamingTranscriber;
   extractor: Extractor;
   judge: BoundaryJudge | null;
   gemini: GeminiClient | null;
   deliverer: Deliverer;
+  /** Long-term data store: blobs under DATA_DIR/blobs, catalog in SQLite. */
+  data: DataStore;
   placeholders: boolean;
   log: (msg: string) => void;
 }
@@ -62,15 +74,34 @@ export function createEngine(opts: EngineOptions = {}): Engine {
     ? new GeminiClient(cfg.geminiApiKey, cfg.geminiModel, cfg.geminiRpm, path.join(cfg.paths.cacheDir, "llm"), { cap: cfg.geminiDailyCap, file: path.join(cfg.paths.dataDir, "gemini-ledger.json") }, cfg.geminiThinking)
     : null;
   if (extractorKind === "gemini" && !gemini) throw new ConfigError("GEMINI_API_KEY is not set. Add it to .env, or use --extractor fuzzy");
-  const judge = gemini && !opts.noJudge ? new GeminiJudge(gemini) : null;
+  const judge = gemini && !opts.noJudge && extractorKind !== "oracle" ? new GeminiJudge(gemini) : null;
 
   const transcriberKind = opts.transcriber ?? defaultTranscriber(cfg);
   let transcriber: Transcriber;
+  let streaming: StreamingTranscriber;
   if (transcriberKind === "deepgram") {
     if (!cfg.deepgramApiKey) throw new ConfigError("DEEPGRAM_API_KEY is not set. Add it to .env, or use --transcriber script for fixture audio");
     transcriber = new DeepgramTranscriber(cfg.deepgramApiKey, judge);
+    const live = new DeepgramStreamingTranscriber(sdkSocketFactory(cfg.deepgramApiKey), {
+      keyterms: loadCatalog(cfg.paths.menu).keyterms(),
+      language: cfg.language,
+      idleCloseS: cfg.deepgramIdleCloseS,
+      log,
+    });
+    // Files: prerecorded API, cached (reruns are free). Live connections: streaming.
+    streaming = opts.liveFiles
+      ? live
+      : new FileOrLiveTranscriber(transcriber, live, {
+          channelMap: cfg.channelMap.value,
+          audioStartUtc: cfg.audioStartUtc.value,
+          keyterms: loadCatalog(cfg.paths.menu).keyterms(),
+          language: cfg.language,
+          cacheDir: cfg.paths.cacheDir,
+          lowConfWord: cfg.lowConfWord,
+        });
   } else {
     transcriber = new ScriptTranscriber();
+    streaming = new ScriptStreamingTranscriber();
   }
 
   const extractor: Extractor =
@@ -91,5 +122,10 @@ export function createEngine(opts: EngineOptions = {}): Engine {
     },
     { log },
   );
-  return { cfg, catalog, matcher, db, transcriber, extractor, judge, gemini, deliverer, placeholders: anyPlaceholders(cfg), log };
+  const data = new DataStore(db, new LocalBlobStore(path.join(cfg.paths.dataDir, "blobs")), {
+    pipelineVersion: cfg.pipelineVersion,
+    budgetBytes: cfg.data.budgetBytes,
+    retention: cfg.data.retention,
+  });
+  return { cfg, catalog, matcher, db, transcriber, streaming, extractor, judge, gemini, deliverer, data, placeholders: anyPlaceholders(cfg), log };
 }

@@ -16,6 +16,10 @@ export interface SegmentConfig {
 /** "Does a new customer start here?" asked with three utterances either side. */
 export interface BoundaryJudge {
   isNewCustomer(before: Utterance[], after: Utterance[]): Promise<boolean>;
+  /** Live: one quick try; null means no answer and the rules decide. */
+  newCustomerAnswer?(before: Utterance[], after: Utterance[], live: { timeoutMs: number }): Promise<boolean | null>;
+  /** Plan D7: crew or customer for each line of one conversation whose voices were not separated. */
+  labelLines?(lines: string[]): Promise<("crew" | "customer")[] | null>;
 }
 
 const EDGE_TOLERANCE_S = 2;
@@ -76,7 +80,8 @@ function majority(values: (string | undefined)[]): string | null {
   return [...counts.entries()].sort((x, y) => y[1] - x[1])[0]?.[0] ?? null;
 }
 
-function describe(
+/** Segment facts (greeting, closing, truncation, language, crosstalk) for a run of utterances. */
+export function describe(
   utts: Utterance[],
   index: number,
   isFirst: boolean,

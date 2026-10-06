@@ -6,6 +6,8 @@
  *   4. slow phase via the worker: 5m, 30m, 2h, 5h, 10h, 10h
  *   5. then dead letter (Resend in the UI, `pipeline resend <order_id>` in the CLI)
  * The body never changes between retries; webhook-id is constant so receivers can dedupe.
+ * Per order, version N waits until every earlier version is delivered, failed or dead,
+ * so a receiver never sees order.updated before the order.finalized it corrects.
  */
 import type { OrderPayload } from "../schemas";
 import { sleep as realSleep } from "../lib/retry";
@@ -54,6 +56,8 @@ export class Deliverer {
   private readonly rand: () => number;
   private readonly now: () => number;
   private readonly log: (msg: string) => void;
+  /** Deliveries started when an earlier version finished; settle() waits for them. */
+  private readonly released = new Set<Promise<unknown>>();
 
   constructor(
     private readonly db: DB,
@@ -70,17 +74,24 @@ export class Deliverer {
   enqueue(payload: OrderPayload, runId: string | null): string {
     const id = makeWebhookId(payload.order_id, payload.order_version);
     const now = this.now();
+    const status = this.earlierUnfinished(payload.order_id, payload.order_version) ? "waiting" : "pending";
     this.db
       .prepare(
         `INSERT OR IGNORE INTO outbox (webhook_id, order_id, order_version, run_id, url, body, status, attempt_count, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'pending', 0, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
       )
-      .run(id, payload.order_id, payload.order_version, runId, this.cfg.url, JSON.stringify(payload), now, now);
+      .run(id, payload.order_id, payload.order_version, runId, this.cfg.url, JSON.stringify(payload), status, now, now);
     return id;
   }
 
-  /** Send now and run the fast retry phase inline. Leaves the row delivered, failed, or scheduled for the slow phase. */
+  /** Send now and run the fast retry phase inline. Leaves the row delivered, failed, waiting, or scheduled for the slow phase. */
   async deliver(webhookId: string, phase: "fast" | "manual" = "fast"): Promise<OutboxRow> {
+    const current = getOutbox(this.db, webhookId);
+    if (current?.status === "pending" && this.earlierUnfinished(current.order_id, current.order_version)) {
+      this.setRow(webhookId, { status: "waiting", next_attempt_at: null });
+      this.log(`${webhookId}: waiting for an earlier version of ${current.order_id}`);
+      return getOutbox(this.db, webhookId) as OutboxRow;
+    }
     if (!this.claim(webhookId, ["pending"])) return getOutbox(this.db, webhookId) as OutboxRow;
     for (;;) {
       const row = getOutbox(this.db, webhookId) as OutboxRow;
@@ -138,6 +149,31 @@ export class Deliverer {
     return attemptsFor(this.db, webhookId);
   }
 
+  /** Wait for deliveries started by releasing a waiting version (tests and shutdown). */
+  async settle(): Promise<void> {
+    while (this.released.size) await Promise.allSettled([...this.released]);
+  }
+
+  /** An earlier version of the order is not yet delivered, failed or dead. */
+  private earlierUnfinished(orderId: string, version: number): boolean {
+    return !!this.db
+      .prepare(`SELECT 1 FROM outbox WHERE order_id = ? AND order_version < ? AND status NOT IN ('delivered', 'failed', 'dead') LIMIT 1`)
+      .get(orderId, version);
+  }
+
+  /** After a version finishes, send the next waiting one (also picked up by the worker if this process stops). */
+  private releaseNext(orderId: string): void {
+    const next = this.db
+      .prepare(`SELECT webhook_id, order_version FROM outbox WHERE order_id = ? AND status = 'waiting' ORDER BY order_version LIMIT 1`)
+      .get(orderId) as { webhook_id: string; order_version: number } | undefined;
+    if (!next || this.earlierUnfinished(orderId, next.order_version)) return;
+    this.setRow(next.webhook_id, { status: "pending", next_attempt_at: this.now() });
+    const p = this.deliver(next.webhook_id)
+      .catch((e: unknown) => this.log(`${next.webhook_id}: release failed: ${(e as Error).message}`))
+      .finally(() => this.released.delete(p));
+    this.released.add(p);
+  }
+
   // ------------------------------------------------------------ internals
 
   private claim(webhookId: string, from: OutboxRow["status"][]): boolean {
@@ -165,13 +201,15 @@ export class Deliverer {
       ...(status === "delivered" ? { delivered_at: this.now() } : {}),
     });
     this.log(`${webhookId}: ${status} after ${n} attempt(s) (${o.statusCode ?? o.error})`);
-    return getOutbox(this.db, webhookId) as OutboxRow;
+    const row = getOutbox(this.db, webhookId) as OutboxRow;
+    this.releaseNext(row.order_id);
+    return row;
   }
 
   private scheduleSlow(webhookId: string, n: number, o: AttemptOutcome): OutboxRow {
     const slowIndex = n - this.cfg.fastScheduleS.length - 1;
     const waitS = this.cfg.slowScheduleS[slowIndex];
-    if (waitS === undefined) return this.finish(webhookId, n, "dead", o);
+    if (waitS === undefined) return this.finish(webhookId, n, "dead", o); // finish() releases the next version
     const delayMs = Math.max(waitS, o.retryAfterS ?? 0) * 1000;
     this.setRow(webhookId, {
       status: "pending",

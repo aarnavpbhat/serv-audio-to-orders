@@ -10,13 +10,14 @@ import type { BoundaryJudge } from "../segment/segment";
 import type { RoleJudge } from "../transcribe/types";
 import { FuzzyExtractor } from "./fuzzy-extractor";
 import { LlmExtraction, extractionJsonSchema } from "./llm-schema";
-import { BOUNDARY_PROMPT, PROMPT_VERSION, ROLE_PROMPT, SYSTEM_PROMPT, buildUserPrompt, formatUtterances, repairPrompt } from "./prompt";
-import { addUsage, emptyUsage, type ExtractInput, type ExtractResult, type Extractor, type LlmUsage } from "./types";
+import { BOUNDARY_PROMPT, LINE_ROLES_PROMPT, PROMPT_VERSION, ROLE_PROMPT, SYSTEM_PROMPT, buildUserPrompt, formatUtterances, repairPrompt } from "./prompt";
+import { addUsage, emptyUsage, type ExtractInput, type ExtractResult, type Extractor, type LlmCallRecord, type LlmUsage } from "./types";
 import { validateEvents } from "./validate";
 
 interface CallResult {
   text: string;
   usage: LlmUsage;
+  record: LlmCallRecord;
 }
 
 /** Per-request deadline; a hung call is retried as transient, then the caller falls back. */
@@ -164,6 +165,14 @@ export class GeminiClient {
     writeLedger(this.budget.file, { ...l, tier: free ? "free" : l.tier, exhausted: l.exhausted || isDailyQuota(err), last_429: msg.slice(0, 4000) });
   }
 
+  /** Live calls never wait for a slot: true if one is free now (and takes it). */
+  private takeSlotNow(): boolean {
+    const now = Date.now();
+    if (this.nextSlot > now) return false;
+    this.nextSlot = now + 60_000 / Math.max(1, this.rpm);
+    return true;
+  }
+
   private async throttle(): Promise<void> {
     const gap = 60_000 / Math.max(1, this.rpm);
     const now = Date.now();
@@ -172,18 +181,41 @@ export class GeminiClient {
     if (wait > 0) await sleep(wait);
   }
 
-  async json(opts: { site: string; system: string; user: string; schema?: Record<string, unknown>; history?: { role: "user" | "model"; text: string }[] }): Promise<CallResult> {
+  async json(opts: {
+    site: string;
+    system: string;
+    user: string;
+    schema?: Record<string, unknown>;
+    history?: { role: "user" | "model"; text: string }[];
+    /**
+     * Live tie-breakers: one attempt, this deadline, and no waiting for a per-minute
+     * slot (a busy slot throws GeminiBudgetError so the caller's rules decide).
+     */
+    live?: { timeoutMs: number };
+  }): Promise<CallResult> {
     const contents = [...(opts.history ?? []), { role: "user" as const, text: opts.user }].map((m) => ({ role: m.role, parts: [{ text: m.text }] }));
     const key = createHash("sha256")
       .update(JSON.stringify({ m: this.model, t: this.thinking, s: opts.system, c: contents, j: opts.schema ?? null }))
       .digest("hex")
       .slice(0, 24);
+    const record = (text: string, usage: LlmUsage, cached: boolean): LlmCallRecord => ({
+      request_hash: key,
+      site: opts.site,
+      model: usage.model,
+      prompt_version: PROMPT_VERSION,
+      system_sha256: createHash("sha256").update(opts.system).digest("hex"),
+      contents: [...(opts.history ?? []), { role: "user" as const, text: opts.user }],
+      response_text: text,
+      usage,
+      cached,
+      at: new Date().toISOString(),
+    });
     const file = this.cacheDir ? path.join(this.cacheDir, `${key}.json`) : null;
     if (file && existsSync(file)) {
       const hit = JSON.parse(readFileSync(file, "utf8")) as { text: string; model: string };
       const usage = { ...emptyUsage(hit.model), cached_calls: 1 };
       Object.assign(this.totals, addUsage(this.totals, usage));
-      return { text: hit.text, usage };
+      return { text: hit.text, usage, record: record(hit.text, usage, true) };
     }
 
     const started = Date.now();
@@ -192,7 +224,9 @@ export class GeminiClient {
     try {
       res = await withRetry(
       async () => {
-        await this.throttle();
+        if (opts.live) {
+          if (!this.takeSlotNow()) throw new GeminiBudgetError("Gemini per-minute slot busy; the rules decide this one");
+        } else await this.throttle();
         this.spend();
         return this.ai.models.generateContent({
           model: this.model,
@@ -204,7 +238,7 @@ export class GeminiClient {
             responseMimeType: "application/json",
             ...(opts.schema ? { responseJsonSchema: opts.schema } : {}),
             safetySettings: SAFETY_SETTINGS,
-            abortSignal: AbortSignal.timeout(CALL_TIMEOUT_MS),
+            abortSignal: AbortSignal.timeout(opts.live?.timeoutMs ?? CALL_TIMEOUT_MS),
           },
         }).catch((err: unknown) => {
           this.noteQuota(err);
@@ -213,7 +247,7 @@ export class GeminiClient {
       },
       {
         // Google counts failed attempts (503 included) against the daily request quota, so retry sparingly.
-        maxRetries: 2,
+        maxRetries: opts.live ? 0 : 2,
         initialDelay: 5000,
         maxDelay: 60_000,
         retryOn: (err) => !(err instanceof GeminiBudgetError) && isRetryableError(err),
@@ -245,7 +279,7 @@ export class GeminiClient {
       mkdirSync(path.dirname(file), { recursive: true });
       writeFileSync(file, JSON.stringify({ text, model, prompt_version: PROMPT_VERSION }));
     }
-    return { text, usage };
+    return { text, usage, record: record(text, usage, false) };
   }
 }
 
@@ -279,6 +313,7 @@ export class GeminiExtractor implements Extractor {
     let repaired = false;
     let lastText = "";
     let lastError = "";
+    const calls: LlmCallRecord[] = [];
 
     for (let attempt = 0; attempt < 2; attempt++) {
       const history = attempt === 0 ? undefined : [{ role: "user" as const, text: user }, { role: "model" as const, text: lastText }];
@@ -290,9 +325,10 @@ export class GeminiExtractor implements Extractor {
         if (!(e instanceof GeminiBudgetError) && !(e instanceof GeminiSafetyBlockedError) && !(e instanceof Error && isRetryableError(e))) throw e;
         const why = e instanceof GeminiBudgetError || e instanceof GeminiSafetyBlockedError ? e.message : `Gemini unavailable after retries (${errorStatus(e) ?? "network"}).`;
         const fb = await this.fallback.extract(input);
-        return { ...fb, usage, warnings: [`${why} Used fuzzy fallback; everything is in needs_review.`], raw: lastText, repaired, fallback: true };
+        return { ...fb, usage, warnings: [`${why} Used fuzzy fallback; everything is in needs_review.`], raw: lastText, repaired, fallback: true, calls };
       }
       usage = addUsage(usage, call.usage);
+      calls.push(call.record);
       lastText = call.text;
       let parsed: z.infer<typeof LlmExtraction>;
       try {
@@ -309,17 +345,18 @@ export class GeminiExtractor implements Extractor {
         repaired = true;
         continue;
       }
-      return { events: v.events, usage: { ...usage, model: this.client.resolvedModel ?? usage.model }, warnings: v.warnings, raw: parsed, repaired, fallback: false, customer_language: parsed.customer_language };
+      return { events: v.events, usage: { ...usage, model: this.client.resolvedModel ?? usage.model }, warnings: v.warnings, raw: parsed, repaired, fallback: false, customer_language: parsed.customer_language, calls };
     }
 
     // Repair failed: fall back to keyword + fuzzy matching (everything lands in needs_review).
     const fb = await this.fallback.extract(input);
-    return { ...fb, usage, warnings: [`LLM output unusable after repair (${lastError.slice(0, 200)}); used fuzzy fallback`], raw: lastText, repaired, fallback: true };
+    return { ...fb, usage, warnings: [`LLM output unusable after repair (${lastError.slice(0, 200)}); used fuzzy fallback`], raw: lastText, repaired, fallback: true, calls };
   }
 }
 
 const BoundaryAnswer = z.object({ new_customer: z.boolean() });
 const RoleAnswer = z.object({ crew_speaker: z.string() });
+const LineRolesAnswer = z.object({ roles: z.array(z.enum(["crew", "customer"])) });
 
 export class GeminiJudge implements BoundaryJudge, RoleJudge {
   constructor(private readonly client: GeminiClient) {}
@@ -344,16 +381,47 @@ export class GeminiJudge implements BoundaryJudge, RoleJudge {
     }
   }
 
-  async isNewCustomer(before: Utterance[], after: Utterance[]): Promise<boolean> {
+  async isNewCustomer(before: Utterance[], after: Utterance[], live?: { timeoutMs: number }): Promise<boolean> {
+    return (await this.newCustomerAnswer(before, after, live)) ?? false;
+  }
+
+  /**
+   * Live tie-breaker: one attempt within the deadline. Null when there is no answer
+   * (timeout, busy slot, budget, unusable output), so the tracker's rules decide.
+   */
+  async newCustomerAnswer(before: Utterance[], after: Utterance[], live?: { timeoutMs: number }): Promise<boolean | null> {
     const user = `${formatUtterances(before)}\n----- does a new customer start here? -----\n${formatUtterances(after)}`;
-    const res = await this.ask({
-      site: "segment_boundary",
+    let res: CallResult | null;
+    try {
+      res = await this.ask({
+        site: live ? "segment_boundary_live" : "segment_boundary",
+        ...(live ? { live } : {}),
       system: BOUNDARY_PROMPT,
       user,
-      schema: { type: "object", properties: { new_customer: { type: "boolean" } }, required: ["new_customer"] },
+        schema: { type: "object", properties: { new_customer: { type: "boolean" } }, required: ["new_customer"] },
+      });
+    } catch (e) {
+      if (!live) throw e;
+      logLine("WARNING", "judge_no_answer", { event: "judge_no_answer", site: "segment_boundary_live", detail: (e as Error).message.slice(0, 200) });
+      return null;
+    }
+    if (!res) return null;
+    return this.parse("segment_boundary", res.text, BoundaryAnswer)?.new_customer ?? null;
+  }
+
+  /** Plan D7: one role per line when diarization collapsed. Null when there is no usable answer. */
+  async labelLines(lines: string[]): Promise<("crew" | "customer")[] | null> {
+    if (!lines.length) return [];
+    const user = lines.map((l, i) => `${i + 1}. ${l}`).join("\n");
+    const res = await this.ask({
+      site: "line_roles",
+      system: LINE_ROLES_PROMPT,
+      user,
+      schema: { type: "object", properties: { roles: { type: "array", items: { type: "string", enum: ["crew", "customer"] } } }, required: ["roles"] },
     });
-    if (!res) return false;
-    return this.parse("segment_boundary", res.text, BoundaryAnswer)?.new_customer ?? false;
+    if (!res) return null;
+    const roles = this.parse("line_roles", res.text, LineRolesAnswer)?.roles ?? null;
+    return roles && roles.length === lines.length ? roles : null;
   }
 
   async pickCrew(samples: { speaker: string; lines: string[] }[]): Promise<string | null> {

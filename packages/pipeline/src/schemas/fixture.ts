@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { OrderEvent } from "./events";
 import { Size } from "./menu";
-import { Flag, NotOrderedReason, OrderStatus } from "./order";
+import { Flag, NotOrderedReason, OrderStatus, ReviewReason } from "./order";
 
 export const NoiseLevel = z.enum(["clean", "moderate", "heavy"]);
 export type NoiseLevel = z.infer<typeof NoiseLevel>;
@@ -32,7 +32,14 @@ export const ExpectedOrder = z.object({
   not_ordered: z.array(z.object({ catalog_id: z.string().nullable(), reason: NotOrderedReason })).default([]),
   /** Flags that must be present (placeholder_values is ignored by the eval). */
   flags: z.array(Flag).default([]),
+  /** Status when no vehicle events are available (audio only). */
   status: OrderStatus,
+  /** Status when the replay also sends the fixture's vehicle events, if different. */
+  status_with_vehicle_events: OrderStatus.optional(),
+  /** Order version expected through the live path (2 when a late addition reopens the order). */
+  lane_version: z.number().int().positive().optional(),
+  /** Exact set of review reasons expected. */
+  review: z.array(ReviewReason).default([]),
   /** Orders with the same non-null label must share a group_id. */
   group: z.string().nullable().default(null),
   customer_declined_combo: z.boolean().optional(),
@@ -45,6 +52,8 @@ export const FixtureScript = z.object({
   /** Edge case checklist rows this script covers. */
   covers: z.array(z.number().int()),
   language: z.string().default("en"),
+  /** Behaviour only the live path has (a reopen). Kept for the segmentation unit tests, which skip it. */
+  live_only: z.boolean().default(false),
   render: z
     .object({
       noise: NoiseLevel.default("clean"),
@@ -88,5 +97,9 @@ export const FixtureTimeline = z.object({
   ),
   /** Expected order spans in file time, in order. */
   orders: z.array(z.object({ fixture_id: z.string(), order_index: z.number().int(), start_s: z.number(), end_s: z.number() })),
+  /** When the recording started, so replays stamp original times, never today's. */
+  recording_start_utc: z.string().default("2026-10-03T18:40:00.000Z"),
+  /** Synthetic car arrivals and departures per conversation, for replays with vehicle events on. */
+  vehicle_events: z.array(z.object({ type: z.enum(["vehicle_arrived", "vehicle_departed"]), at_s: z.number() })).default([]),
 });
 export type FixtureTimeline = z.infer<typeof FixtureTimeline>;

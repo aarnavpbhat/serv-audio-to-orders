@@ -18,10 +18,12 @@ export const POST = wrapAsync(async (req: Request) => {
 
 export const GET = wrapAsync(async () => {
   const d = db();
-  return Response.json({ settings: store.getMockSettings(d), inbox: store.listMockInbox(d, 200) });
+  return Response.json({ settings: store.getMockSettings(d), inbox: store.listMockInbox(d, 200), orders: store.listMockOrders(d, 200) });
 });
 
 export const DELETE = wrapAsync(async () => {
-  db().prepare("DELETE FROM mock_inbox").run();
+  const d = db();
+  d.prepare("DELETE FROM mock_inbox").run();
+  d.prepare("DELETE FROM mock_orders").run();
   return Response.json({ cleared: true });
 });

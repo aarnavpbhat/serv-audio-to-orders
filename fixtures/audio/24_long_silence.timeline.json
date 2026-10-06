@@ -1,0 +1,60 @@
+{
+  "fixture_ids": [
+    "24_long_silence"
+  ],
+  "file": "24_long_silence",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 75.86,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "24_long_silence",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "24_long_silence",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Hi, can I get a six piece nuggets and a medium Coke?",
+      "start_s": 5.502,
+      "end_s": 9.293
+    },
+    {
+      "id": "u3",
+      "fixture_id": "24_long_silence",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Six piece nuggets and a medium Coke. Anything else?",
+      "start_s": 9.893,
+      "end_s": 13.86
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "24_long_silence",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 13.86
+    }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 14.86
+    }
+  ]
+}

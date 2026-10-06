@@ -3,7 +3,7 @@ import { replay } from "../build/replay";
 import { compareOrder } from "../eval/compare";
 import { postprocess } from "../postprocess/postprocess";
 import { ExpectedOrder } from "../schemas";
-import { catalog, events, matcher, ppOptions, seg } from "../test-helpers";
+import { catalog, closingSignals, events, matcher, ppOptions, seg } from "../test-helpers";
 
 const build = (list: Parameters<typeof events>[0]) => replay(events(list), catalog);
 const order = (list: Parameters<typeof events>[0], ctx = seg()) => postprocess(build(list), ctx, ppOptions())[0]!;
@@ -144,7 +144,8 @@ describe("replay", () => {
     const o = order([{ event_id: "e1", type: "ADD", catalog_id: "fluffy_thing", raw_text: "sandy fluffy" }]);
     expect(o.items).toEqual([]);
     expect(o.needs_review[0]?.candidates[0]?.catalog_id).toBe("fluffle");
-    expect(o.status).toBe("needs_review");
+    expect(o.status).toBe("completed");
+    expect(o.review).toEqual({ required: true, reasons: ["unclear_items"] });
   });
 
   it("readback with a different quantity is flagged", () => {
@@ -187,12 +188,13 @@ describe("post-processing", () => {
     expect(o.flags).not.toContain("missing_required_slot");
   });
 
-  it("status precedence: cancelled > incomplete > abandoned > needs_review > completed", () => {
+  it("status comes from evidence; review is separate and can sit on any status", () => {
     const base = [{ event_id: "e1", type: "ADD" as const, catalog_id: "fries", recognition_confidence: 0.5 }];
-    expect(order(base, seg({ truncated_end: true, has_closing: false })).status).toBe("incomplete");
-    expect(order(base, seg({ has_closing: false })).status).toBe("abandoned");
-    expect(order(base).status).toBe("needs_review");
-    expect(order([...base, { event_id: "e2", type: "CANCEL_ORDER" }], seg({ has_closing: false })).status).toBe("cancelled");
+    const noCues = seg({ has_closing: false, signals: { ...closingSignals(), utterances: [] } });
+    expect(order(base, noCues).status).toBe("undetermined");
+    expect(order(base, noCues).review.reasons).toEqual(["unclear_items"]);
+    expect(order(base).status).toBe("completed");
+    expect(order([...base, { event_id: "e2", type: "CANCEL_ORDER" }], noCues).status).toBe("cancelled");
   });
 
   it("thresholds route lines to items, needs_review or not_ordered", () => {

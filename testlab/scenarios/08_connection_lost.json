@@ -1,0 +1,53 @@
+{
+  "id": "connection_lost",
+  "number": 8,
+  "title": "Connection lost",
+  "checks": "The connection drops for good mid-order: after the 3 minute grace period the order is sent as undetermined, flagged stream_interrupted.",
+  "minutes": 4,
+  "lines": [
+    {
+      "role": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?"
+    },
+    {
+      "role": "customer",
+      "text": "Can I get a bacon smash burger?"
+    },
+    {
+      "role": "crew",
+      "text": "One bacon smash. Anything else?"
+    }
+  ],
+  "actions": [
+    {
+      "at": "start",
+      "do": "car_arrived"
+    },
+    {
+      "at": "end",
+      "do": "drop",
+      "seconds": null
+    }
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "undetermined",
+        "items": [
+          {
+            "catalog_id": "bacon_smash",
+            "quantity": 1
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [
+          "stream_interrupted"
+        ],
+        "review": [
+          "stream_gap"
+        ]
+      }
+    ]
+  }
+}

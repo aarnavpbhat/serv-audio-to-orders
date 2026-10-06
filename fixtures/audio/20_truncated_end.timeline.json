@@ -35,5 +35,12 @@
       "start_s": 1,
       "end_s": 8.855
     }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    }
   ]
 }

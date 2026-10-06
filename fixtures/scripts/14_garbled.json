@@ -72,7 +72,7 @@
   "expected": {
     "orders": [
       {
-        "status": "needs_review",
+        "status": "completed",
         "items": [
           {
             "catalog_id": "cheeseburger",
@@ -90,10 +90,11 @@
             ]
           }
         ],
-        "flags": [
-          "needs_review_present"
-        ],
-        "group": null
+        "flags": [],
+        "group": null,
+        "review": [
+          "unclear_items"
+        ]
       }
     ]
   }

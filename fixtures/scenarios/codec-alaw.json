@@ -1,0 +1,1 @@
+{ "description": "Wire codec alaw, 100 ms frames (row 36; decoded by the WebSocket endpoint).", "codec": "alaw", "frame_ms": 100 }

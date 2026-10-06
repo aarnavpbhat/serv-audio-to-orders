@@ -7,12 +7,19 @@ import { ingest } from "../ingest/ingest";
 import { segmentTranscript, type SegmentConfig } from "../segment/segment";
 import { ScriptTranscriber, loadTimeline } from "../transcribe/script";
 import type { TranscribeOptions } from "../transcribe/types";
+import { loadFixtureScripts } from "../fixtures/load";
 import { repoRoot } from "../test-helpers";
 
 const cfg = getConfig();
 const segCfg: SegmentConfig = { ...cfg.segment, lowAudioQualityMeanConf: cfg.lowAudioQualityMeanConf };
 const audioDir = path.join(repoRoot, "fixtures/audio");
-const files = readdirSync(audioDir).filter((f) => f.endsWith(".mono.clean.mp3") || f.endsWith(".mono.moderate.mp3") || f.endsWith(".mono.heavy.mp3"));
+// A late addition after the close is one car to the live tracker (it reopens the order), but
+// v1's whole-file rules see two conversations; recordings with a live-only fixture are covered
+// by the tracker tests instead.
+const liveOnly = new Set(loadFixtureScripts(path.join(repoRoot, "fixtures/scripts")).filter((s) => s.live_only).map((s) => s.id));
+const files = readdirSync(audioDir).filter(
+  (f) => /\.mono\.(clean|moderate|heavy)\.mp3$/.test(f) && !(loadTimeline(path.join(audioDir, f))?.fixture_ids ?? []).some((id) => liveOnly.has(id)),
+);
 const opts: TranscribeOptions = { channelMap: null, keyterms: [], language: "en", cacheDir: "", lowConfWord: 0.6 };
 
 async function segmentsFor(file: string) {

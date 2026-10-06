@@ -7,6 +7,8 @@
   "scripts": {
     "pipeline": "pnpm --silent --filter @serv/pipeline cli",
     "eval": "pnpm --silent --filter @serv/pipeline cli eval",
+    "feed": "pnpm --silent --filter @serv/pipeline cli feed",
+    "data": "pnpm --silent --filter @serv/pipeline cli data",
     "fixtures:build": "pnpm --silent --filter @serv/pipeline fixtures:build",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",

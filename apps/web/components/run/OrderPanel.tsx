@@ -1,7 +1,7 @@
 "use client";
 
 import type { AppliedEvent } from "@serv/pipeline/build/replay";
-import type { ComboOpportunity, NeedsReviewItem, NotOrderedItem, OrderEvent, OrderItem } from "@serv/pipeline/schemas/index";
+import type { ComboOpportunity, NeedsReviewItem, NotOrderedItem, OrderEvent, OrderItem, OutcomeEvidence, Review } from "@serv/pipeline/schemas/index";
 import { ChevronRightIcon } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/Collapsible";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,10 @@ import { JsonView } from "../JsonView";
 export interface PanelOrder {
   order_id: string;
   status: string | null;
+  review: Review | null;
+  outcome_evidence: OutcomeEvidence[];
+  order_version?: number;
+  correction_reason?: string | null;
   group_id: string | null;
   items: OrderItem[];
   needs_review: NeedsReviewItem[];
@@ -59,7 +63,8 @@ function ItemRow({ n, item, name }: { n: number; item: OrderItem; name: (id: str
   );
 }
 
-export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "final" | "live" | "waiting"; name: (id: string | null) => string }) {
+/** `known`: the run's answer is known (a fixture), so it is scored, never sent to review (E6). */
+export function OrderCard({ order, phase, name, known = false }: { order: PanelOrder; phase: "final" | "live" | "waiting"; name: (id: string | null) => string; known?: boolean }) {
   const flags = order.flags.filter((f) => f !== "placeholder_values");
   const spoken = order.totals.spoken_by_crew;
   const mismatch = spoken !== null && Math.abs(spoken - order.totals.computed) > 0.05;
@@ -67,7 +72,14 @@ export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "f
     <div className={phase === "waiting" ? "opacity-45" : ""}>
       <div className="flex flex-wrap items-center gap-2 px-2 pb-1.5">
         <span className="font-mono text-[11px] text-muted-foreground">{order.order_id}</span>
+        {(order.order_version ?? 1) > 1 && (
+          <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]" title="Corrections keep the order_id and raise the version">
+            v{order.order_version}
+            {order.correction_reason ? ` · ${order.correction_reason.replace(/_/g, " ")}` : ""}
+          </span>
+        )}
         {phase === "final" && order.status && <Badge value={order.status} />}
+        {phase === "final" && order.review?.required && !known && <Badge value="review" label={`Review: ${order.review.reasons.map((r) => r.replace(/_/g, " ")).join(", ")}`} />}
         {phase === "live" && (
           <span className="flex items-center gap-1.5 text-[11px] font-semibold text-brand">
             <Equalizer /> Building
@@ -127,11 +139,28 @@ export function OrderCard({ order, phase, name }: { order: PanelOrder; phase: "f
         </div>
       ))}
 
+      {phase === "final" && (order.outcome_evidence ?? []).length > 0 && <Evidence list={order.outcome_evidence} />}
+
       <div className="mt-1 flex items-center justify-end gap-3 border-t border-line px-2 pt-2 text-[12px]">
         <span className="text-muted-foreground">confidence {pct(order.overall_confidence)}</span>
         {spoken !== null && <span className={mismatch ? "font-medium text-rose-600 dark:text-rose-400" : "text-muted-foreground"}>crew said {money(spoken)}</span>}
         <span className="text-[14px] font-semibold tabular-nums">{money(order.totals.computed)}</span>
       </div>
+    </div>
+  );
+}
+
+/** Why the status is what it is; context-only entries never decided it. */
+function Evidence({ list }: { list: OutcomeEvidence[] }) {
+  return (
+    <div className="mx-2 mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11.5px] text-muted-foreground">
+      <span className="font-medium text-foreground">Outcome evidence:</span>
+      {list.map((e, k) => (
+        <span key={k} className={e.context_only ? "opacity-60" : undefined}>
+          {e.type === "spoken_cue" ? `"${e.cue}" (${e.kind?.replace(/_/g, " ")})` : e.type === "silence" ? `silence ${e.duration_s}s` : (e.event ?? e.type).replace(/_/g, " ")}
+          {e.context_only ? " · context only" : ""}
+        </span>
+      ))}
     </div>
   );
 }

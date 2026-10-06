@@ -2,18 +2,8 @@
  * Generated "album art" for a fixture or run: a deterministic two-tone gradient
  * with a waveform glyph, so the same file always gets the same cover.
  */
-const PALETTES: [string, string][] = [
-  ["#ff5f6d", "#ffc371"],
-  ["#5e5ce6", "#bf5af2"],
-  ["#0a84ff", "#64d2ff"],
-  ["#30d158", "#0a9b8a"],
-  ["#ff375f", "#bf5af2"],
-  ["#ff9f0a", "#ff375f"],
-  ["#1d976c", "#93f9b9"],
-  ["#2c3e50", "#4ca1af"],
-  ["#c33764", "#1d2671"],
-  ["#f7971e", "#ffd200"],
-];
+/** Two-tone gradients from Serv's palette (globals.css --art-*), so covers follow the brand and the theme. */
+const PALETTES: [string, string][] = Array.from({ length: 6 }, (_, i) => [`var(--art-${i}a)`, `var(--art-${i}b)`]);
 
 export function hashOf(s: string): number {
   let h = 2166136261;

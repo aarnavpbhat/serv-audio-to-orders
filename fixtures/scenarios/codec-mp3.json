@@ -1,0 +1,1 @@
+{ "description": "Wire codec mp3, 100 ms frames (row 36; decoded by the WebSocket endpoint).", "codec": "mp3", "frame_ms": 100 }

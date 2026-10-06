@@ -27,7 +27,8 @@ export interface SandboxConfig {
     examplesDir: string;
     evalDir: string;
   };
-  locationId: Setting<string>;
+  /** Default store for replays; live sessions carry their own store_id. */
+  storeId: Setting<string>;
   laneId: Setting<string>;
   webhookUrl: Setting<string>;
   webhookSecret: Setting<string>;
@@ -46,11 +47,47 @@ export interface SandboxConfig {
   /** Gemini 3 thinking level. Low keeps output tokens (and free-tier usage) small. */
   geminiThinking: "minimal" | "low" | "medium" | "high";
   sttModel: string;
+  /** The WebSocket endpoint HME connects to (PLACEHOLDER path and format). */
+  ingest: {
+    host: string;
+    port: number;
+    /** Accept ?token= as well as the Authorization header (off by default: query strings end up in logs). */
+    allowQueryToken: boolean;
+    /** Listen on a non-local address without TLS (trusted networks only). */
+    allowInsecure: boolean;
+    tlsCert: string | null;
+    tlsKey: string | null;
+    /** URL clients use to reach the endpoint (the simulator, replays over ws). */
+    publicUrl: string;
+  };
+  /** Long-term data store (raw capture, audio, ASR and LLM responses, events, labels). */
+  data: {
+    /** DATA_DISK_BUDGET_GB in bytes: warn at 80%, pause raw capture and audio archiving at 95%. */
+    budgetBytes: number;
+    /** keep_all: nothing is deleted on a schedule (pnpm data prune and delete are manual). */
+    retention: "keep_all";
+  };
+  /** Dev-only routes (simulator, mock receiver, review screen, ingest tickets); never in production. */
+  enableDevRoutes: boolean;
+  /** Close an idle Deepgram live connection after this many seconds of pause (reopened on resume). */
+  deepgramIdleCloseS: number;
   lowConfWord: number;
   lowAudioQualityMeanConf: number;
   /** Below this speech-to-noise-floor ratio (dB) a conversation is flagged low_audio_quality. */
   lowAudioSnrDb: number;
   totalTolerance: number;
+  /** Plan D13: a quantity above maxQuantity on one line, or a total above maxTotal, sends the order to review. */
+  reviewCap: { maxQuantity: number; maxTotal: number };
+  /** Live conversation tracker timers (seconds). Shorter settle = faster orders but more reopens. */
+  tracker: {
+    closeSettleS: number;
+    idleTimeoutS: number;
+    reconnectGraceS: number;
+    reopenWindowS: number;
+    maxConversationS: number;
+    /** Gray-zone "is this a new car?" question: one try, this deadline, then the rules decide. */
+    judgeTimeoutMs: number;
+  };
   segment: {
     gapS: number;
     maxSegmentS: number;
@@ -121,6 +158,11 @@ export function parseChannelMap(raw: string | null): Record<number, "crew" | "cu
 }
 
 /** Dev secret is generated once and stored in .data so the sender and the mock receiver agree. */
+function retentionPolicy(v: string | null): "keep_all" {
+  if (v === null || v === "keep_all") return "keep_all";
+  throw new Error(`RETENTION_POLICY=${v} is not supported; the sandbox only has keep_all`);
+}
+
 function devWebhookSecret(dataDir: string): string {
   const file = path.join(dataDir, "dev-webhook-secret");
   if (existsSync(file)) return readFileSync(file, "utf8").trim();
@@ -155,7 +197,8 @@ export function getConfig(): SandboxConfig {
   const menuPath = path.join(repoRoot, "menu", "menu.json");
   const menuVersion = (JSON.parse(readFileSync(menuPath, "utf8")) as { menu_version: string }).menu_version;
 
-  const location = env("LOCATION_ID");
+  // STORE_ID replaces LOCATION_ID (schema v2.0); the old name still works.
+  const location = env("STORE_ID") ?? env("LOCATION_ID");
   const lane = env("LANE_ID");
   const url = env("WEBHOOK_URL");
   const secret = env("WEBHOOK_SECRET");
@@ -176,17 +219,17 @@ export function getConfig(): SandboxConfig {
       examplesDir: path.join(repoRoot, "examples"),
       evalDir: path.join(repoRoot, "eval"),
     },
-    locationId: {
-      key: "LOCATION_ID",
+    storeId: {
+      key: "STORE_ID",
       value: location ?? "store_demo_001",
       placeholder: location === null || location === "store_demo_001",
-      note: "Replace when Serv shares site IDs",
+      note: "Default for replays only; live sessions get the store from their ingest token. Replace when Serv shares site IDs",
     },
     laneId: {
       key: "LANE_ID",
       value: lane ?? "lane_1",
       placeholder: lane === null || lane === "lane_1",
-      note: "Replace when Serv shares lane IDs",
+      note: "Default for replays only; live sessions name their lane. Replace when Serv shares lane IDs",
     },
     webhookUrl: {
       key: "WEBHOOK_URL",
@@ -238,10 +281,34 @@ export function getConfig(): SandboxConfig {
     geminiDailyCap: num("GEMINI_DAILY_CAP", 200),
     geminiThinking: thinking(env("GEMINI_THINKING")),
     sttModel: "nova-3",
+    deepgramIdleCloseS: num("DEEPGRAM_IDLE_CLOSE_S", 30),
+    ingest: {
+      host: env("INGEST_HOST") ?? "127.0.0.1",
+      port: num("INGEST_PORT", 8787),
+      allowQueryToken: env("INGEST_AUTH_ALLOW_QUERY") === "true",
+      allowInsecure: env("ALLOW_INSECURE_WS") === "true",
+      tlsCert: env("INGEST_TLS_CERT"),
+      tlsKey: env("INGEST_TLS_KEY"),
+      publicUrl: env("INGEST_URL") ?? `ws://127.0.0.1:${num("INGEST_PORT", 8787)}`,
+    },
+    data: {
+      budgetBytes: num("DATA_DISK_BUDGET_GB", 50) * 1024 ** 3,
+      retention: retentionPolicy(env("RETENTION_POLICY")),
+    },
+    enableDevRoutes: env("ENABLE_DEV_ROUTES") === "true",
     lowConfWord: 0.6,
     lowAudioQualityMeanConf: num("LOW_AUDIO_QUALITY_CONF", 0.8),
     lowAudioSnrDb: num("LOW_AUDIO_SNR_DB", 15),
     totalTolerance: 0.05,
+    reviewCap: { maxQuantity: num("REVIEW_MAX_QUANTITY", 10), maxTotal: num("REVIEW_MAX_TOTAL", 150) },
+    tracker: {
+      closeSettleS: num("CLOSE_SETTLE_S", 3),
+      idleTimeoutS: num("IDLE_TIMEOUT_S", 45),
+      reconnectGraceS: num("RECONNECT_GRACE_S", 180),
+      reopenWindowS: num("REOPEN_WINDOW_S", 20),
+      maxConversationS: 360,
+      judgeTimeoutMs: num("JUDGE_TIMEOUT_MS", 3000),
+    },
     segment: {
       gapS: num("SEGMENT_GAP_S", 8),
       maxSegmentS: 360,
@@ -269,7 +336,7 @@ export type PlaceholderSetting = Pick<Setting<unknown>, "key" | "placeholder" | 
 /** All Serv-dependent settings, for the UI badge list and the placeholder_values flag. */
 export function servSettings(cfg: SandboxConfig = getConfig()): PlaceholderSetting[] {
   const list: Setting<unknown>[] = [
-    cfg.locationId,
+    cfg.storeId,
     cfg.laneId,
     cfg.webhookUrl,
     cfg.webhookSecret,

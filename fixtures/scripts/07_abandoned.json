@@ -64,7 +64,7 @@
   "expected": {
     "orders": [
       {
-        "status": "abandoned",
+        "status": "undetermined",
         "items": [
           {
             "catalog_id": "nuggets_10",
@@ -82,7 +82,9 @@
         "not_ordered": [],
         "needs_review": [],
         "flags": [],
-        "group": null
+        "group": null,
+        "status_with_vehicle_events": "abandoned",
+        "review": []
       }
     ]
   },

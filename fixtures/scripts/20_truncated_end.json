@@ -41,7 +41,7 @@
   "expected": {
     "orders": [
       {
-        "status": "incomplete",
+        "status": "undetermined",
         "items": [
           {
             "catalog_id": "combo_1",
@@ -68,7 +68,8 @@
         "flags": [
           "truncated_end"
         ],
-        "group": null
+        "group": null,
+        "review": []
       }
     ]
   },

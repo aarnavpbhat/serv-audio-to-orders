@@ -53,4 +53,6 @@ export function repairPrompt(previous: string, error: string): string {
 
 export const BOUNDARY_PROMPT = `You read a drive-thru recording transcript. Decide whether a NEW customer (a different car) starts speaking at the marked point. Answer with JSON {"new_customer": true|false}.`;
 
+export const LINE_ROLES_PROMPT = `You read one drive-thru conversation where every line was heard as one voice. For each numbered line, decide who said it: the crew member (greets, takes the order, repeats it back, reads totals, asks "anything else") or the customer (orders, answers, says "that's it"). Return JSON {"roles": ["crew"|"customer", ...]} with exactly one entry per line, in order.`;
+
 export const ROLE_PROMPT = `You read lines from a drive-thru recording, grouped by speaker. The crew member greets, takes the order, repeats it back and reads totals. Customers order food. Return JSON {"crew_speaker": "<speaker label>"} naming the crew member.`;

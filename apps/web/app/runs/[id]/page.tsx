@@ -17,7 +17,7 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
       menu={menuJson()}
       thresholds={cfg.thresholds.value}
       site={{
-        location: { value: cfg.locationId.value, placeholder: cfg.locationId.placeholder, note: cfg.locationId.note },
+        store: { value: cfg.storeId.value, placeholder: cfg.storeId.placeholder, note: cfg.storeId.note },
         lane: { value: cfg.laneId.value, placeholder: cfg.laneId.placeholder, note: cfg.laneId.note },
         webhook: { value: cfg.webhookUrl.value, placeholder: cfg.webhookUrl.placeholder, note: cfg.webhookUrl.note },
       }}

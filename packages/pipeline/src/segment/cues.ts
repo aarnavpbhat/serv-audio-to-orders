@@ -50,3 +50,26 @@ export const matchesAny = (text: string, cues: RegExp[]): boolean => cues.some((
 export function cueHits(text: string, cues: RegExp[]): number {
   return cues.reduce((n, r) => n + (r.test(text) ? 1 : 0), 0);
 }
+
+/** The customer saying they are done ("that's it"). Counts as a close only when the crew answers. */
+export const CUSTOMER_DONE_CUES: RegExp[] = [
+  /\bthat'?s (it|all|everything)\b/i,
+  /\bthat('?ll| will) be (it|all)\b/i,
+  /\bnothing else\b/i,
+];
+
+/** The crew saying the car left before finishing: evidence of abandonment. */
+export const DEPARTURE_SAID_CUES: RegExp[] = [
+  /\b(they|he|she|the car|that car)( just)? (drove|pulled|took) (off|away)\b/i,
+  /\b(they|he|she)( just)? left\b/i,
+  /\bdrove off\b/i,
+];
+
+/** First regex match in the text, for evidence records. */
+export function firstMatch(text: string, cues: RegExp[]): string | null {
+  for (const r of cues) {
+    const m = r.exec(text);
+    if (m) return m[0];
+  }
+  return null;
+}

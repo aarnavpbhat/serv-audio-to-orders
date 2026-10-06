@@ -1,0 +1,72 @@
+{
+  "id": "connection_blip",
+  "number": 7,
+  "title": "Connection blip",
+  "checks": "The connection drops for 8 seconds and comes back: one order, flagged stream_gap.",
+  "minutes": 1.5,
+  "lines": [
+    {
+      "role": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?"
+    },
+    {
+      "role": "customer",
+      "text": "Can I get a crispy chicken sandwich?"
+    },
+    {
+      "role": "crew",
+      "text": "One crispy chicken sandwich. Anything else?"
+    },
+    {
+      "role": "customer",
+      "text": "And a small sweet tea."
+    },
+    {
+      "role": "crew",
+      "text": "A crispy chicken sandwich and a small sweet tea. Please pull forward."
+    }
+  ],
+  "actions": [
+    {
+      "at": "start",
+      "do": "car_arrived"
+    },
+    {
+      "at": {
+        "after_line": 3
+      },
+      "do": "drop",
+      "seconds": 8
+    },
+    {
+      "at": "end",
+      "do": "car_left"
+    }
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "crispy_chicken",
+            "quantity": 1
+          },
+          {
+            "catalog_id": "sweet_tea",
+            "quantity": 1,
+            "size": "small"
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [
+          "stream_gap"
+        ],
+        "review": [
+          "stream_gap"
+        ]
+      }
+    ]
+  }
+}

@@ -9,6 +9,7 @@ export interface OrderComparison {
     not_ordered: boolean;
     flags: boolean;
     status: boolean;
+    review: boolean;
     group: boolean;
     declined_combo: boolean;
   };
@@ -52,12 +53,25 @@ function multisetDiff(expected: string[], actual: string[]): { tp: number; missi
   return { tp, missing, extra: pool };
 }
 
-export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: Order | undefined): OrderComparison {
+export interface CompareOptions {
+  /** The run went through the live path: check lane_version when the fixture sets it. */
+  lane?: boolean;
+  /**
+   * Vehicle events in the run: off (audio only), on (the true timeline, so
+   * `status_with_vehicle_events` applies), or noisy (some missed: either status is fine).
+   */
+  vehicleEvents?: "off" | "on" | "noisy";
+}
+
+export const expectedStatus = (exp: ExpectedOrder, opts: CompareOptions = {}) =>
+  (opts.vehicleEvents === "on" ? exp.status_with_vehicle_events : undefined) ?? exp.status;
+
+export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: (Order & { version?: number }) | undefined, opts: CompareOptions = {}): OrderComparison {
   const diffs: string[] = [];
   if (!act) {
     const n = exp.items.length;
     return {
-      checks: { items: false, needs_review: false, not_ordered: false, flags: false, status: false, group: false, declined_combo: false },
+      checks: { items: false, needs_review: false, not_ordered: false, flags: false, status: false, review: false, group: false, declined_combo: false },
       item_tp: 0,
       item_fp: 0,
       item_fn: n,
@@ -97,8 +111,15 @@ export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: Order | 
   const expFlags = sortedJoin(exp.flags.filter((f) => !IGNORED_FLAGS.has(f)));
   const actFlags = sortedJoin(act.flags.filter((f) => !IGNORED_FLAGS.has(f)));
   if (expFlags !== actFlags) diffs.push(`flags: expected [${expFlags}], got [${actFlags}]`);
-  if (exp.status !== act.status) diffs.push(`status: expected ${exp.status}, got ${act.status}`);
+  const noisyAlt = opts.vehicleEvents === "noisy" && exp.status_with_vehicle_events === act.status;
+  const status = noisyAlt ? act.status : expectedStatus(exp, opts);
+  if (status !== act.status) diffs.push(`status: expected ${status}, got ${act.status}`);
+  const expReview = sortedJoin(exp.review);
+  const actReview = sortedJoin(act.review.reasons);
+  if (expReview !== actReview) diffs.push(`review: expected [${expReview}], got [${actReview}]`);
 
+  const versionOk = !opts.lane || exp.lane_version === undefined || exp.lane_version === act.version;
+  if (!versionOk) diffs.push(`order_version: expected ${exp.lane_version}, got ${act.version ?? 1}`);
   const declinedOk = exp.customer_declined_combo === undefined || exp.customer_declined_combo === act.customer_declined_combo;
   if (!declinedOk) diffs.push(`customer_declined_combo: expected ${exp.customer_declined_combo}`);
 
@@ -111,9 +132,10 @@ export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: Order | 
       needs_review: nrOk,
       not_ordered: no.missing.length === 0 && no.extra.length === 0,
       flags: expFlags === actFlags,
-      status: exp.status === act.status,
+      status: status === act.status,
+      review: expReview === actReview,
       group: true,
-      declined_combo: declinedOk,
+      declined_combo: declinedOk && versionOk,
     },
     item_tp: items.tp,
     item_fp: items.extra.length,
@@ -125,8 +147,8 @@ export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: Order | 
 }
 
 /** Compares a list of expected orders with produced orders, in time order, including group checks. */
-export function compareOrders(catalog: Catalog, expected: ExpectedOrder[], actual: Order[]): OrderComparison[] {
-  const results = expected.map((e, i) => compareOrder(catalog, e, actual[i]));
+export function compareOrders(catalog: Catalog, expected: ExpectedOrder[], actual: (Order & { version?: number })[], opts: CompareOptions = {}): OrderComparison[] {
+  const results = expected.map((e, i) => compareOrder(catalog, e, actual[i], opts));
   // Group labels: same label -> same non-null group_id; null label -> null group_id.
   expected.forEach((e, i) => {
     const a = actual[i];

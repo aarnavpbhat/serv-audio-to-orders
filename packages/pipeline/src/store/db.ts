@@ -82,12 +82,43 @@ CREATE TABLE IF NOT EXISTS mock_inbox (
   headers TEXT NOT NULL,
   body TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS mock_orders (
+  order_id TEXT PRIMARY KEY,
+  order_version INTEGER NOT NULL,
+  webhook_id TEXT NOT NULL,
+  status TEXT,
+  body TEXT NOT NULL,
+  received_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS live_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  at INTEGER NOT NULL,
+  store_id TEXT NOT NULL,
+  lane_id TEXT NOT NULL,
+  type TEXT NOT NULL,
+  data TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS mock_settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   mode TEXT NOT NULL,
   remaining INTEGER NOT NULL,
   retry_after_s INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS testlab_results (
+  id TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL,
+  scenario_id TEXT NOT NULL,
+  tester_mode TEXT NOT NULL,
+  input TEXT NOT NULL,
+  stt TEXT NOT NULL,
+  extractor TEXT NOT NULL,
+  pass INTEGER NOT NULL,
+  wer_customer REAL,
+  wer_crew REAL,
+  role_accuracy REAL,
+  speed_ms REAL,
+  detail TEXT NOT NULL
 );
 `;
 
@@ -107,7 +138,7 @@ export function openDb(file: string): DB {
 
 // ------------------------------------------------------------------ runs
 
-export type RunStatus = "queued" | "running" | "completed" | "failed";
+export type RunStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
 
 export interface RunRow {
   id: string;
@@ -188,13 +219,24 @@ export function ordersForRun(db: DB, runId: string): OrderRow[] {
   return db.prepare(`SELECT * FROM orders WHERE run_id = ? ORDER BY created_at, order_id`).all(runId) as OrderRow[];
 }
 
+/** Next version number for an order (1 when it has none yet). Versions are never deleted. */
+export function nextOrderVersion(db: DB, orderId: string): number {
+  const row = db.prepare(`SELECT MAX(version) AS v FROM orders WHERE order_id = ?`).get(orderId) as { v: number | null };
+  return (row.v ?? 0) + 1;
+}
+
+export function orderVersions(db: DB, orderId: string): OrderRow[] {
+  return db.prepare(`SELECT * FROM orders WHERE order_id = ? ORDER BY version`).all(orderId) as OrderRow[];
+}
+
 export function latestOrder(db: DB, orderId: string): OrderRow | undefined {
   return db.prepare(`SELECT * FROM orders WHERE order_id = ? ORDER BY version DESC LIMIT 1`).get(orderId) as OrderRow | undefined;
 }
 
 // ---------------------------------------------------------------- outbox
 
-export type OutboxStatus = "pending" | "delivering" | "delivered" | "failed" | "dead";
+/** waiting: a later order version held until every earlier version is delivered, failed or dead. */
+export type OutboxStatus = "pending" | "waiting" | "delivering" | "delivered" | "failed" | "dead";
 
 export interface OutboxRow {
   webhook_id: string;
@@ -285,6 +327,52 @@ export interface MockInboxRow {
   body: string;
 }
 
+/** What the mock receiver kept: the highest version per order_id. */
+export interface MockOrderRow {
+  order_id: string;
+  order_version: number;
+  webhook_id: string;
+  status: string | null;
+  body: string;
+  received_at: number;
+}
+
+export function listMockOrders(db: DB, limit = 200): MockOrderRow[] {
+  return db.prepare(`SELECT * FROM mock_orders ORDER BY received_at DESC LIMIT ?`).all(limit) as MockOrderRow[];
+}
+
 export function listMockInbox(db: DB, limit = 100): MockInboxRow[] {
   return db.prepare(`SELECT * FROM mock_inbox ORDER BY id DESC LIMIT ?`).all(limit) as MockInboxRow[];
+}
+
+// ------------------------------------------------------------------ test lab (v2.1 step 7)
+
+export interface TestlabResultRow {
+  id: string;
+  created_at: number;
+  /** A scenario id, or "free_play". */
+  scenario_id: string;
+  tester_mode: string;
+  /** "mic" or "text". */
+  input: string;
+  stt: string;
+  extractor: string;
+  pass: number;
+  wer_customer: number | null;
+  wer_crew: number | null;
+  role_accuracy: number | null;
+  speed_ms: number | null;
+  /** The scorecard as JSON. */
+  detail: string;
+}
+
+export function insertTestlabResult(db: DB, r: TestlabResultRow): void {
+  db.prepare(
+    `INSERT INTO testlab_results (id, created_at, scenario_id, tester_mode, input, stt, extractor, pass, wer_customer, wer_crew, role_accuracy, speed_ms, detail)
+     VALUES (@id, @created_at, @scenario_id, @tester_mode, @input, @stt, @extractor, @pass, @wer_customer, @wer_crew, @role_accuracy, @speed_ms, @detail)`,
+  ).run(r);
+}
+
+export function listTestlabResults(db: DB, limit = 500): TestlabResultRow[] {
+  return db.prepare(`SELECT * FROM testlab_results ORDER BY created_at DESC LIMIT ?`).all(limit) as TestlabResultRow[];
 }

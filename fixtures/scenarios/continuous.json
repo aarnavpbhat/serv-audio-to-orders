@@ -1,0 +1,1 @@
+{ "description": "Continuous audio, no vehicle events, PCM over the wire. The plain live feed.", "audio_mode": "continuous", "vehicle_events": "off" }

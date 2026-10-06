@@ -1,0 +1,1 @@
+{ "description": "Connection drops 8 s in for 10 s and comes back with HME backoff (row 31).", "disconnects": [{ "at_s": 8, "for_s": 10, "reconnect": true }] }

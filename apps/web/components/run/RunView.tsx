@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { replay } from "@serv/pipeline/build/replay";
 import { Catalog } from "@serv/pipeline/menu/catalog";
 import { FuzzyMatcher } from "@serv/pipeline/menu/fuzzy";
+import { emptySignals } from "@serv/pipeline/postprocess/outcome";
 import { postprocess } from "@serv/pipeline/postprocess/postprocess";
 import type { Segment } from "@serv/pipeline/schemas/index";
 import { Button } from "@/components/ui/Button";
@@ -20,6 +21,8 @@ import { EventLog, OrderCard, type PanelOrder } from "./OrderPanel";
 import { PlayerBar } from "./PlayerBar";
 import { Transcript } from "./Transcript";
 import { Waveform, type WaveformHandle } from "./Waveform";
+import { SectionHeader } from "@/components/SectionHeader";
+import { ExpectedVsExtracted } from "../review/ExpectedVsExtracted";
 
 interface SiteValue {
   value: string;
@@ -27,7 +30,7 @@ interface SiteValue {
   note: string;
 }
 
-const STAGES = ["ingest", "transcribe", "segment", "extract", "deliver", "done"] as const;
+const STAGES = ["ingest", "transcribe", "extract", "deliver", "done"] as const;
 const fmt = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
 
 export function RunView({
@@ -41,7 +44,7 @@ export function RunView({
   initial: RunDetail;
   menu: unknown;
   thresholds: { recognition: number; commitment: number };
-  site: { location: SiteValue; lane: SiteValue; webhook: SiteValue };
+  site: { store: SiteValue; lane: SiteValue; webhook: SiteValue };
 }) {
   const [run, setRun] = useState(initial);
   const [time, setTime] = useState(0);
@@ -93,6 +96,7 @@ export function RunView({
           non_english: flags.has("non_english"),
           low_audio_quality: flags.has("low_audio_quality"),
           crosstalk_suspected: flags.has("crosstalk_suspected"),
+          signals: emptySignals(),
         },
         {
           catalog,
@@ -101,6 +105,7 @@ export function RunView({
           taxRate: 0,
           totalTolerance: 0.05,
           placeholders: flags.has("placeholder_values"),
+          reviewCap: { maxQuantity: Number.POSITIVE_INFINITY, maxTotal: Number.POSITIVE_INFINITY },
           newOrderId: (() => {
             let k = 0;
             return () => finals[k++]?.order_id ?? `${first.order_id}_${k}`;
@@ -108,7 +113,8 @@ export function RunView({
           newGroupId: () => first.payload.group_id ?? "group",
         },
       );
-      return built.map((o) => ({ ...o, status: null }));
+      // The live preview shows items only; status and review are decided once, at finalize.
+      return built.map((o) => ({ ...o, status: null, review: null, outcome_evidence: [] }));
     },
     [catalog, matcher, thresholds, time],
   );
@@ -173,6 +179,16 @@ export function RunView({
                 {sync ? "Replaying live" : "Live replay"}
               </Toggle>
               <Badge value={run.status} />
+              {run.has_audio && (run.status === "queued" || run.status === "running") && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  title="Stop this run. Orders already sent stay sent; the open conversation is dropped."
+                  onClick={() => void fetch(`/api/runs/${id}/cancel`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })}
+                >
+                  Cancel
+                </Button>
+              )}
               <ol className="ml-auto flex items-center gap-1 text-[11px]">
                 {STAGES.slice(0, -1).map((s, i) => {
                   const done = i < stageIdx;
@@ -194,7 +210,8 @@ export function RunView({
         {run.error && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">{run.error}</p>}
         {run.status === "queued" && run.queue_position >= 0 && <p className="text-muted-foreground">Queued (position {run.queue_position + 1})</p>}
 
-        <Waveform
+        {!run.has_audio && <p className="rounded-lg bg-muted px-3 py-2 text-[13px] text-muted-foreground">Live session: there is no single audio file. Each order&apos;s audio is kept in the archive.</p>}
+        {run.has_audio && <Waveform
           ref={wave}
           url={`/api/runs/${id}/audio`}
           time={time}
@@ -206,15 +223,14 @@ export function RunView({
             setPlaying(p);
             if (p) setSync(true);
           }}
-        />
+        />}
+
+        {run.truth && run.status !== "running" && <ExpectedVsExtracted rows={run.truth} name={name} />}
 
         <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           {/* Orders as an album track list, one "disc" per conversation. */}
           <section className="min-w-0 space-y-7">
-            <div className="flex items-baseline justify-between">
-              <h2 className="section-title">Orders</h2>
-              <span className="text-[12px] text-muted-foreground">{segments.length} conversations</span>
-            </div>
+            <SectionHeader className="mb-0" title="Orders" details={`${segments.length} conversation${segments.length === 1 ? "" : "s"}`} />
             {!segments.length && <p className="text-muted-foreground">Orders appear after segmentation and extraction.</p>}
             {segments.map((seg, si) => {
               const finals = ordersBySeg.get(seg.segment_id) ?? [];
@@ -224,22 +240,26 @@ export function RunView({
               const current = nowSeg?.segment_id === seg.segment_id && playing;
               return (
                 <div key={seg.segment_id}>
-                  <button type="button" onClick={() => seek(seg.start_s)} className="group mb-2 flex w-full items-baseline gap-2 border-b border-line px-2 pb-1.5 text-left">
-                    <span className={cn("text-[14px] font-semibold", current ? "text-brand" : "group-hover:text-brand")}>Conversation {si + 1}</span>
-                    {current && <Equalizer className="text-brand" />}
-                    <span className="text-[12px] text-muted-foreground">
+                  <button type="button" data-section-header onClick={() => seek(seg.start_s)} className="group mb-2 block w-full border-b border-line px-2 pb-1.5 text-left">
+                    <span className="flex items-center gap-2">
+                      <span data-header-title className={cn("text-[14px] font-semibold", current ? "text-brand" : "group-hover:text-brand")}>
+                        Conversation {si + 1}
+                      </span>
+                      {current && <Equalizer className="text-brand" />}
+                      <span className="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground">word conf {seg.mean_word_conf.toFixed(2)}</span>
+                    </span>
+                    <span data-header-details className="block text-[12px] text-muted-foreground">
                       {fmt(seg.start_s)} to {fmt(seg.end_s)}
                       {seg.has_greeting && " · greeting"}
                       {seg.has_closing ? " · closing" : ""}
                       {seg.non_customer_ids.length > 0 && ` · ${seg.non_customer_ids.length} chatter excluded`}
+                      {!seg.has_closing && <span className="text-orange-600 dark:text-orange-400"> · no closing</span>}
                     </span>
-                    {!seg.has_closing && <span className="text-[12px] text-orange-600 dark:text-orange-400">no closing</span>}
-                    <span className="ml-auto font-mono text-[11px] text-muted-foreground">word conf {seg.mean_word_conf.toFixed(2)}</span>
                   </button>
                   <div className="space-y-5">
                     {shown.length === 0 && <div className="px-2 py-2 text-muted-foreground">{run.status === "running" ? "Extracting..." : "No order"}</div>}
                     {shown.map((o) => (
-                      <OrderCard key={o.order_id} order={o} phase={phase} name={name} />
+                      <OrderCard key={o.order_id} order={o} phase={phase} name={name} known={!!run.truth} />
                     ))}
                   </div>
                   {first && (
@@ -279,7 +299,7 @@ export function RunView({
           <h2 className="section-title mb-2">Details</h2>
           <dl className="grid gap-x-8 gap-y-2 text-[12px] sm:grid-cols-2 lg:grid-cols-3">
             <Note k="Run id" v={<span className="font-mono">{run.id}</span>} />
-            <Note k="Location" v={<span className="font-mono">{site.location.value}</span>} placeholder={site.location.placeholder ? site.location.note : null} />
+            <Note k="Store" v={<span className="font-mono">{site.store.value}</span>} placeholder={site.store.placeholder ? site.store.note : null} />
             <Note k="Lane" v={<span className="font-mono">{site.lane.value}</span>} placeholder={site.lane.placeholder ? site.lane.note : null} />
             <Note k="Webhook" v={<span className="break-all font-mono">{site.webhook.value}</span>} placeholder={site.webhook.placeholder ? site.webhook.note : null} />
             {run.transcript && (

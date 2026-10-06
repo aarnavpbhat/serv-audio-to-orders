@@ -21,75 +21,36 @@
         "has_closing": true,
         "truncated_start": false,
         "truncated_end": false,
-        "trailing_silence_s": 3.665,
+        "trailing_silence_s": 3,
         "language": "en",
         "non_english": false,
         "mean_word_conf": 0.976,
         "crosstalk_suspected": false
       }
     ],
-    "boundaries": [
-      {
-        "after_index": 0,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 1,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 2,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 3,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 4,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 5,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 6,
-        "score": 0.25,
-        "signals": [
-          "end_cue"
-        ],
-        "decided_by": "rules",
-        "is_boundary": false
-      }
-    ],
+    "boundaries": [],
     "llm_calls": 0
   },
   "orders": [
     {
       "order": {
-        "order_id": "ord_01M443TAH3ZAN0MCRZVE2R3MB8",
+        "order_id": "ord_01M47MMSQR9PH3KANR53TAFS1X",
         "group_id": null,
         "segment_id": "seg_1",
         "status": "completed",
+        "outcome_evidence": [
+          {
+            "type": "spoken_cue",
+            "kind": "closing",
+            "cue": "your total is",
+            "utterance_id": "u7",
+            "at": "2026-10-03T18:40:23.215Z"
+          }
+        ],
+        "review": {
+          "required": false,
+          "reasons": []
+        },
         "started_s": 1.12,
         "ended_s": 30.175,
         "items": [
@@ -140,7 +101,7 @@
         "not_ordered": [
           {
             "catalog_id": "shake_choc",
-            "raw_text": "chocolate shake",
+            "raw_text": "a chocolate shake",
             "ordered": false,
             "reason": "out_of_stock",
             "quantity": 1,
@@ -153,10 +114,11 @@
           },
           {
             "catalog_id": "combo_1",
-            "raw_text": "No. Not the meal.",
+            "raw_text": "meal",
             "ordered": false,
             "reason": "declined_upsell",
             "source_utterance_ids": [
+              "u4",
               "u5"
             ]
           }
@@ -205,7 +167,7 @@
           "type": "ADD",
           "target_line_ref": null,
           "catalog_id": "big_sandbox",
-          "raw_text": "Big Sandbox",
+          "raw_text": "a Big Sandbox",
           "quantity": 1,
           "size": null,
           "modifiers": [],
@@ -225,7 +187,7 @@
           "type": "ADD",
           "target_line_ref": null,
           "catalog_id": "fries",
-          "raw_text": "large fries",
+          "raw_text": "a large fries",
           "quantity": 1,
           "size": "large",
           "modifiers": [],
@@ -245,7 +207,7 @@
           "type": "ADD",
           "target_line_ref": null,
           "catalog_id": "shake_choc",
-          "raw_text": "chocolate shake",
+          "raw_text": "a chocolate shake",
           "quantity": 1,
           "size": null,
           "modifiers": [],
@@ -265,7 +227,7 @@
           "type": "OUT_OF_STOCK",
           "target_line_ref": "e3",
           "catalog_id": "shake_choc",
-          "raw_text": null,
+          "raw_text": "shakes",
           "quantity": null,
           "size": null,
           "modifiers": [],
@@ -285,7 +247,7 @@
           "type": "REMOVE",
           "target_line_ref": "e3",
           "catalog_id": null,
-          "raw_text": null,
+          "raw_text": "chocolate shake",
           "quantity": null,
           "size": null,
           "modifiers": [],
@@ -293,19 +255,20 @@
           "readback_items": null,
           "amount": null,
           "source_utterance_ids": [
-            "u4"
+            "u4",
+            "u5"
           ],
-          "recognition_confidence": 0.96,
+          "recognition_confidence": 0.97,
           "commitment_confidence": 1,
           "candidates": [],
-          "t_s": 10.32
+          "t_s": 16.495
         },
         {
           "event_id": "e6",
           "type": "DECLINE_UPSELL",
           "target_line_ref": null,
           "catalog_id": "combo_1",
-          "raw_text": "No. Not the meal.",
+          "raw_text": "meal",
           "quantity": null,
           "size": null,
           "modifiers": [],
@@ -313,6 +276,7 @@
           "readback_items": null,
           "amount": null,
           "source_utterance_ids": [
+            "u4",
             "u5"
           ],
           "recognition_confidence": 0.97,
@@ -422,7 +386,7 @@
         {
           "event_id": "e5",
           "type": "REMOVE",
-          "t_s": 10.32,
+          "t_s": 16.495,
           "applied": false,
           "note": "e3 already out_of_stock",
           "line_ids": []

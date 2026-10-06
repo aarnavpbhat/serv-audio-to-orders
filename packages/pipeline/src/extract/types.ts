@@ -18,6 +18,21 @@ export interface LlmUsage {
   model: string;
 }
 
+/** One Gemini request and its answer, kept in the data store (llm/.../order=<id>/<request_hash>.json). */
+export interface LlmCallRecord {
+  request_hash: string;
+  site: string;
+  model: string;
+  prompt_version: string;
+  /** sha256 of the system prompt (the prompt itself is versioned in code). */
+  system_sha256: string;
+  contents: { role: "user" | "model"; text: string }[];
+  response_text: string;
+  usage: LlmUsage;
+  cached: boolean;
+  at: string;
+}
+
 export interface ExtractResult {
   events: OrderEvent[];
   usage: LlmUsage;
@@ -29,6 +44,8 @@ export interface ExtractResult {
   fallback: boolean;
   /** Language the model heard the customer use (ISO code), when it says. */
   customer_language?: string | null;
+  /** Every LLM request made for this extraction (empty for the fuzzy and oracle extractors). */
+  calls?: LlmCallRecord[];
 }
 
 /** Turns one conversation into order events. Implementations: gemini, fuzzy. */

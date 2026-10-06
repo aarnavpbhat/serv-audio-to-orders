@@ -1,0 +1,86 @@
+{
+  "id": "two_cars",
+  "number": 10,
+  "title": "Two cars",
+  "checks": "Two cars order back to back: two separate orders.",
+  "minutes": 2,
+  "lines": [
+    {
+      "role": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?"
+    },
+    {
+      "role": "customer",
+      "text": "Can I get an apple pie?"
+    },
+    {
+      "role": "crew",
+      "text": "One apple pie. Please pull forward."
+    },
+    {
+      "role": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?"
+    },
+    {
+      "role": "customer",
+      "text": "Can I get a medium lemonade?"
+    },
+    {
+      "role": "crew",
+      "text": "One medium lemonade. Please pull forward."
+    }
+  ],
+  "actions": [
+    {
+      "at": "start",
+      "do": "car_arrived"
+    },
+    {
+      "at": {
+        "after_line": 3
+      },
+      "do": "car_left"
+    },
+    {
+      "at": {
+        "after_line": 3
+      },
+      "do": "car_arrived"
+    },
+    {
+      "at": "end",
+      "do": "car_left"
+    }
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "apple_pie",
+            "quantity": 1
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [],
+        "review": []
+      },
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "lemonade",
+            "quantity": 1,
+            "size": "medium"
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [],
+        "review": []
+      }
+    ]
+  }
+}

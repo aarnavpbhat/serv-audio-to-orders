@@ -1,17 +1,17 @@
 {
-  "transcript_id": "tr_01M443TAH2YQ7MFQAFJ0APJQV8",
+  "transcript_id": "tr_run_01M47MMSJMF5XASJ0GSJDDF9D4",
   "source_file": "11_declined_upsell_out_of_stock.mono.clean.mp3",
   "audio": {
-    "codec": "mp3",
-    "sample_rate": 8000,
+    "codec": "pcm_s16le",
+    "sample_rate": 16000,
     "channels": 1,
-    "duration_s": 33.84
+    "duration_s": 33.68
   },
   "audio_start_utc": "2026-10-03T18:40:00.000Z",
-  "timestamp_source": "env",
+  "timestamp_source": "recording_metadata",
   "role_source": "diarization",
-  "stt": "deepgram/nova-3",
-  "language": "en",
+  "stt": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+  "language": null,
   "utterances": [
     {
       "id": "u1",
@@ -286,8 +286,7 @@
           "w": "the",
           "start_s": 14,
           "end_s": 14.24,
-          "conf": 0.553,
-          "low_conf": true
+          "conf": 0.553
         },
         {
           "w": "Big",
