@@ -63,7 +63,8 @@ export function spokenCues(utts: CueUtterance[], firstItemS: number | null): Out
       out.push({ type: "spoken_cue", kind: "customer_done", cue: done.toLowerCase(), utterance_id: u.id, at: ack.start_utc });
     }
   });
-  return out.sort(byTime);
+  // On a tie, the crew's own closing cue is the clearer evidence.
+  return out.sort((a, b) => byTime(a, b) || (a.kind === "closing" ? -1 : b.kind === "closing" ? 1 : 0));
 }
 
 export interface OutcomeInput {

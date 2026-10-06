@@ -36,6 +36,8 @@ export const ExpectedOrder = z.object({
   status: OrderStatus,
   /** Status when the replay also sends the fixture's vehicle events, if different. */
   status_with_vehicle_events: OrderStatus.optional(),
+  /** Order version expected through the live path (2 when a late addition reopens the order). */
+  lane_version: z.number().int().positive().optional(),
   /** Exact set of review reasons expected. */
   review: z.array(ReviewReason).default([]),
   /** Orders with the same non-null label must share a group_id. */
@@ -50,6 +52,8 @@ export const FixtureScript = z.object({
   /** Edge case checklist rows this script covers. */
   covers: z.array(z.number().int()),
   language: z.string().default("en"),
+  /** Behaviour only the live path has (a reopen); the v1 file path skips it. */
+  live_only: z.boolean().default(false),
   render: z
     .object({
       noise: NoiseLevel.default("clean"),

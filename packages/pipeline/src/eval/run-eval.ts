@@ -31,6 +31,7 @@ export interface EvalOptions {
 
 interface Target {
   id: string;
+  liveOnly?: boolean;
   title: string;
   covers: number[];
   noise: NoiseLevel;
@@ -77,6 +78,7 @@ function targets(fixturesDir: string, opts: EvalOptions): Target[] {
   const scripts = loadFixtureScripts(path.join(fixturesDir, "scripts"));
   const out: Target[] = scripts.map((s) => ({
     id: s.id,
+    liveOnly: s.live_only,
     title: s.title,
     covers: s.covers,
     noise: s.render.noise,
@@ -100,7 +102,8 @@ function targets(fixturesDir: string, opts: EvalOptions): Target[] {
       out.push({ id: c.id, title: c.title, covers: [23], noise: c.noise, compilation: true, expected });
     }
   }
-  return opts.only?.length ? out.filter((t) => opts.only?.includes(t.id)) : out;
+  const runnable = opts.via === "lane" ? out : out.filter((t) => !t.liveOnly);
+  return opts.only?.length ? runnable.filter((t) => opts.only?.includes(t.id)) : runnable;
 }
 
 function spansOf(timeline: FixtureTimeline): { start_s: number; end_s: number }[] {
@@ -151,7 +154,7 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
   } catch (e) {
     return { ...base, error: (e as Error).message };
   }
-  const compareOpts = { vehicleEvents: opts.via === "lane" ? (opts.scenario?.vehicle_events ?? "off") : ("off" as const) };
+  const compareOpts = { lane: opts.via === "lane", vehicleEvents: opts.via === "lane" ? (opts.scenario?.vehicle_events ?? "off") : ("off" as const) };
 
   const spans = spansOf(timeline);
   const segs = result.segmentation.segments;
@@ -184,7 +187,7 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
   spans.forEach((_, k) => {
     const exp = t.expected.filter((e) => e.span === k).map((e) => e.order);
     const seg = matchFor[k];
-    const produced: Order[] = seg ? result.orders.filter((o) => o.order.segment_id === seg.segment_id).map((o) => o.order) : [];
+    const produced = seg ? result.orders.filter((o) => o.order.segment_id === seg.segment_id).map((o) => ({ ...o.order, version: o.payload.order_version })) : [];
     if (produced.length !== exp.length) countsOk = false;
     for (const c of compareOrders(engine.catalog, exp, produced, compareOpts)) comparisons.push({ ...c, pass: passed(c) });
     for (const extraOrder of produced.slice(exp.length)) {
@@ -253,8 +256,8 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
     if (wh) return { row, title, fixtures: ["webhook self-check"], pass: wh.pass, detail: wh.detail };
     const lc = live.find((c) => c.row === row);
     if (lc) return { row, title, fixtures: ["live check"], pass: lc.pass, detail: lc.detail };
-    if (row >= 29) return { row, title, fixtures: [], pass: false, detail: opts.via === "lane" ? "not checked yet" : "run with --via lane" };
     const covering = fixtures.filter((f) => f.covers.includes(row));
+    if (row >= 29 && !covering.length) return { row, title, fixtures: [], pass: false, detail: opts.via === "lane" ? "not checked yet" : "run with --via lane" };
     return { row, title, fixtures: covering.map((f) => f.id), pass: covering.length > 0 && covering.every((f) => f.pass) };
   });
 

@@ -54,6 +54,8 @@ function multisetDiff(expected: string[], actual: string[]): { tp: number; missi
 }
 
 export interface CompareOptions {
+  /** The run went through the live path: check lane_version when the fixture sets it. */
+  lane?: boolean;
   /**
    * Vehicle events in the run: off (audio only), on (the true timeline, so
    * `status_with_vehicle_events` applies), or noisy (some missed: either status is fine).
@@ -64,7 +66,7 @@ export interface CompareOptions {
 export const expectedStatus = (exp: ExpectedOrder, opts: CompareOptions = {}) =>
   (opts.vehicleEvents === "on" ? exp.status_with_vehicle_events : undefined) ?? exp.status;
 
-export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: Order | undefined, opts: CompareOptions = {}): OrderComparison {
+export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: (Order & { version?: number }) | undefined, opts: CompareOptions = {}): OrderComparison {
   const diffs: string[] = [];
   if (!act) {
     const n = exp.items.length;
@@ -117,6 +119,8 @@ export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: Order | 
   const actReview = sortedJoin(act.review.reasons);
   if (expReview !== actReview) diffs.push(`review: expected [${expReview}], got [${actReview}]`);
 
+  const versionOk = !opts.lane || exp.lane_version === undefined || exp.lane_version === act.version;
+  if (!versionOk) diffs.push(`order_version: expected ${exp.lane_version}, got ${act.version ?? 1}`);
   const declinedOk = exp.customer_declined_combo === undefined || exp.customer_declined_combo === act.customer_declined_combo;
   if (!declinedOk) diffs.push(`customer_declined_combo: expected ${exp.customer_declined_combo}`);
 
@@ -132,7 +136,7 @@ export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: Order | 
       status: status === act.status,
       review: expReview === actReview,
       group: true,
-      declined_combo: declinedOk,
+      declined_combo: declinedOk && versionOk,
     },
     item_tp: items.tp,
     item_fp: items.extra.length,
@@ -144,7 +148,7 @@ export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: Order | 
 }
 
 /** Compares a list of expected orders with produced orders, in time order, including group checks. */
-export function compareOrders(catalog: Catalog, expected: ExpectedOrder[], actual: Order[], opts: CompareOptions = {}): OrderComparison[] {
+export function compareOrders(catalog: Catalog, expected: ExpectedOrder[], actual: (Order & { version?: number })[], opts: CompareOptions = {}): OrderComparison[] {
   const results = expected.map((e, i) => compareOrder(catalog, e, actual[i], opts));
   // Group labels: same label -> same non-null group_id; null label -> null group_id.
   expected.forEach((e, i) => {

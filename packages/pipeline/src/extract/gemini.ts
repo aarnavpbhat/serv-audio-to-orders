@@ -164,6 +164,14 @@ export class GeminiClient {
     writeLedger(this.budget.file, { ...l, tier: free ? "free" : l.tier, exhausted: l.exhausted || isDailyQuota(err), last_429: msg.slice(0, 4000) });
   }
 
+  /** Live calls never wait for a slot: true if one is free now (and takes it). */
+  private takeSlotNow(): boolean {
+    const now = Date.now();
+    if (this.nextSlot > now) return false;
+    this.nextSlot = now + 60_000 / Math.max(1, this.rpm);
+    return true;
+  }
+
   private async throttle(): Promise<void> {
     const gap = 60_000 / Math.max(1, this.rpm);
     const now = Date.now();
@@ -172,7 +180,18 @@ export class GeminiClient {
     if (wait > 0) await sleep(wait);
   }
 
-  async json(opts: { site: string; system: string; user: string; schema?: Record<string, unknown>; history?: { role: "user" | "model"; text: string }[] }): Promise<CallResult> {
+  async json(opts: {
+    site: string;
+    system: string;
+    user: string;
+    schema?: Record<string, unknown>;
+    history?: { role: "user" | "model"; text: string }[];
+    /**
+     * Live tie-breakers: one attempt, this deadline, and no waiting for a per-minute
+     * slot (a busy slot throws GeminiBudgetError so the caller's rules decide).
+     */
+    live?: { timeoutMs: number };
+  }): Promise<CallResult> {
     const contents = [...(opts.history ?? []), { role: "user" as const, text: opts.user }].map((m) => ({ role: m.role, parts: [{ text: m.text }] }));
     const key = createHash("sha256")
       .update(JSON.stringify({ m: this.model, t: this.thinking, s: opts.system, c: contents, j: opts.schema ?? null }))
@@ -192,7 +211,9 @@ export class GeminiClient {
     try {
       res = await withRetry(
       async () => {
-        await this.throttle();
+        if (opts.live) {
+          if (!this.takeSlotNow()) throw new GeminiBudgetError("Gemini per-minute slot busy; the rules decide this one");
+        } else await this.throttle();
         this.spend();
         return this.ai.models.generateContent({
           model: this.model,
@@ -204,7 +225,7 @@ export class GeminiClient {
             responseMimeType: "application/json",
             ...(opts.schema ? { responseJsonSchema: opts.schema } : {}),
             safetySettings: SAFETY_SETTINGS,
-            abortSignal: AbortSignal.timeout(CALL_TIMEOUT_MS),
+            abortSignal: AbortSignal.timeout(opts.live?.timeoutMs ?? CALL_TIMEOUT_MS),
           },
         }).catch((err: unknown) => {
           this.noteQuota(err);
@@ -213,7 +234,7 @@ export class GeminiClient {
       },
       {
         // Google counts failed attempts (503 included) against the daily request quota, so retry sparingly.
-        maxRetries: 2,
+        maxRetries: opts.live ? 0 : 2,
         initialDelay: 5000,
         maxDelay: 60_000,
         retryOn: (err) => !(err instanceof GeminiBudgetError) && isRetryableError(err),
@@ -344,16 +365,32 @@ export class GeminiJudge implements BoundaryJudge, RoleJudge {
     }
   }
 
-  async isNewCustomer(before: Utterance[], after: Utterance[]): Promise<boolean> {
+  async isNewCustomer(before: Utterance[], after: Utterance[], live?: { timeoutMs: number }): Promise<boolean> {
+    return (await this.newCustomerAnswer(before, after, live)) ?? false;
+  }
+
+  /**
+   * Live tie-breaker: one attempt within the deadline. Null when there is no answer
+   * (timeout, busy slot, budget, unusable output), so the tracker's rules decide.
+   */
+  async newCustomerAnswer(before: Utterance[], after: Utterance[], live?: { timeoutMs: number }): Promise<boolean | null> {
     const user = `${formatUtterances(before)}\n----- does a new customer start here? -----\n${formatUtterances(after)}`;
-    const res = await this.ask({
-      site: "segment_boundary",
+    let res: CallResult | null;
+    try {
+      res = await this.ask({
+        site: live ? "segment_boundary_live" : "segment_boundary",
+        ...(live ? { live } : {}),
       system: BOUNDARY_PROMPT,
       user,
-      schema: { type: "object", properties: { new_customer: { type: "boolean" } }, required: ["new_customer"] },
-    });
-    if (!res) return false;
-    return this.parse("segment_boundary", res.text, BoundaryAnswer)?.new_customer ?? false;
+        schema: { type: "object", properties: { new_customer: { type: "boolean" } }, required: ["new_customer"] },
+      });
+    } catch (e) {
+      if (!live) throw e;
+      logLine("WARNING", "judge_no_answer", { event: "judge_no_answer", site: "segment_boundary_live", detail: (e as Error).message.slice(0, 200) });
+      return null;
+    }
+    if (!res) return null;
+    return this.parse("segment_boundary", res.text, BoundaryAnswer)?.new_customer ?? null;
   }
 
   async pickCrew(samples: { speaker: string; lines: string[] }[]): Promise<string | null> {

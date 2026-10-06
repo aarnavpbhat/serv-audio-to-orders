@@ -46,6 +46,12 @@ export interface TranscriptStream {
   close(): void;
   /** Billable audio minutes sent to the provider so far. */
   audioMinutes(): number;
+  /**
+   * Session seconds before which nothing is still being said (no utterance is
+   * in progress). Timers never run past it, so a close does not settle while
+   * the customer is mid-sentence. Infinity when no speech is pending.
+   */
+  watermarkS(): number;
 }
 
 export interface StreamingTranscriber {

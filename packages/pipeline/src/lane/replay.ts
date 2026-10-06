@@ -11,10 +11,13 @@ import type { RunOrder } from "../orders/finalize";
 import type { Segmentation, Transcript } from "../schemas";
 import { insertRun, outboxForRun, updateRun, type OutboxRow } from "../store/db";
 import { LaneManager } from "./manager";
+import type { TrackerDecision } from "./tracker";
 import type { StreamingTranscriber } from "./types";
 
 export interface ReplayRunOptions extends ReplayOptions {
   transcriber: StreamingTranscriber;
+  /** tracker (default) or batch (v1 segmentation, for parity checks). */
+  mode?: "tracker" | "batch";
   deliver?: boolean;
   runId?: string;
 }
@@ -23,7 +26,11 @@ export interface ReplayResult {
   run_id: string;
   transcript: Transcript;
   segmentation: Segmentation;
+  /** Latest version of every order. */
   orders: RunOrder[];
+  /** Every version built, in order (v1, then v2 on a reopen or late evidence). */
+  versions: RunOrder[];
+  decisions: TrackerDecision[];
   deliveries: OutboxRow[];
   usage: { deepgram_minutes: number; llm: ReturnType<typeof emptyUsage>; gemini_today: { day: string; requests: number; cap: number } | null };
   timings: Record<string, number>;
@@ -45,7 +52,7 @@ export async function replayFile(engine: Engine, file: string, opts: ReplayRunOp
   }
   updateRun(db, runId, { status: "running", stage: "transcribe", transcriber: opts.transcriber.name, extractor: engine.extractor.name });
   try {
-    const manager = new LaneManager({ engine, transcriber: opts.transcriber, runId, deliver: opts.deliver !== false });
+    const manager = new LaneManager({ engine, transcriber: opts.transcriber, runId, deliver: opts.deliver !== false, ...(opts.mode ? { mode: opts.mode } : {}) });
     for await (const m of source.messages()) await manager.handle(m);
     updateRun(db, runId, { stage: "extract" });
     await manager.end();
@@ -53,8 +60,9 @@ export async function replayFile(engine: Engine, file: string, opts: ReplayRunOp
     const lanes = [...manager.lanes.values()];
     const lane = lanes[0];
     const transcript = lane?.transcript() ?? emptyTranscript(abs);
-    const segmentation = lane?.segmentation ?? { segments: [], boundaries: [], llm_calls: 0 };
-    const orders = lanes.flatMap((l) => l.orders);
+    const segmentation = lane?.segmentation() ?? { segments: [], boundaries: [], llm_calls: 0 };
+    const orders = lanes.flatMap((l) => l.latestOrders);
+    const versions = lanes.flatMap((l) => l.orders);
     updateRun(db, runId, { stage: "deliver", transcript, segmentation, audio: transcript.audio });
     await Promise.allSettled(lanes.flatMap((l) => l.sends));
     await engine.deliverer.settle();
@@ -68,7 +76,7 @@ export async function replayFile(engine: Engine, file: string, opts: ReplayRunOp
     };
     const timings = { total_ms: Math.round(performance.now() - t0) };
     updateRun(db, runId, { status: "completed", stage: "done", usage, timings });
-    return { run_id: runId, transcript, segmentation, orders, deliveries: outboxForRun(db, runId), usage, timings };
+    return { run_id: runId, transcript, segmentation, orders, versions, decisions: lanes.flatMap((l) => l.decisions), deliveries: outboxForRun(db, runId), usage, timings };
   } catch (e) {
     updateRun(db, runId, { status: "failed", error: (e as Error).message });
     throw e;

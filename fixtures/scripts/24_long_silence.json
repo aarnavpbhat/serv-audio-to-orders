@@ -1,0 +1,35 @@
+{
+  "id": "24_long_silence",
+  "title": "60 seconds of silence mid-order, no closing and no vehicle events",
+  "covers": [34],
+  "turns": [
+    { "speaker": "crew", "text": "Welcome to Sandbox Burger, what can I get for you today?", "pause_after_s": 0.6 },
+    { "speaker": "customer", "text": "Hi, can I get a six piece nuggets and a medium Coke?", "pause_after_s": 0.6 },
+    { "speaker": "crew", "text": "Six piece nuggets and a medium Coke. Anything else?", "pause_after_s": 0.6 }
+  ],
+  "events": [
+    [
+      { "event_id": "e1", "type": "ADD", "source_utterance_ids": ["u2"], "catalog_id": "nuggets_6" },
+      { "event_id": "e2", "type": "ADD", "source_utterance_ids": ["u2"], "catalog_id": "coke", "size": "medium" },
+      { "event_id": "e3", "type": "READBACK", "source_utterance_ids": ["u3"], "readback_items": [{ "catalog_id": "nuggets_6" }, { "catalog_id": "coke", "size": "medium" }] }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "undetermined",
+        "status_with_vehicle_events": "abandoned",
+        "items": [
+          { "catalog_id": "nuggets_6", "quantity": 1 },
+          { "catalog_id": "coke", "quantity": 1, "size": "medium" }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [],
+        "group": null,
+        "review": ["outcome_undetermined"]
+      }
+    ]
+  },
+  "render": { "tail_silence_s": 62 }
+}
