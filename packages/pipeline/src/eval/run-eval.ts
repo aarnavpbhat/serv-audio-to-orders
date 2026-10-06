@@ -7,7 +7,7 @@ import { replayFile } from "../lane/replay";
 import type { StreamingTranscriber } from "../lane/types";
 import { loadFixtureScripts } from "../fixtures/load";
 import { runPipeline, type RunResult } from "../run";
-import type { ExpectedOrder, FixtureTimeline, NoiseLevel, Order } from "../schemas";
+import type { ExpectedOrder, FixtureTimeline, NoiseLevel } from "../schemas";
 import { loadTimeline } from "../transcribe/script";
 import { CHECKLIST } from "./checklist";
 import { runLiveChecks, type LiveCheck } from "./live-checks";
