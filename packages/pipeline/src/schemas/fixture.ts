@@ -93,5 +93,9 @@ export const FixtureTimeline = z.object({
   ),
   /** Expected order spans in file time, in order. */
   orders: z.array(z.object({ fixture_id: z.string(), order_index: z.number().int(), start_s: z.number(), end_s: z.number() })),
+  /** When the recording started, so replays stamp original times, never today's. */
+  recording_start_utc: z.string().default("2026-10-03T18:40:00.000Z"),
+  /** Synthetic car arrivals and departures per conversation, for replays with vehicle events on. */
+  vehicle_events: z.array(z.object({ type: z.enum(["vehicle_arrived", "vehicle_departed"]), at_s: z.number() })).default([]),
 });
 export type FixtureTimeline = z.infer<typeof FixtureTimeline>;

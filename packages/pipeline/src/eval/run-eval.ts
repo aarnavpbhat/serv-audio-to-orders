@@ -2,6 +2,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { Engine } from "../engine";
+import type { Scenario } from "../input/scenario";
+import { replayFile } from "../lane/replay";
+import { ScriptStreamingTranscriber } from "../lane/script-transcriber";
+import type { StreamingTranscriber } from "../lane/types";
 import { loadFixtureScripts } from "../fixtures/load";
 import { runPipeline, type RunResult } from "../run";
 import type { ExpectedOrder, FixtureTimeline, NoiseLevel, Order } from "../schemas";
@@ -17,6 +21,11 @@ export interface EvalOptions {
   compilations: boolean;
   deliver: boolean;
   webhook: boolean;
+  /** file: v1 batch path. lane: replay through the live path at max speed (plan D1). */
+  via?: "file" | "lane";
+  scenario?: Scenario;
+  /** Streaming transcriber for --via lane (default: the free script transcriber). */
+  streamingTranscriber?: StreamingTranscriber;
 }
 
 interface Target {
@@ -43,7 +52,7 @@ export interface FixtureReport {
 
 export interface EvalReport {
   generated_at: string;
-  config: { layout: string; transcriber: string; extractor: string; model: string | null; menu_version: string };
+  config: { layout: string; via: string; scenario: string | null; transcriber: string; extractor: string; model: string | null; menu_version: string };
   summary: {
     fixtures: number;
     fixtures_passed: number;
@@ -111,16 +120,37 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
   const timeline = existsSync(file) ? loadTimeline(file) : null;
   if (!timeline) return { ...base, error: `missing ${base.file}; run pnpm fixtures:build` };
 
-  let result: RunResult;
+  let result: Pick<RunResult, "run_id" | "segmentation" | "orders" | "usage">;
   try {
-    result = await runPipeline(engine, file, {
-      channelMap: opts.layout === "stereo" ? { 0: "customer", 1: "crew" } : null,
-      audioStartUtc: "2026-10-03T18:40:00Z",
-      deliver: opts.deliver,
-    });
+    if (opts.via === "lane") {
+      const r = await replayFile(engine, file, {
+        transcriber: opts.streamingTranscriber ?? new ScriptStreamingTranscriber(),
+        ...(opts.scenario ? { scenario: { ...opts.scenario, channels: opts.layout } } : {}),
+        deliver: opts.deliver,
+        speed: "max",
+      });
+      result = {
+        run_id: r.run_id,
+        segmentation: r.segmentation,
+        orders: r.orders,
+        usage: {
+          stt: { provider: opts.streamingTranscriber?.name ?? "script/ground-truth", audio_minutes: r.usage.deepgram_minutes, cached: false, role_llm_calls: 0 },
+          llm: r.usage.llm,
+          segmentation_llm_calls: r.segmentation.llm_calls,
+          gemini_today: r.usage.gemini_today ? { ...r.usage.gemini_today, tier: "unknown", exhausted: false } : null,
+        },
+      };
+    } else {
+      result = await runPipeline(engine, file, {
+        channelMap: opts.layout === "stereo" ? { 0: "customer", 1: "crew" } : null,
+        audioStartUtc: "2026-10-03T18:40:00Z",
+        deliver: opts.deliver,
+      });
+    }
   } catch (e) {
     return { ...base, error: (e as Error).message };
   }
+  const compareOpts = { vehicleEvents: opts.via === "lane" ? (opts.scenario?.vehicle_events ?? "off") : ("off" as const) };
 
   const spans = spansOf(timeline);
   const segs = result.segmentation.segments;
@@ -155,7 +185,7 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
     const seg = matchFor[k];
     const produced: Order[] = seg ? result.orders.filter((o) => o.order.segment_id === seg.segment_id).map((o) => o.order) : [];
     if (produced.length !== exp.length) countsOk = false;
-    for (const c of compareOrders(engine.catalog, exp, produced)) comparisons.push({ ...c, pass: passed(c) });
+    for (const c of compareOrders(engine.catalog, exp, produced, compareOpts)) comparisons.push({ ...c, pass: passed(c) });
     for (const extraOrder of produced.slice(exp.length)) {
       comparisons.push({
         checks: { items: false, needs_review: true, not_ordered: true, flags: true, status: true, review: true, group: true, declined_combo: true },
@@ -237,7 +267,9 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
     generated_at: new Date().toISOString(),
     config: {
       layout: opts.layout,
-      transcriber: engine.transcriber.name,
+      via: opts.via ?? "file",
+      scenario: opts.scenario?.name ?? null,
+      transcriber: opts.via === "lane" ? (opts.streamingTranscriber?.name ?? "script/ground-truth") : engine.transcriber.name,
       extractor: engine.extractor.name,
       model: engine.gemini?.resolvedModel ?? engine.gemini?.model ?? null,
       menu_version: engine.catalog.version,
@@ -274,7 +306,7 @@ export function formatReport(r: EvalReport): string {
   const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
   const lines = [
     "",
-    `Eval: ${r.config.transcriber} + ${r.config.extractor} (${r.config.layout})`,
+    `Eval: ${r.config.transcriber} + ${r.config.extractor} (${r.config.layout}, via ${r.config.via ?? "file"}${r.config.scenario ? `, scenario ${r.config.scenario}` : ""})`,
     "",
     `  Fixtures passed     ${s.fixtures_passed}/${s.fixtures}`,
     `  Item precision      ${pct(s.item_precision)}`,

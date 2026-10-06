@@ -54,12 +54,15 @@ function multisetDiff(expected: string[], actual: string[]): { tp: number; missi
 }
 
 export interface CompareOptions {
-  /** The run had vehicle events, so `status_with_vehicle_events` applies when set. */
-  vehicleEvents?: boolean;
+  /**
+   * Vehicle events in the run: off (audio only), on (the true timeline, so
+   * `status_with_vehicle_events` applies), or noisy (some missed: either status is fine).
+   */
+  vehicleEvents?: "off" | "on" | "noisy";
 }
 
 export const expectedStatus = (exp: ExpectedOrder, opts: CompareOptions = {}) =>
-  (opts.vehicleEvents ? exp.status_with_vehicle_events : undefined) ?? exp.status;
+  (opts.vehicleEvents === "on" ? exp.status_with_vehicle_events : undefined) ?? exp.status;
 
 export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: Order | undefined, opts: CompareOptions = {}): OrderComparison {
   const diffs: string[] = [];
@@ -106,9 +109,11 @@ export function compareOrder(catalog: Catalog, exp: ExpectedOrder, act: Order | 
   const expFlags = sortedJoin(exp.flags.filter((f) => !IGNORED_FLAGS.has(f)));
   const actFlags = sortedJoin(act.flags.filter((f) => !IGNORED_FLAGS.has(f)));
   if (expFlags !== actFlags) diffs.push(`flags: expected [${expFlags}], got [${actFlags}]`);
-  const status = expectedStatus(exp, opts);
+  const noisyAlt = opts.vehicleEvents === "noisy" && exp.status_with_vehicle_events === act.status;
+  const status = noisyAlt ? act.status : expectedStatus(exp, opts);
   if (status !== act.status) diffs.push(`status: expected ${status}, got ${act.status}`);
-  const expReview = sortedJoin(exp.review);
+  // An outcome settled by vehicle events no longer needs review for being undetermined.
+  const expReview = sortedJoin(status === "undetermined" ? exp.review : exp.review.filter((r) => r !== "outcome_undetermined"));
   const actReview = sortedJoin(act.review.reasons);
   if (expReview !== actReview) diffs.push(`review: expected [${expReview}], got [${actReview}]`);
 

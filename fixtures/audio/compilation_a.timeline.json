@@ -293,5 +293,48 @@
       "start_s": 153.164,
       "end_s": 175.245
     }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 22.982
+    },
+    {
+      "type": "vehicle_arrived",
+      "at_s": 33.482
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 56.606
+    },
+    {
+      "type": "vehicle_arrived",
+      "at_s": 67.107
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 101.663
+    },
+    {
+      "type": "vehicle_arrived",
+      "at_s": 112.163
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 129.165
+    },
+    {
+      "type": "vehicle_arrived",
+      "at_s": 151.664
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 177.245
+    }
   ]
 }

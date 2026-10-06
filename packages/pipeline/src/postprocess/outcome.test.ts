@@ -68,6 +68,23 @@ describe("decideOutcome", () => {
     expect(o.evidence).toEqual([{ type: "silence", at: atS(4), duration_s: 60, context_only: true }]);
   });
 
+  it("a vehicle event followed by more customer speech is noise, kept as context only", () => {
+    const o = decide({
+      utterances: [...ordered, cueUtt("u3", "customer", "And a large fries.", 12)],
+      vehicle: [{ type: "vehicle_event", event: "vehicle_arrived", at: atS(9) }],
+    });
+    expect(o.status).toBe("undetermined");
+    expect(o.evidence).toEqual([{ type: "vehicle_event", event: "vehicle_arrived", at: atS(9), context_only: true }]);
+  });
+
+  it("a ghost arrival followed by the crew's closing cue keeps completed", () => {
+    const o = decide({
+      utterances: [...ordered, cueUtt("u3", "crew", "That'll be $4.19, see you at the window.", 12)],
+      vehicle: [{ type: "vehicle_event", event: "vehicle_arrived", at: atS(9) }],
+    });
+    expect(o.status).toBe("completed");
+  });
+
   it("the crew saying the car left is abandonment", () => {
     expect(decide({ utterances: [...ordered, cueUtt("u3", "crew", "Oh, they just drove off.", 9)] }).status).toBe("abandoned");
   });

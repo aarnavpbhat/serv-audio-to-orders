@@ -1,0 +1,1 @@
+{ "description": "Connection drops 8 s in and never comes back within the grace window (row 32).", "disconnects": [{ "at_s": 8, "for_s": 600, "reconnect": false }] }

@@ -1,0 +1,54 @@
+/** Lane layer: one per store_id:lane_id. Owns the streaming transcriber, the conversation tracker and the clock anchor. */
+import type { AudioFrame, StreamSession } from "../input/types";
+
+/** Word times are seconds since the session anchor. */
+export interface StreamWord {
+  w: string;
+  start_s: number;
+  end_s: number;
+  conf: number;
+}
+
+/** A finalized utterance from a streaming transcriber. Times are seconds since the session anchor. */
+export interface StreamUtterance {
+  /** Provider or fixture id; the lane assigns one when absent. */
+  id?: string;
+  sessionId: string;
+  speaker: "crew" | "customer";
+  speakerLabel?: string;
+  /** Role inferred from wording because the audio did not separate the voices. */
+  speakerGuessed?: boolean;
+  start_s: number;
+  end_s: number;
+  text: string;
+  confidence: number;
+  words: StreamWord[];
+  language?: string;
+}
+
+export interface TranscriptHandlers {
+  utterance(u: StreamUtterance): void;
+  /** Interim (not final) text, for the UI only; never feeds the tracker. */
+  interim?(text: string, sessionId: string): void;
+  error?(e: Error): void;
+  /** Audio between these session offsets was not transcribed (provider error, reconnect). */
+  gap?(fromS: number, toS: number): void;
+}
+
+export interface TranscriptStream {
+  push(frame: AudioFrame): void;
+  /** No audio for a while (stream paused): keep the provider connection alive or close it to save credit. */
+  pause(): void;
+  resume(): void;
+  /** Flush pending finals and close. */
+  end(): Promise<void>;
+  /** Close at once. */
+  close(): void;
+  /** Billable audio minutes sent to the provider so far. */
+  audioMinutes(): number;
+}
+
+export interface StreamingTranscriber {
+  readonly name: string;
+  open(session: StreamSession, handlers: TranscriptHandlers): TranscriptStream;
+}

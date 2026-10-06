@@ -1,0 +1,1 @@
+{ "description": "Wire codec flac, 100 ms frames (row 36; decoded by the WebSocket endpoint).", "codec": "flac", "frame_ms": 100 }

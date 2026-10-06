@@ -91,23 +91,35 @@ export function decideOutcome(input: OutcomeInput): Outcome {
   const cues = spokenCues(signals.utterances, input.activeLines > 0 ? input.firstItemS : null);
   const completion = cues.find((c) => c.kind === "closing" || c.kind === "customer_done");
   const greeting = cues.find((c) => c.kind === "next_car_greeting");
+  // A vehicle event followed by more talk in this conversation did not mean the car left
+  // (a missed or ghost sensor event: nobody keeps ordering from an empty lane). Talk that is
+  // itself about the departure, or the next car's greeting, does not count against it.
+  const aboutLeaving = new Set(cues.filter((c) => c.kind === "departure_said" || c.kind === "next_car_greeting").map((c) => c.utterance_id));
+  const lastCustomerMs = Math.max(
+    Number.NEGATIVE_INFINITY,
+    ...signals.utterances.filter((u) => !u.chatter && !aboutLeaving.has(u.id)).map((u) => Date.parse(u.start_utc)),
+  );
+  const credible = (v: OutcomeEvidence) => Date.parse(v.at) >= lastCustomerMs;
+  const vehicle = signals.vehicle.filter(credible);
+  const doubtful = signals.vehicle.filter((v) => !credible(v)).map((v) => ({ ...v, context_only: true }));
   const departures = [
-    ...signals.vehicle.filter((v) => v.event === "vehicle_departed"),
+    ...vehicle.filter((v) => v.event === "vehicle_departed"),
     ...cues.filter((c) => c.kind === "departure_said"),
     // The next car's arrival counts; with a mid-order greeting it is the plan's "greeting plus vehicle event".
-    ...signals.vehicle.filter((v) => v.event === "vehicle_arrived"),
+    ...vehicle.filter((v) => v.event === "vehicle_arrived"),
   ].sort(byTime);
   const departure = departures[0];
+  const ctx = [...context, ...doubtful].sort(byTime);
 
   if (completion && (!departure || Date.parse(completion.at) <= Date.parse(departure.at))) {
-    const supporting = signals.vehicle.filter((v) => v.event === "vehicle_departed");
-    return { status: "completed", evidence: [completion, ...supporting, ...context] };
+    const supporting = vehicle.filter((v) => v.event === "vehicle_departed");
+    return { status: "completed", evidence: [completion, ...supporting, ...ctx] };
   }
   if (departure) {
     const withGreeting = departure.event === "vehicle_arrived" && greeting ? [greeting] : [];
-    return { status: "abandoned", evidence: [...withGreeting, departure, ...context] };
+    return { status: "abandoned", evidence: [...withGreeting, departure, ...ctx] };
   }
-  return { status: "undetermined", evidence: context };
+  return { status: "undetermined", evidence: ctx };
 }
 
 export interface ReviewInput {
