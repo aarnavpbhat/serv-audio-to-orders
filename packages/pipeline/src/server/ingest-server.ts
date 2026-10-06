@@ -260,7 +260,11 @@ export class IngestServer {
       if (!entry || entry.closing) return;
       entry.closing = true;
       this.live.delete(entry);
-      const drain = conn.close("remote_close").then(() => this.opts.onSessionClosed?.(conn.session.sessionId));
+      const drain = conn
+        .close("remote_close")
+        .then(() => this.opts.onSessionClosed?.(conn.session.sessionId))
+        // Never an unhandled rejection (it would end the process), and never blocks shutdown.
+        .catch((e: unknown) => this.opts.log?.({ event: "ingest_session_close_error", session_id: conn.session.sessionId, error: (e as Error).message.slice(0, 200) }));
       this.draining.add(drain);
       void drain.finally(() => this.draining.delete(drain));
       this.opts.log?.({ event: "ingest_session_close", session_id: conn.session.sessionId });
