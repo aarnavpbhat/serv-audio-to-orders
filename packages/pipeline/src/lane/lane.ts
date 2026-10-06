@@ -9,6 +9,8 @@
  * parity against the old file path; the tracker is the live path.
  */
 import type { Engine } from "../engine";
+import { replay } from "../build/replay";
+import { FuzzyExtractor } from "../extract/fuzzy-extractor";
 import { addUsage, emptyUsage, type LlmUsage } from "../extract/types";
 import { addSeconds } from "../ingest/start-time";
 import { LEVEL_WINDOW_SAMPLES, mixdown } from "../input/pcm";
@@ -23,13 +25,24 @@ import { ConversationTracker, type TrackerAction, type TrackerDecision } from ".
 import type { StreamUtterance, StreamingTranscriber, TranscriptStream } from "./types";
 
 /** What the lane reports as it goes (live UI, logs). */
+export interface DraftLine {
+  name: string;
+  quantity: number;
+  size: string | null;
+}
+
 export type LaneUpdate =
-  | { type: "session"; sessionId: string; open: boolean; at: string }
+  | { type: "session"; sessionId: string; open: boolean; at: string; codec?: string; channels?: number; sourceType?: string }
   | { type: "utterance"; utterance: Utterance }
   | { type: "interim"; text: string; sessionId: string }
   | { type: "tracker"; decision: TrackerDecision }
   | { type: "order"; payload: OrderPayload }
-  | { type: "event"; event: ControlEvent["type"] | "disconnect" | "reconnect"; at: string };
+  | { type: "event"; event: ControlEvent["type"] | "disconnect" | "reconnect"; at: string }
+  /** Tracker state and timers (lane clock), sent when they change. */
+  | { type: "status"; status: ConversationTracker["status"]; clock: string; audioMinutes: number }
+  /** Keyword preview of the open conversation's order (free; the real order is built at close). */
+  | { type: "draft"; conversationId: string | null; lines: DraftLine[] }
+  | { type: "delivery"; webhookId: string; orderId: string; version: number; status: string; attempts: number; code: number | null };
 
 export interface LaneOptions {
   engine: Engine;
@@ -121,6 +134,9 @@ export class LaneSession {
   private streamMinutes = 0;
   private batchSegmentation: Segmentation | null = null;
   private readonly recorder: LaneRecorder | null;
+  private lastStatus = "";
+  private lastDraft = "";
+  private readonly preview = new FuzzyExtractor();
 
   /** Every order version built, in order. */
   readonly orders: RunOrder[] = [];
@@ -249,6 +265,32 @@ export class LaneSession {
     }
     await this.drain();
     await this.tickTracker();
+    if (this.opts.onUpdate) await this.report();
+  }
+
+  /** Live view: tracker status when it changes, and the open order's keyword preview when its lines change. */
+  private async report(): Promise<void> {
+    if (this.mode !== "tracker") return;
+    const status = this.tracker.status;
+    const key = JSON.stringify(status);
+    if (key !== this.lastStatus) {
+      this.lastStatus = key;
+      this.emit({ type: "status", status, clock: new Date(this.clockMs).toISOString(), audioMinutes: this.audioMinutes });
+    }
+    const open = this.tracker.openUtterances;
+    const draftKey = `${status.conversationId}:${open.length}`;
+    if (draftKey === this.lastDraft) return;
+    this.lastDraft = draftKey;
+    const { engine } = this.opts;
+    const customer = open.filter((u) => u.speaker === "customer");
+    const lines: DraftLine[] = [];
+    if (customer.length) {
+      const ex = await this.preview.extract({ segment: draftSegment(open), utterances: customer, catalog: engine.catalog });
+      for (const l of replay(ex.events, engine.catalog).lines) {
+        if (l.state === "active") lines.push({ name: l.catalog_id ? engine.catalog.name(l.catalog_id) : (l.raw_text ?? "?"), quantity: l.quantity, size: l.size });
+      }
+    }
+    this.emit({ type: "draft", conversationId: open.length ? status.conversationId : null, lines });
   }
 
   private openSession(session: StreamSession): void {
@@ -266,7 +308,7 @@ export class LaneSession {
     });
     this.sessions.set(session.sessionId, { session, stream, anchorMs, receipts: [], open: true, decisionsBefore: this.tracker.decisions.length });
     this.advance(anchorMs);
-    this.emit({ type: "session", sessionId: session.sessionId, open: true, at: session.anchorAt });
+    this.emit({ type: "session", sessionId: session.sessionId, open: true, at: session.anchorAt, codec: session.codecIn, channels: session.audio.channels, sourceType: session.sourceType });
     if (reconnect) {
       this.events.push({ atMs: anchorMs, type: "reconnect", sessionId: session.sessionId });
       this.emit({ type: "event", event: "reconnect", at: session.anchorAt });
@@ -622,6 +664,12 @@ export class LaneSession {
   private collect(done: FinalizeResult): void {
     this.orders.push(...done.orders);
     this.sends.push(...done.sends);
+    for (const send of done.sends) {
+      void send.then(
+        (r) => this.emit({ type: "delivery", webhookId: r.webhook_id, orderId: r.order_id, version: r.order_version, status: r.status, attempts: r.attempt_count, code: r.last_status_code }),
+        () => {},
+      );
+    }
     this.llm = addUsage(this.llm, done.usage);
   }
 
@@ -681,6 +729,27 @@ export class LaneSession {
     }
     return { vehicle, stream, flags: [...new Set(flags)] };
   }
+}
+
+/** A stand-in segment for the draft preview (the keyword extractor reads only the utterances). */
+function draftSegment(utts: Utterance[]): Segment {
+  return {
+    segment_id: "draft",
+    index: 0,
+    start_s: utts[0]?.start_s ?? 0,
+    end_s: utts.at(-1)?.end_s ?? 0,
+    utterance_ids: utts.map((u) => u.id),
+    non_customer_ids: [],
+    has_greeting: false,
+    has_closing: false,
+    truncated_start: false,
+    truncated_end: false,
+    trailing_silence_s: 0,
+    language: null,
+    non_english: false,
+    mean_word_conf: 1,
+    crosstalk_suspected: false,
+  };
 }
 
 function isTrackerControl(t: ControlEvent["type"]): t is "vehicle_arrived" | "vehicle_departed" | "stream_paused" | "stream_resumed" {

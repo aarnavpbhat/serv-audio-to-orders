@@ -9,6 +9,7 @@ import path from "node:path";
 import type { Engine } from "../engine";
 import { newId } from "../lib/ids";
 import { ntpOffsetMs } from "../lib/sntp";
+import { liveWriter } from "../lane/live-feed";
 import { LaneManager } from "../lane/manager";
 import type { LaneSession, LaneUpdate } from "../lane/lane";
 import { insertRun, updateRun } from "../store/db";
@@ -28,6 +29,8 @@ export interface ServeOptions {
    * eval's in-process checks.
    */
   record?: boolean;
+  /** Write lane updates to live_events for the web app's live view (default true). */
+  liveFeed?: boolean;
   /** Raw capture staging root (default DATA_DIR/staging/raw). */
   stagingRoot?: string;
   log?: (line: Record<string, unknown>) => void;
@@ -76,6 +79,7 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
   };
 
   const record = opts.record ?? true;
+  const live = opts.liveFeed === false ? null : liveWriter(db);
   const manager = new LaneManager({
     engine,
     transcriber: engine.streaming,
@@ -87,6 +91,7 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
       if (u.type === "order" || (u.type === "tracker" && u.decision.to === "FINALIZED")) {
         updateRun(db, lane.runId, { transcript: lane.transcript(), segmentation: lane.segmentation(), audio: lane.transcript().audio });
       }
+      live?.(lane, u);
       opts.onUpdate?.(lane, u);
     },
   });

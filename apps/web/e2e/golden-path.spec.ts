@@ -17,3 +17,9 @@ test("a fixture run produces an order and a delivered webhook", async ({ page })
   await expect(page.getByText("Conversation 1")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByText("delivered", { exact: true }).first()).toBeVisible({ timeout: 60_000 });
 });
+
+test("the Live page opens and connects to the feed", async ({ page }) => {
+  await page.goto("/live");
+  await expect(page.getByText(/Feed connected/)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+});

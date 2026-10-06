@@ -15,3 +15,6 @@ export { newId } from "./lib/ids";
 export { issueTicket } from "./input/auth/tokens";
 export { isSafeId } from "./lib/safe-id";
 export { usageOf as dataUsage, type Usage as DataUsage } from "./data/store";
+export { liveAfter, liveRecent, type LiveEvent } from "./lane/live-feed";
+export type { LaneUpdate, DraftLine } from "./lane/lane";
+export type { TrackerDecision } from "./lane/tracker";

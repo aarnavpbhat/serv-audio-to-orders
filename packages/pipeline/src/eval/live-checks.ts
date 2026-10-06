@@ -131,7 +131,7 @@ async function unclearItem(engine: Engine): Promise<LiveCheck> {
 
 /** Row 36: every wire codec over a real socket gives the same transcript as PCM. */
 async function wireCodecs(engine: Engine): Promise<LiveCheck> {
-  const service = await startService(engine, { host: "127.0.0.1", port: 0, devRoutes: true, record: false, skipClockCheck: true, deliver: false, log: () => {} });
+  const service = await startService(engine, { host: "127.0.0.1", port: 0, devRoutes: true, record: false, liveFeed: false, skipClockCheck: true, deliver: false, log: () => {} });
   const url = `ws://127.0.0.1:${service.server.address.port}`;
   const file = audio(engine, "01_simple");
   const codecs = ["pcm_s16le", "mulaw", "alaw", "opus", "mp3", "aac", "wav", "ogg", "flac"] as const;

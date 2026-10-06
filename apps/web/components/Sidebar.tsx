@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/Separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/Tooltip";
 import { cn } from "@/lib/utils";
 import { Artwork } from "./Artwork";
-import { ChartIcon, Equalizer, InboxIcon, SearchIcon, WaveIcon } from "./Icons";
+import { ChartIcon, Equalizer, InboxIcon, LiveIcon, SearchIcon, WaveIcon } from "./Icons";
 
 interface RecentRun {
   id: string;
@@ -21,6 +21,7 @@ interface RecentRun {
 
 const NAV = [
   { href: "/", label: "Runs", icon: WaveIcon },
+  { href: "/live", label: "Live", icon: LiveIcon },
   { href: "/mock-webhook", label: "Mock Webhook", icon: InboxIcon },
   { href: "/eval", label: "Eval", icon: ChartIcon },
 ];
