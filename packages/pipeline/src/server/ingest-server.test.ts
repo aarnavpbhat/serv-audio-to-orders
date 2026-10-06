@@ -4,6 +4,7 @@ import WebSocket from "ws";
 import { openDb } from "../store/db";
 import { createToken, issueTicket, revokeToken } from "../input/auth/tokens";
 import type { SourceMessage } from "../input/types";
+import { encodeForWire } from "../input/encoders";
 import { CLOSE, IngestServer, MAX_TEXT_BYTES, parseFormat } from "./ingest-server";
 
 const db = openDb(":memory:");
@@ -121,7 +122,7 @@ describe("ingest token auth", () => {
 });
 
 describe("endpoint limits", () => {
-  const { token } = createToken(db, { storeId: "store_l", lanes: ["lane_1", "lane_2", "lane_3", "lane_4", "lane_5"] });
+  const { token } = createToken(db, { storeId: "store_l", lanes: ["lane_1", "lane_2", "lane_3", "lane_4", "lane_5", "lane_6"] });
 
   it("refuses a non-local address without TLS", () => {
     expect(() => new IngestServer({ db, host: "0.0.0.0", port: 0, onMessage: () => {}, allowQueryToken: false, enableDevRoutes: false, allowInsecure: false })).toThrow(/without TLS/);
@@ -179,6 +180,21 @@ describe("endpoint limits", () => {
     expect(audio.reduce((n, m) => n + (m.kind === "audio" ? (m.frame.pcm[0]?.length ?? 0) : 0), 0)).toBe(1600);
     const controls = got.flatMap((m) => (m.kind === "control" ? [m.event.type] : []));
     expect(controls).toEqual(["vehicle_arrived", "unknown"]);
+    expect(got.at(-1)?.kind).toBe("session_close");
+  });
+
+  it("shutting down right after a session ends still decodes its last audio and closes it", async () => {
+    const { s, url, got } = await start();
+    const wire = await encodeForWire([new Int16Array(16000).fill(2000)], "flac", 100);
+    const { ws } = await connect(`${url}?lane=lane_6&codec=flac&rate=16000&channels=1`, bearer(token));
+    for (const chunk of wire) ws.send(chunk, { binary: true });
+    await new Promise((r) => {
+      ws.once("close", r);
+      ws.close(1000);
+    });
+    await s.close();
+    const samples = got.reduce((n, m) => n + (m.kind === "audio" ? (m.frame.pcm[0]?.length ?? 0) : 0), 0);
+    expect(samples).toBeGreaterThan(15000);
     expect(got.at(-1)?.kind).toBe("session_close");
   });
 

@@ -96,6 +96,8 @@ export class IngestServer {
   private readonly http: Server;
   private readonly wss: WebSocketServer;
   private readonly live = new Set<Live>();
+  /** Connections whose socket closed but whose decoder is still draining (awaited on shutdown). */
+  private readonly draining = new Set<Promise<void>>();
   private readonly auth: IngestAuth;
   private timers: ReturnType<typeof setInterval>[] = [];
 
@@ -152,6 +154,8 @@ export class IngestServer {
     for (const t of this.timers) clearInterval(t);
     for (const l of this.live) l.ws.close(1001, "server shutting down");
     await Promise.all([...this.live].map((l) => l.conn.close("remote_close")));
+    // Sessions that ended just before shutdown finish decoding their last audio first.
+    await Promise.all([...this.draining]);
     this.wss.close();
     await new Promise<void>((resolve) => this.http.close(() => resolve()));
   }
@@ -256,7 +260,13 @@ export class IngestServer {
       if (!entry || entry.closing) return;
       entry.closing = true;
       this.live.delete(entry);
-      void conn.close("remote_close").then(() => this.opts.onSessionClosed?.(conn.session.sessionId));
+      const drain = conn
+        .close("remote_close")
+        .then(() => this.opts.onSessionClosed?.(conn.session.sessionId))
+        // Never an unhandled rejection (it would end the process), and never blocks shutdown.
+        .catch((e: unknown) => this.opts.log?.({ event: "ingest_session_close_error", session_id: conn.session.sessionId, error: (e as Error).message.slice(0, 200) }));
+      this.draining.add(drain);
+      void drain.finally(() => this.draining.delete(drain));
       this.opts.log?.({ event: "ingest_session_close", session_id: conn.session.sessionId });
     };
     ws.on("close", done);
