@@ -19,8 +19,8 @@ test("a fixture run produces an order and a delivered webhook", async ({ page })
   await expect(page.getByText("delivered", { exact: true }).first()).toBeVisible({ timeout: 60_000 });
 });
 
-test("the Live page opens and connects to the feed", async ({ page }) => {
-  await page.goto("/live");
-  await expect(page.getByText(/Feed connected/)).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+test("the Live page is disabled: 404 and not in the sidebar", async ({ page }) => {
+  expect((await page.goto("/live"))?.status()).toBe(404);
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "Live", exact: true })).toHaveCount(0);
 });

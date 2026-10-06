@@ -79,10 +79,10 @@ test("stopping twice, or from a second tab, is not an error", async ({ page, con
   const { sessions } = (await (await page.request.get("/api/sessions")).json()) as { sessions: { sessionId: string; laneId: string }[] };
   const id = sessions.find((s) => s.laneId === l)?.sessionId ?? "";
   expect(id).not.toBe("");
-  // The Live page's Sessions panel in another tab ends it.
+  // Another tab ends it through the stop endpoint.
   const other = await context.newPage();
-  await other.goto("/live");
-  await other.locator(`[data-session="${id}"]`).getByRole("button", { name: "End session" }).click();
+  await other.goto("/orders");
+  expect((await other.request.post(`/api/sessions/${id}/stop`, { data: { mode: "end" } })).status()).toBe(200);
   await expect(page.getByText(/stopped by operator/i)).toBeVisible();
   await page.waitForTimeout(3000);
   await expect(page.getByText(/^(open|connecting|reconnecting)$/)).toHaveCount(0);
