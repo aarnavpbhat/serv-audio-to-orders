@@ -21,7 +21,7 @@ import { ConfigError, createEngine, type EngineOptions, type ExtractorKind, type
 import { dataCommand } from "./data/cli";
 import { runActedScenarios } from "./sim/acted-scenarios";
 import { readRawSession } from "./data/raw-sink";
-import { formatReport, runEval } from "./eval/run-eval";
+import { formatReport, runEval, uncachedMinutes } from "./eval/run-eval";
 import { IngestError } from "./ingest/probe";
 import { createToken, issueTicket, listTokens, revokeToken } from "./input/auth/tokens";
 import { DEFAULT_SCENARIO, loadScenario } from "./input/scenario";
@@ -284,6 +284,13 @@ async function main(): Promise<void> {
     }
     case "eval": {
       const engine = createEngine({ ...engineOpts(values), log: () => {} });
+      // Credit guard: never bill Deepgram for audio by surprise.
+      const bill = await uncachedMinutes(engine, { layout: values.layout === "stereo" ? "stereo" : "mono", compilations: !values["no-compilations"], ...(values.only ? { only: values.only.split(",") } : {}) });
+      if (bill.minutes > 0 && !values.yes) {
+        console.log(`This eval would send ${bill.minutes} min of audio to Deepgram (not cached: ${bill.files.join(", ")}). Add --yes to spend it, or --transcriber script for a free run.`);
+        process.exitCode = 1;
+        return;
+      }
       const report = await runEval(engine, {
         layout: values.layout === "stereo" ? "stereo" : "mono",
         ...(values.only ? { only: values.only.split(",") } : {}),

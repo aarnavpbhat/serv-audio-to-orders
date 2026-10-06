@@ -8,6 +8,8 @@ import type { StreamingTranscriber } from "../lane/types";
 import { loadFixtureScripts } from "../fixtures/load";
 import type { RunResult } from "../run";
 import { FileOrLiveTranscriber } from "../lane/file-transcriber";
+import { probeAudio, sha256File } from "../ingest/probe";
+import { DeepgramTranscriber } from "../transcribe/deepgram";
 import type { ExpectedOrder, FixtureTimeline, NoiseLevel } from "../schemas";
 import { loadTimeline } from "../transcribe/script";
 import { CHECKLIST } from "./checklist";
@@ -286,6 +288,29 @@ function liveMetrics(r: Awaited<ReturnType<typeof replayFile>>, t: Target): NonN
     expected_reopens: t.expected.filter((e) => (e.order.lane_version ?? 1) > 1).length,
     duplicate_versions,
   };
+}
+
+/**
+ * Deepgram minutes a run would bill: audio whose prerecorded response is not
+ * cached yet (or every minute, when files are streamed live). Shown before a
+ * real-provider eval so credit is never spent by surprise.
+ */
+export async function uncachedMinutes(engine: Engine, opts: Pick<EvalOptions, "layout" | "only" | "compilations">): Promise<{ minutes: number; files: string[] }> {
+  if (engine.streaming.name.startsWith("script")) return { minutes: 0, files: [] };
+  const live = !(engine.streaming instanceof FileOrLiveTranscriber);
+  let minutes = 0;
+  const files: string[] = [];
+  for (const t of targets(engine.cfg.paths.fixturesDir, { layout: opts.layout, compilations: opts.compilations, deliver: false, webhook: false, ...(opts.only ? { only: opts.only } : {}) })) {
+    const file = path.join(engine.cfg.paths.fixturesDir, "audio", `${t.id}.${opts.layout}.${t.noise}.mp3`);
+    if (!existsSync(file)) continue;
+    const multichannel = opts.layout === "stereo";
+    const cached = !live && existsSync(DeepgramTranscriber.cacheFile(engine.cfg.paths.cacheDir, await sha256File(file), multichannel, engine.cfg.language));
+    if (cached) continue;
+    const info = await probeAudio(file);
+    minutes += (info.duration_s / 60) * (multichannel ? info.channels : 1);
+    files.push(path.basename(file));
+  }
+  return { minutes: Math.round(minutes * 10) / 10, files };
 }
 
 export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string) => void = console.log): Promise<EvalReport> {

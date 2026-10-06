@@ -17,6 +17,7 @@ import { newId } from "../lib/ids";
 import { finalizeConversation, type FinalizeResult, type RunOrder } from "../orders/finalize";
 import type { BoundaryDecision, Flag, OrderEvent, OrderPayload, OutcomeEvidence, Segment, Segmentation, Transcript, Utterance } from "../schemas";
 import { describe } from "../segment/segment";
+import { inferTurnRoles } from "../transcribe/roles";
 import type { OutboxRow } from "../store/db";
 import { LaneRecorder, type SessionEventLine } from "./recorder";
 import { ConversationTracker, type TrackerAction, type TrackerDecision } from "./tracker";
@@ -446,10 +447,10 @@ export class LaneSession {
       .map((id) => this.byId.get(id))
       .filter((u): u is Utterance => u !== undefined)
       .sort((x, y) => x.start_s - y.start_s);
-    // Guessed roles are checked again after the LLM role pass, so a mislabelled customer is not lost.
-    if (!utts.some((u) => u.speaker === "customer" || u.speaker_guessed)) {
-      // A car that never spoke (or only crew lines): no order, as in v1.
-      this.log(`${this.key}: ${a.conversationId} closed with no customer speech; no order`);
+    // Nothing heard at all: no order. Lines all heard as crew still go on: the role pass
+    // (runFinalize) decides whether the customer's voice was put under the crew's label.
+    if (!utts.length) {
+      this.log(`${this.key}: ${a.conversationId} closed with no speech; no order`);
       return;
     }
     const durS = this.laneS(this.audioEndMs || this.clockMs);
@@ -478,14 +479,24 @@ export class LaneSession {
    */
   private async rolePass(seg: Segment): Promise<boolean> {
     const utts = seg.utterance_ids.map((id) => this.byId.get(id)).filter((u): u is Utterance => u !== undefined);
-    if (!utts.some((u) => u.speaker_guessed) || this.rolesChecked.has(seg.utterance_ids.join())) return this.lowAgreement.has(seg.utterance_ids.join());
+    // Every car has a customer: a conversation heard as all crew means diarization put
+    // the customer's voice under the crew's label, so its roles are checked too.
+    const noCustomer = !utts.some((u) => u.speaker === "customer");
+    if ((!noCustomer && !utts.some((u) => u.speaker_guessed)) || this.rolesChecked.has(seg.utterance_ids.join())) return this.lowAgreement.has(seg.utterance_ids.join());
     this.rolesChecked.add(seg.utterance_ids.join());
-    const roles = await this.opts.engine.judge?.labelLines?.(utts.map((u) => u.text));
+    // The LLM labels the lines; without one, a crew-only conversation falls back to wording and turn-taking.
+    // Agreement compares two independent guesses: the LLM against the wording. (Against
+    // diarization that heard everyone as crew it would always look low.)
+    const wording = noCustomer ? inferTurnRoles(utts) : utts.map((u) => u.speaker);
+    const roles = (await this.opts.engine.judge?.labelLines?.(utts.map((u) => u.text))) ?? (noCustomer ? wording : null);
     if (!roles) return false;
-    const agree = utts.filter((u, i) => u.speaker === roles[i]).length / utts.length;
+    const agree = utts.filter((_, i) => wording[i] === roles[i]).length / utts.length;
     utts.forEach((u, i) => {
       const r = roles[i];
-      if (r) u.speaker = r;
+      if (r && r !== u.speaker) {
+        u.speaker = r;
+        u.speaker_guessed = true;
+      }
     });
     const low = agree < ROLE_AGREEMENT_MIN;
     if (low) this.lowAgreement.add(seg.utterance_ids.join());

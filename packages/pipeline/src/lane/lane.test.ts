@@ -121,4 +121,44 @@ describe("guessed roles", () => {
     expect(labels).toHaveLength(1);
     expect(lane.orders.map((o) => o.order.items.map((i) => i.catalog_id))).toEqual([["cheeseburger"]]);
   });
+
+  it("a car diarized entirely as crew (not guessed) is checked too; with no LLM the wording decides", async () => {
+    const texts = ["Hi. Welcome to Sandbox Burger. Go ahead whenever you're ready.", "Can I get a cheeseburger please?", "Your total is $2.99. See you at the window."];
+    // Diarization put the customer's voice under the crew's label; nothing is marked guessed.
+    const transcriber: StreamingTranscriber = {
+      name: "stub/diarized",
+      open: (session, h) => {
+        let sent = false;
+        return {
+          push: () => {
+            if (sent) return;
+            sent = true;
+            texts.forEach((text, i) => h.utterance({ sessionId: session.sessionId, speaker: "crew", start_s: i * 4, end_s: i * 4 + 3, text, confidence: 0.9, words: [] }));
+          },
+          pause: () => {},
+          resume: () => {},
+          end: async () => {},
+          close: () => {},
+          audioMinutes: () => 0,
+          watermarkS: () => Number.POSITIVE_INFINITY,
+        };
+      },
+    };
+    const engine = testEngine();
+    engine.extractor = { name: "stub", extract: async () => ({ events: events([{ event_id: "e1", type: "ADD", catalog_id: "cheeseburger", source_utterance_ids: ["u2"] }]), usage: emptyUsage("none"), warnings: [], raw: null, repaired: false, fallback: false }) };
+    const manager = new LaneManager({ engine, transcriber, runId: "run_diar", deliver: false });
+    const at = (s: number) => new Date(Date.parse("2026-10-03T18:40:00Z") + s * 1000).toISOString();
+    await manager.handle({ kind: "session_open", session: { sessionId: "ses_d", storeId: "s", laneId: "l", sourceType: "hme_ws", audio: { sampleRate: 16000, channels: 1 }, timeBasis: "receive_clock", anchorAt: at(0), codecIn: "pcm_s16le" } });
+    await manager.handle({ kind: "audio", frame: { sessionId: "ses_d", seq: 0, sampleOffset: 0, receivedAt: at(0), pcm: [new Int16Array(16000)] } });
+    await manager.handle({ kind: "tick", at: at(20) });
+    await manager.end();
+    const lane = [...manager.lanes.values()][0];
+    expect(lane?.orders.map((o) => o.order.items.map((i) => i.catalog_id))).toEqual([["cheeseburger"]]);
+    const roles = lane?.transcript().utterances.map((u) => [u.speaker, u.speaker_guessed ?? false]);
+    expect(roles).toEqual([
+      ["crew", false],
+      ["customer", true],
+      ["crew", false],
+    ]);
+  });
 });
