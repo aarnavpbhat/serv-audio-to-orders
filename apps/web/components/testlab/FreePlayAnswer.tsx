@@ -25,7 +25,7 @@ export function FreePlayAnswer({ catalog, onScore, onSkip }: { catalog: Catalog;
     <Card className="gap-4 px-5 py-4 text-[13px]">
       <div>
         <h2 className="section-title">What was actually ordered?</h2>
-        <p className="text-muted-foreground">Your answer is the ground truth: the run is scored against it. Skip it, and any order the system flagged goes to the review queue instead.</p>
+        <p className="text-muted-foreground">Your answer is the ground truth: the run is scored against it. Skip it, and any order the system flagged stays flagged on the Orders page.</p>
       </div>
       {orders.map((o, i) => (
         <div key={i} className="space-y-2 rounded-lg border border-line p-3">
