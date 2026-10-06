@@ -126,8 +126,9 @@ function ReviewCard({ order, catalog, name, author }: { order: ReviewOrder; cata
       <div className="space-y-1">
         <div className="label text-[10.5px]">Why it was flagged</div>
         <ul className="list-disc space-y-0.5 pl-5">
-          {reviewReasonText(p, name).map((t) => (
-            <li key={t}>{t}</li>
+          {reviewReasonText(p, name).map((t, i) => (
+            // Two unclear items can read the same, so the index is the key.
+            <li key={i}>{t}</li>
           ))}
         </ul>
       </div>

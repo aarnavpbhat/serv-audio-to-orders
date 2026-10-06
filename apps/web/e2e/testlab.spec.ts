@@ -50,6 +50,11 @@ test("a run with a skipped line fails, and the missing item is attributed to hea
   await expect(missing).toContainText("heard wrong");
 });
 
+test("scripted runs have a known answer, so none of their orders wait in the review queue", async ({ page }) => {
+  await page.goto("/review");
+  await expect(page.getByText(/store_testlab \/ tl_\d+_/)).toHaveCount(0);
+});
+
 test("the history aggregates the runs per scenario", async ({ page }) => {
   await page.goto("/testlab/history");
   await expect(page.getByTestId("history-table")).toBeVisible();
