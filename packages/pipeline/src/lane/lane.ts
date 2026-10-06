@@ -69,7 +69,9 @@ interface Conversation {
   /** First order id is minted at open (ULID); split parts and later versions reuse theirs. */
   orderIds: string[];
   groupId: string | null;
+  /** Finalizations so far; each order id keeps its own version (a split part first seen on a reopen starts at 1). */
   version: number;
+  versions: Map<string, number>;
   events: OrderEvent[] | null;
   statuses: string[];
   segment: Segment | null;
@@ -361,6 +363,7 @@ export class LaneSession {
             orderIds: [newId("ord")],
             groupId: null,
             version: 0,
+            versions: new Map(),
             events: null,
             statuses: [],
             segment: null,
@@ -463,8 +466,8 @@ export class LaneSession {
       ...(s?.session.sourceRef ? { audioFile: s.session.sourceRef } : {}),
       orderIds: conv.orderIds,
       groupId: conv.groupId,
-      version: conv.version + 1,
-      correctionReason: conv.version > 0 ? reason : null,
+      version: conv.versions,
+      correctionReason: reason,
       ...(events ? { events } : {}),
       // A late vehicle event only matters if it changes how the conversation ended.
       ...(reason === "late_evidence" ? { onlyIfStatusChanges: conv.statuses } : {}),
@@ -473,6 +476,7 @@ export class LaneSession {
     });
     if (!done.orders.length) return;
     conv.version += 1;
+    for (const o of done.orders) conv.versions.set(o.order.order_id, o.payload.order_version);
     conv.orderIds = done.orders.map((o) => o.order.order_id);
     conv.groupId = done.orders[0]?.order.group_id ?? null;
     conv.events = done.orders[0]?.events ?? conv.events;
@@ -607,6 +611,7 @@ export class LaneSession {
         orderIds: [newId("ord")],
         groupId: null,
         version: 0,
+        versions: new Map(),
         events: null,
         statuses: [],
         segment,
