@@ -10,7 +10,7 @@ import type { BoundaryJudge } from "../segment/segment";
 import type { RoleJudge } from "../transcribe/types";
 import { FuzzyExtractor } from "./fuzzy-extractor";
 import { LlmExtraction, extractionJsonSchema } from "./llm-schema";
-import { BOUNDARY_PROMPT, PROMPT_VERSION, ROLE_PROMPT, SYSTEM_PROMPT, buildUserPrompt, formatUtterances, repairPrompt } from "./prompt";
+import { BOUNDARY_PROMPT, LINE_ROLES_PROMPT, PROMPT_VERSION, ROLE_PROMPT, SYSTEM_PROMPT, buildUserPrompt, formatUtterances, repairPrompt } from "./prompt";
 import { addUsage, emptyUsage, type ExtractInput, type ExtractResult, type Extractor, type LlmUsage } from "./types";
 import { validateEvents } from "./validate";
 
@@ -341,6 +341,7 @@ export class GeminiExtractor implements Extractor {
 
 const BoundaryAnswer = z.object({ new_customer: z.boolean() });
 const RoleAnswer = z.object({ crew_speaker: z.string() });
+const LineRolesAnswer = z.object({ roles: z.array(z.enum(["crew", "customer"])) });
 
 export class GeminiJudge implements BoundaryJudge, RoleJudge {
   constructor(private readonly client: GeminiClient) {}
@@ -391,6 +392,21 @@ export class GeminiJudge implements BoundaryJudge, RoleJudge {
     }
     if (!res) return null;
     return this.parse("segment_boundary", res.text, BoundaryAnswer)?.new_customer ?? null;
+  }
+
+  /** Plan D7: one role per line when diarization collapsed. Null when there is no usable answer. */
+  async labelLines(lines: string[]): Promise<("crew" | "customer")[] | null> {
+    if (!lines.length) return [];
+    const user = lines.map((l, i) => `${i + 1}. ${l}`).join("\n");
+    const res = await this.ask({
+      site: "line_roles",
+      system: LINE_ROLES_PROMPT,
+      user,
+      schema: { type: "object", properties: { roles: { type: "array", items: { type: "string", enum: ["crew", "customer"] } } }, required: ["roles"] },
+    });
+    if (!res) return null;
+    const roles = this.parse("line_roles", res.text, LineRolesAnswer)?.roles ?? null;
+    return roles && roles.length === lines.length ? roles : null;
   }
 
   async pickCrew(samples: { speaker: string; lines: string[] }[]): Promise<string | null> {

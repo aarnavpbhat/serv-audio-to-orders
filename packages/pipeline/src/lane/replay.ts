@@ -34,6 +34,8 @@ export interface ReplayResult {
   deliveries: OutboxRow[];
   usage: { deepgram_minutes: number; llm: ReturnType<typeof emptyUsage>; gemini_today: { day: string; requests: number; cap: number } | null };
   timings: Record<string, number>;
+  /** Real-time replays only: conversation end -> first webhook 2xx, per order (ms). */
+  closeLatencyMs: number[];
 }
 
 export async function replayFile(engine: Engine, file: string, opts: ReplayRunOptions): Promise<ReplayResult> {
@@ -75,8 +77,21 @@ export async function replayFile(engine: Engine, file: string, opts: ReplayRunOp
       gemini_today: ledger ? { day: ledger.day, requests: ledger.requests, cap: engine.cfg.geminiDailyCap } : null,
     };
     const timings = { total_ms: Math.round(performance.now() - t0) };
+    // At 1x (or Nx), recording time maps to wall time, so the close latency is measurable.
+    const deliveries = outboxForRun(db, runId);
+    const closeLatencyMs: number[] = [];
+    const speed = opts.speed ?? "max";
+    if (speed !== "max" && source.wallStartMs !== null && source.anchorMs !== null) {
+      for (const o of orders) {
+        const v1 = deliveries.find((d) => d.order_id === o.order.order_id && d.order_version === 1);
+        if (!v1?.delivered_at) continue;
+        const endedWall = source.wallStartMs + (Date.parse(o.payload.times.ended_at) - source.anchorMs) / speed;
+        closeLatencyMs.push(Math.round(v1.delivered_at - endedWall));
+      }
+    }
     updateRun(db, runId, { status: "completed", stage: "done", usage, timings });
-    return { run_id: runId, transcript, segmentation, orders, versions, decisions: lanes.flatMap((l) => l.decisions), deliveries: outboxForRun(db, runId), usage, timings };
+    updateRun(db, runId, { timings: { ...timings, ...latencySummary(closeLatencyMs) } });
+    return { run_id: runId, transcript, segmentation, orders, versions, decisions: lanes.flatMap((l) => l.decisions), deliveries, usage, timings, closeLatencyMs };
   } catch (e) {
     updateRun(db, runId, { status: "failed", error: (e as Error).message });
     throw e;
@@ -95,4 +110,12 @@ function emptyTranscript(file: string): Transcript {
     language: null,
     utterances: [],
   };
+}
+
+/** p50 and p95 of close latency, for run timings and reports. */
+export function latencySummary(ms: number[]): { close_latency_p50_ms?: number; close_latency_p95_ms?: number } {
+  if (!ms.length) return {};
+  const sorted = [...ms].sort((a, b) => a - b);
+  const at = (q: number) => sorted[Math.min(sorted.length - 1, Math.ceil(q * sorted.length) - 1)] as number;
+  return { close_latency_p50_ms: at(0.5), close_latency_p95_ms: at(0.95) };
 }

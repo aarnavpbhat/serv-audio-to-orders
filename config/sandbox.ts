@@ -47,6 +47,8 @@ export interface SandboxConfig {
   /** Gemini 3 thinking level. Low keeps output tokens (and free-tier usage) small. */
   geminiThinking: "minimal" | "low" | "medium" | "high";
   sttModel: string;
+  /** Close an idle Deepgram live connection after this many seconds of pause (reopened on resume). */
+  deepgramIdleCloseS: number;
   lowConfWord: number;
   lowAudioQualityMeanConf: number;
   /** Below this speech-to-noise-floor ratio (dB) a conversation is flagged low_audio_quality. */
@@ -252,6 +254,7 @@ export function getConfig(): SandboxConfig {
     geminiDailyCap: num("GEMINI_DAILY_CAP", 200),
     geminiThinking: thinking(env("GEMINI_THINKING")),
     sttModel: "nova-3",
+    deepgramIdleCloseS: num("DEEPGRAM_IDLE_CLOSE_S", 30),
     lowConfWord: 0.6,
     lowAudioQualityMeanConf: num("LOW_AUDIO_QUALITY_CONF", 0.8),
     lowAudioSnrDb: num("LOW_AUDIO_SNR_DB", 15),

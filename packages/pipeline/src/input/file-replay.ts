@@ -43,6 +43,9 @@ const iso = (ms: number) => new Date(ms).toISOString();
 export class FileReplaySource implements AudioSource {
   private closed = false;
   readonly scenario: Scenario;
+  /** Set when playback starts: wall time of recording offset 0, and the recording anchor (for latency). */
+  wallStartMs: number | null = null;
+  anchorMs: number | null = null;
 
   constructor(
     readonly file: string,
@@ -61,6 +64,7 @@ export class FileReplaySource implements AudioSource {
     const now = this.opts.now ?? Date.now;
     const sleep = this.opts.sleep ?? realSleep;
     const wallStart = now();
+    this.wallStartMs = wallStart;
     for (const m of timed) {
       if (this.closed) return;
       if (speed !== "max") {
@@ -84,6 +88,7 @@ export class FileReplaySource implements AudioSource {
     const total = pcm[0]?.length ?? 0;
     const durS = total / CANONICAL_RATE;
     const anchorMs = Date.parse(this.opts.anchorAt ?? timeline?.recording_start_utc ?? resolveStartTime(this.file, cfg.audioStartUtc.value).audio_start_utc);
+    this.anchorMs = anchorMs;
     const at = (t: number) => iso(anchorMs + Math.round(t * 1000));
     const roles: ChannelRole[] = channels === 2 ? ["customer", "crew"] : ["mixed"];
 

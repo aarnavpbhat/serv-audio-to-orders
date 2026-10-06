@@ -3,6 +3,7 @@ import { getConfig } from "@serv/config";
 import type { Engine } from "./engine";
 import { OracleExtractor } from "./extract/oracle";
 import { openDb } from "./store/db";
+import { ScriptStreamingTranscriber } from "./lane/script-transcriber";
 import { ScriptTranscriber } from "./transcribe/script";
 import { Deliverer } from "./webhook/deliver";
 import { loadCatalog } from "./menu/load";
@@ -76,6 +77,7 @@ export function testEngine(): Engine {
     matcher,
     db,
     transcriber: new ScriptTranscriber(),
+    streaming: new ScriptStreamingTranscriber(),
     extractor: new OracleExtractor(path.join(repoRoot, "fixtures")),
     judge: null,
     gemini: null,

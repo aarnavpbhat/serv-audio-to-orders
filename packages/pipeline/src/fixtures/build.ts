@@ -32,7 +32,11 @@ interface Compilation {
   title: string;
   scripts: string[];
   gap_s: number;
+  /** Per-gap silences (lane streams); overrides gap_s. */
+  gaps_s?: number[];
   noise: NoiseLevel;
+  /** Layouts to write (default both). Lane streams are mono only to keep the repo small. */
+  layouts?: ("stereo" | "mono")[];
 }
 
 interface Rendered {
@@ -208,6 +212,7 @@ async function writeVariants(
   levels: NoiseLevel[],
   fixtureIds: string[],
   scripts: Map<string, FixtureScript>,
+  layouts: ("stereo" | "mono")[] = ["stereo", "mono"],
 ): Promise<string[]> {
   const written: string[] = [];
   const speechRms = Math.max(rms(r.customer), rms(r.crew)) || 0.1;
@@ -226,7 +231,7 @@ async function writeVariants(
       stereo[2 * i + 1] = clamp(w);
       mono[i] = clamp((r.customer[i] ?? 0) + (r.crew[i] ?? 0) + nz);
     }
-    for (const layout of ["stereo", "mono"] as const) {
+    for (const layout of layouts) {
       const file = `${base}.${layout}.${level}.mp3`;
       const out = path.join(outDir, file);
       if (layout === "stereo") {
@@ -254,22 +259,22 @@ async function writeVariants(
 
 const clamp = (v: number) => (v > 0.99 ? 0.99 : v < -0.99 ? -0.99 : v);
 
-function concat(parts: Rendered[], gapS: number): Rendered {
-  const gap = Math.round(gapS * SR);
-  const n = parts.reduce((s, p) => s + p.customer.length, 0) + gap * (parts.length - 1);
+function concat(parts: Rendered[], gapS: number | number[]): Rendered {
+  const gapAt = (i: number) => Math.round((Array.isArray(gapS) ? (gapS[i] ?? gapS.at(-1) ?? 10) : gapS) * SR);
+  const n = parts.reduce((s, p, i) => s + p.customer.length + (i < parts.length - 1 ? gapAt(i) : 0), 0);
   const customer = new Float32Array(n);
   const crew = new Float32Array(n);
   const utterances: Rendered["utterances"] = [];
   const orders: Rendered["orders"] = [];
   let offset = 0;
   let uid = 0;
-  for (const p of parts) {
+  for (const [i, p] of parts.entries()) {
     customer.set(p.customer, offset);
     crew.set(p.crew, offset);
     const off = offset / SR;
     for (const u of p.utterances) utterances.push({ ...u, id: `u${++uid}`, start_s: round3(u.start_s + off), end_s: round3(u.end_s + off) });
     for (const o of p.orders) orders.push({ ...o, start_s: round3(o.start_s + off), end_s: round3(o.end_s + off) });
-    offset += p.customer.length + gap;
+    offset += p.customer.length + gapAt(i);
   }
   return { customer, crew, utterances, orders, duration_s: round3(n / SR) };
 }
@@ -307,8 +312,8 @@ async function main(): Promise<void> {
       if (!r) throw new Error(`compilation ${c.id}: unknown script ${id}`);
       return r;
     });
-    const r = concat(parts, c.gap_s);
-    const files = await writeVariants(c.id, outDir, r, [c.noise], c.scripts, byId);
+    const r = concat(parts, c.gaps_s ?? c.gap_s);
+    const files = await writeVariants(c.id, outDir, r, [c.noise], c.scripts, byId, c.layouts);
     count += files.length;
     console.log(`${c.id.padEnd(36)} ${r.duration_s.toFixed(1).padStart(5)}s  ${files.join(", ")}`);
   }

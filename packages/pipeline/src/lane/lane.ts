@@ -409,7 +409,33 @@ export class LaneSession {
     conv.chain = conv.chain.then(() => (conv.events ? this.runFinalize(conv, args, "late_evidence", conv.events) : undefined));
   }
 
+  /**
+   * Plan D7: when roles were guessed from wording, ask the LLM once to label the
+   * conversation's lines. Its answer replaces the guesses; if the two disagree
+   * on many lines, the order goes to review (roles_guessed_low_agreement).
+   */
+  private async rolePass(seg: Segment): Promise<boolean> {
+    const utts = seg.utterance_ids.map((id) => this.byId.get(id)).filter((u): u is Utterance => u !== undefined);
+    if (!utts.some((u) => u.speaker_guessed) || this.rolesChecked.has(seg.utterance_ids.join())) return this.lowAgreement.has(seg.utterance_ids.join());
+    this.rolesChecked.add(seg.utterance_ids.join());
+    const roles = await this.opts.engine.judge?.labelLines?.(utts.map((u) => u.text));
+    if (!roles) return false;
+    const agree = utts.filter((u, i) => u.speaker === roles[i]).length / utts.length;
+    utts.forEach((u, i) => {
+      const r = roles[i];
+      if (r) u.speaker = r;
+    });
+    const low = agree < ROLE_AGREEMENT_MIN;
+    if (low) this.lowAgreement.add(seg.utterance_ids.join());
+    this.log(`${this.key}: role pass on ${utts.length} guessed lines, ${Math.round(agree * 100)}% agreement`);
+    return low;
+  }
+
+  private readonly rolesChecked = new Set<string>();
+  private readonly lowAgreement = new Set<string>();
+
   private async runFinalize(conv: Conversation, args: FinalizeArgs, reason: "reopened_late_addition" | "late_evidence" | null, events: OrderEvent[] | null): Promise<void> {
+    const rolesLowAgreement = events ? false : await this.rolePass(args.segment);
     const transcript = this.transcript();
     const sessionId = this.utteranceSession.get(args.segment.utterance_ids[0] ?? "") ?? [...this.sessions.keys()][0] ?? "";
     const s = this.sessions.get(sessionId);
@@ -424,6 +450,7 @@ export class LaneSession {
       levelsDb: this.levels(),
       signals: { vehicle: args.vehicle, stream: args.stream, silence: args.silence },
       extraFlags: [...args.flags, ...(this.transcriptGap(args.segment) ? (["transcript_gap"] as Flag[]) : [])],
+      rolesLowAgreement,
       receivedAt: new Date(receipt?.wallMs ?? conv.openedWallMs).toISOString(),
       ...(s?.session.sourceRef ? { audioFile: s.session.sourceRef } : {}),
       orderIds: conv.orderIds,
@@ -612,5 +639,8 @@ function sessionFacts(s: SessionState | undefined, sessionId: string, storeId: s
     },
   };
 }
+
+/** Below this share of lines where the LLM agrees with the wording guesses, roles need a person's check. */
+export const ROLE_AGREEMENT_MIN = 0.7;
 
 export const laneKey = (storeId: string, laneId: string) => `${storeId}:${laneId}`;

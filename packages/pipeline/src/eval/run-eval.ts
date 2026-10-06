@@ -4,7 +4,6 @@ import path from "node:path";
 import type { Engine } from "../engine";
 import type { Scenario } from "../input/scenario";
 import { replayFile } from "../lane/replay";
-import { ScriptStreamingTranscriber } from "../lane/script-transcriber";
 import type { StreamingTranscriber } from "../lane/types";
 import { loadFixtureScripts } from "../fixtures/load";
 import { runPipeline, type RunResult } from "../run";
@@ -99,7 +98,8 @@ function targets(fixturesDir: string, opts: EvalOptions): Target[] {
         for (const e of t.expected) expected.push({ span: span + e.span, order: e.order });
         span += spans;
       }
-      out.push({ id: c.id, title: c.title, covers: [23], noise: c.noise, compilation: true, expected });
+      const liveOnly = c.scripts.some((sid) => out.find((x) => x.id === sid)?.liveOnly);
+      out.push({ id: c.id, title: c.title, covers: [23], noise: c.noise, compilation: true, expected, liveOnly });
     }
   }
   const runnable = opts.via === "lane" ? out : out.filter((t) => !t.liveOnly);
@@ -128,7 +128,7 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
   try {
     if (opts.via === "lane") {
       const r = await replayFile(engine, file, {
-        transcriber: opts.streamingTranscriber ?? new ScriptStreamingTranscriber(),
+        transcriber: opts.streamingTranscriber ?? engine.streaming,
         ...(opts.scenario ? { scenario: { ...opts.scenario, channels: opts.layout } } : {}),
         deliver: opts.deliver,
         speed: "max",
@@ -138,7 +138,7 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions): Promise
         segmentation: r.segmentation,
         orders: r.orders,
         usage: {
-          stt: { provider: opts.streamingTranscriber?.name ?? "script/ground-truth", audio_minutes: r.usage.deepgram_minutes, cached: false, role_llm_calls: 0 },
+          stt: { provider: (opts.streamingTranscriber ?? engine.streaming).name, audio_minutes: r.usage.deepgram_minutes, cached: false, role_llm_calls: 0 },
           llm: r.usage.llm,
           segmentation_llm_calls: r.segmentation.llm_calls,
           gemini_today: r.usage.gemini_today ? { ...r.usage.gemini_today, tier: "unknown", exhausted: false } : null,
@@ -278,7 +278,7 @@ export async function runEval(engine: Engine, opts: EvalOptions, log: (m: string
       layout: opts.layout,
       via: opts.via ?? "file",
       scenario: opts.scenario?.name ?? null,
-      transcriber: opts.via === "lane" ? (opts.streamingTranscriber?.name ?? "script/ground-truth") : engine.transcriber.name,
+      transcriber: opts.via === "lane" ? (opts.streamingTranscriber ?? engine.streaming).name : engine.transcriber.name,
       extractor: engine.extractor.name,
       model: engine.gemini?.resolvedModel ?? engine.gemini?.model ?? null,
       menu_version: engine.catalog.version,
