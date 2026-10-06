@@ -21,7 +21,7 @@ import { inferTurnRoles } from "../transcribe/roles";
 import type { OutboxRow } from "../store/db";
 import { LaneRecorder, type SessionEventLine } from "./recorder";
 import { ConversationTracker, type TrackerAction, type TrackerDecision } from "./tracker";
-import type { StreamUtterance, StreamingTranscriber, TranscriptStream } from "./types";
+import { sttName, type StreamUtterance, type StreamingTranscriber, type TranscriptStream } from "./types";
 
 /** What the lane reports as it goes (live UI, logs). */
 export interface DraftLine {
@@ -638,7 +638,7 @@ export class LaneSession {
       audio_start_utc: base,
       timestamp_source: first?.timeBasis ?? "receive_clock",
       role_source: this.opts.transcriber.name.startsWith("script") ? "script" : first && first.audio.channels > 1 ? "channel" : "diarization",
-      stt: this.opts.transcriber.name,
+      stt: sttName(this.opts.transcriber, first),
       language: null,
       utterances: [...this.utterances].sort((a, b) => a.start_s - b.start_s),
     };

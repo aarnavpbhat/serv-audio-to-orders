@@ -3,6 +3,7 @@ import { Separator } from "@/components/ui/Separator";
 import { cn } from "@/lib/utils";
 import { Placeholder } from "./Badge";
 import { GearIcon } from "./Icons";
+import { SectionHeader } from "@/components/SectionHeader";
 
 interface Props {
   settings: {
@@ -33,10 +34,7 @@ export function SettingsPanel({ settings }: Props) {
   ];
   return (
     <section>
-      <div className="mb-2 flex items-baseline gap-2">
-        <h2 className="section-title">Sandbox Settings</h2>
-        <span className="text-[12px] text-muted-foreground">Values that depend on Serv live in config/sandbox.ts. Defaults are marked until replaced.</span>
-      </div>
+      <SectionHeader title="Sandbox Settings" details="Values that depend on Serv live in config/sandbox.ts. Defaults are marked until replaced." />
       <Card className="gap-0 py-0">
         {rows.map((row, i) => (
           <div key={row.key}>

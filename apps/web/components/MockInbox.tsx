@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
 import { cn } from "@/lib/utils";
 import { Badge } from "./Badge";
 import { JsonView } from "./JsonView";
+import { SectionHeader } from "@/components/SectionHeader";
 
 interface Settings {
   mode: "ok" | "fail_500" | "rate_limit_429" | "timeout";
@@ -133,8 +134,7 @@ export function MockInbox() {
       <section className="min-w-0">
         {kept.length > 0 && (
           <div className="mb-6">
-            <h2 className="section-title mb-2">Kept Orders</h2>
-            <p className="mb-2 text-[12px] text-muted-foreground">The highest version received per order_id, as a receiver should keep it.</p>
+            <SectionHeader title="Kept Orders" details="The highest version received per order_id, as a receiver should keep it." />
             <div className="tracks">
               {kept.map((o) => (
                 <div key={o.order_id} className="flex flex-wrap items-center gap-2 px-3 py-1.5">
@@ -147,17 +147,15 @@ export function MockInbox() {
             </div>
           </div>
         )}
-        <div className="mb-2 flex items-baseline justify-between">
-          <h2 className="section-title">Inbox</h2>
-          <div className="flex items-center gap-3 text-[12px] text-muted-foreground">
-            <span>
-              {inbox.length} requests · {accepted} accepted
-            </span>
+        <SectionHeader
+          title="Inbox"
+          details={`${inbox.length} requests · ${accepted} accepted`}
+          actions={
             <Button size="sm" variant="secondary" onClick={() => void fetch("/api/mock-webhook", { method: "DELETE" }).then(load)}>
               Clear
             </Button>
-          </div>
-        </div>
+          }
+        />
         {!inbox.length && <p className="py-3 text-muted-foreground">Nothing received yet. Start a run with delivery enabled.</p>}
         <div className="tracks">
           {inbox.map((r) => {

@@ -47,6 +47,12 @@ describe("FileOrLiveTranscriber", () => {
     expect(prerecorded.transcribe).not.toHaveBeenCalled();
   });
 
+  it("names only the model a session actually uses", () => {
+    const { t } = setup();
+    expect(t.nameFor(session())).toBe("stub/prerecorded");
+    expect(t.nameFor(session({ sourceType: "hme_ws" }))).toBe("stub/live");
+  });
+
   it("a file is transcribed once; lines are released as audio arrives; timers wait for the transcript", async () => {
     const { t, prerecorded, finish } = setup();
     const got: StreamUtterance[] = [];

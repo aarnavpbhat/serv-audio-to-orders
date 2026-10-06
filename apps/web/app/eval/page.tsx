@@ -1,3 +1,4 @@
+import { SectionHeader } from "@/components/SectionHeader";
 import { Artwork } from "@/components/Artwork";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -44,21 +45,13 @@ export default function EvalPage() {
       </header>
 
       <section>
-        <div className="mb-2 flex items-baseline gap-2">
-          <h2 className="section-title">Layer A: Heard</h2>
-          <span className="text-[12px] text-muted-foreground">orders against what was said (hand-checked expected orders)</span>
-        </div>
+        <SectionHeader title="Layer A: Heard" details="Orders against what was said (hand-checked expected orders)" />
         <Metrics metrics={metrics} />
       </section>
 
       {r.layer_b && (
         <section>
-          <div className="mb-2 flex items-baseline gap-2">
-            <h2 className="section-title">Layer B: Rung Up</h2>
-            <span className="text-[12px] text-muted-foreground">
-              orders against POS tickets ({r.layer_b.source} until Serv shares real ones), matched within ±{r.layer_b.window_s} s
-            </span>
-          </div>
+          <SectionHeader title="Layer B: Rung Up" details={<>Orders against POS tickets ({r.layer_b.source} until Serv shares real ones), matched within ±{r.layer_b.window_s} s</>} />
           <Metrics
             metrics={[
               ["Exact ticket match", `${r.layer_b.exact}/${r.layer_b.tickets}`, r.layer_b.exact_rate],
@@ -72,10 +65,7 @@ export default function EvalPage() {
 
       {r.live && (
         <section>
-          <div className="mb-2 flex items-baseline gap-2">
-            <h2 className="section-title">Live Path</h2>
-            <span className="text-[12px] text-muted-foreground">conversation end to order sent, estimated at max speed (tracker lag on recording time plus processing)</span>
-          </div>
+          <SectionHeader title="Live Path" details="Conversation end to order sent, estimated at max speed (tracker lag on recording time plus processing)" />
           <Metrics
             metrics={[
               ["Close latency p50", `${(r.live.close_latency_p50_ms / 1000).toFixed(1)} s`, null],
@@ -98,10 +88,7 @@ export default function EvalPage() {
       )}
 
       <section>
-        <div className="mb-2 flex items-baseline gap-2">
-          <h2 className="section-title">Held-Out Set</h2>
-          <span className="text-[12px] text-muted-foreground">real voices, expected orders checked by hand, never used for tuning</span>
-        </div>
+        <SectionHeader title="Held-Out Set" details="Real voices, expected orders checked by hand, never used for tuning" />
         {held ? (
           <>
             <p className="mb-2 text-[12px] text-muted-foreground">
@@ -126,12 +113,7 @@ export default function EvalPage() {
 
       <div className="grid items-start gap-10 xl:grid-cols-2">
         <section>
-          <div className="mb-2 flex items-baseline justify-between">
-            <h2 className="section-title">Edge Case Checklist</h2>
-            <span className="text-[12px] text-muted-foreground">
-              {r.rows.filter((x) => x.pass).length}/{r.rows.length} pass
-            </span>
-          </div>
+          <SectionHeader title="Edge Case Checklist" details={<>{r.rows.filter((x) => x.pass).length}/{r.rows.length} pass</>} />
           <div className="tracks">
             {r.rows.map((row) => (
               <div key={row.row} className="grid grid-cols-[32px_minmax(0,1fr)_20px] items-center gap-3 px-2 py-1.5">
@@ -147,10 +129,7 @@ export default function EvalPage() {
         </section>
 
         <section>
-          <div className="mb-2 flex items-baseline justify-between">
-            <h2 className="section-title">Fixtures</h2>
-            <span className="text-[12px] text-muted-foreground">click to open the run</span>
-          </div>
+          <SectionHeader title="Fixtures" details="Click to open the run" />
           <div className="tracks">
             {r.fixtures.map((f) => {
               const diffs = f.error ? [f.error] : f.orders.comparisons.flatMap((c) => c.diffs);

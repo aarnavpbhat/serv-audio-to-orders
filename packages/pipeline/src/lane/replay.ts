@@ -13,7 +13,7 @@ import { insertRun, outboxForRun, updateRun, type OutboxRow } from "../store/db"
 import type { LaneOptions } from "./lane";
 import { LaneManager } from "./manager";
 import type { TrackerDecision } from "./tracker";
-import type { StreamingTranscriber } from "./types";
+import { sttName, type StreamingTranscriber } from "./types";
 
 export interface ReplayRunOptions extends ReplayOptions {
   transcriber: StreamingTranscriber;
@@ -47,15 +47,16 @@ export async function replayFile(engine: Engine, file: string, opts: ReplayRunOp
   const abs = path.resolve(file);
   const t0 = performance.now();
   const source = new FileReplaySource(abs, opts);
+  const stt = sttName(opts.transcriber, { sourceType: "file_replay", sourceRef: abs });
   if (!opts.runId) {
     insertRun(db, {
       id: runId,
       source_file: path.basename(abs),
       file_path: abs,
-      options: { via: "lane", scenario: source.scenario.name, speed: opts.speed ?? "max", transcriber: opts.transcriber.name, extractor: engine.extractor.name },
+      options: { via: "lane", scenario: source.scenario.name, speed: opts.speed ?? "max", transcriber: stt, extractor: engine.extractor.name },
     });
   }
-  updateRun(db, runId, { status: "running", stage: "transcribe", transcriber: opts.transcriber.name, extractor: engine.extractor.name });
+  updateRun(db, runId, { status: "running", stage: "transcribe", transcriber: stt, extractor: engine.extractor.name });
   try {
     const manager = new LaneManager({ engine, transcriber: opts.transcriber, runId, deliver: opts.deliver !== false, ...(opts.record ? { record: true } : {}), ...(opts.onUpdate ? { onUpdate: opts.onUpdate } : {}) });
     for await (const m of source.messages()) await manager.handle(m);

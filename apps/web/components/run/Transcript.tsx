@@ -2,7 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import type { Segment, Transcript as T } from "@serv/pipeline/schemas/index";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/Tooltip";
+import { ROLE_SOURCE, sttLabel } from "@/lib/labels";
 import { palette } from "../Artwork";
+import { SectionHeader } from "../SectionHeader";
 
 const fmt = (t: number) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, "0")}`;
 
@@ -46,12 +49,24 @@ export function Transcript({
   return (
     <section className="relative overflow-hidden rounded-xl text-white" style={{ background: `linear-gradient(160deg, ${a}, ${b})` }}>
       <div className="absolute inset-0 bg-black/45" />
-      <div className="relative flex items-center justify-between px-5 pb-2 pt-4">
-        <h2 className="text-[15px] font-bold">Transcript</h2>
-        <span className="text-[11px] text-white/60">
-          {transcript.utterances.length} lines · roles from {transcript.role_source} · {transcript.stt}
-        </span>
-      </div>
+      <SectionHeader
+        className="relative mb-0 px-5 pb-2 pt-4"
+        title="Transcript"
+        titleClassName="text-[15px] !text-white"
+        detailsClassName="text-[11px] text-white/60"
+        details={
+          <>
+            {transcript.utterances.length} lines ·{" "}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="cursor-help underline decoration-dotted underline-offset-2">Speaker roles: {ROLE_SOURCE[transcript.role_source]?.label ?? transcript.role_source}</span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">{ROLE_SOURCE[transcript.role_source]?.help}</TooltipContent>
+            </Tooltip>{" "}
+            · {sttLabel(transcript.stt)}
+          </>
+        }
+      />
       <div ref={scroller} className="no-scrollbar relative max-h-[640px] overflow-y-auto px-3 pb-[40%] pt-2">
         {transcript.utterances.map((u, i) => {
           const seg = segOf.get(u.id);
