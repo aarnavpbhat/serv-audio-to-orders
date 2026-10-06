@@ -1,5 +1,5 @@
 /** In-process run queue and slow-phase retry worker. Enough for a single-machine sandbox. */
-import { createEngine, runPipeline, store, type Engine } from "@serv/pipeline";
+import { RunCancelledError, createEngine, runPipeline, store, type Engine } from "@serv/pipeline";
 
 export interface RunJob {
   runId: string;
@@ -13,11 +13,13 @@ export interface RunJob {
 interface JobState {
   queue: RunJob[];
   running: boolean;
+  /** The run in progress and its Cancel switch. */
+  current: { runId: string; abort: AbortController } | null;
   worker: ReturnType<typeof setInterval> | null;
 }
 
 const g = globalThis as typeof globalThis & { __servJobs?: JobState };
-const state: JobState = (g.__servJobs ??= { queue: [], running: false, worker: null });
+const state: JobState = (g.__servJobs ??= { queue: [], running: false, current: null, worker: null });
 
 function deliveryEngine(): Engine {
   return createEngine({ transcriber: "script", extractor: "fuzzy", log: () => {} });
@@ -33,17 +35,35 @@ async function pump(): Promise<void> {
   state.running = true;
   try {
     for (let job = state.queue.shift(); job; job = state.queue.shift()) {
+      const abort = new AbortController();
+      state.current = { runId: job.runId, abort };
       try {
         const engine = createEngine({ transcriber: job.transcriber, extractor: job.extractor, log: () => {} });
-        await runPipeline(engine, job.file, { runId: job.runId, channelMap: job.channelMap, deliver: job.deliver });
+        await runPipeline(engine, job.file, { runId: job.runId, channelMap: job.channelMap, deliver: job.deliver, signal: abort.signal });
       } catch (e) {
-        const db = deliveryEngine().db;
-        store.updateRun(db, job.runId, { status: "failed", error: (e as Error).message });
+        if (!(e instanceof RunCancelledError)) store.updateRun(deliveryEngine().db, job.runId, { status: "failed", error: (e as Error).message });
+      } finally {
+        state.current = null;
       }
     }
   } finally {
     state.running = false;
   }
+}
+
+/** Cancel a queued or running run. Idempotent: false when it is neither (already finished). */
+export function cancelRun(runId: string): boolean {
+  const i = state.queue.findIndex((j) => j.runId === runId);
+  if (i >= 0) {
+    state.queue.splice(i, 1);
+    store.updateRun(deliveryEngine().db, runId, { status: "cancelled", stage: "done" });
+    return true;
+  }
+  if (state.current?.runId === runId) {
+    state.current.abort.abort();
+    return true;
+  }
+  return false;
 }
 
 export function queuePosition(runId: string): number {

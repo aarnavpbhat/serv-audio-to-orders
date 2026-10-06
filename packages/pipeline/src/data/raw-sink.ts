@@ -22,6 +22,8 @@ export interface RawSessionManifest {
   /** Declared on connect (PLACEHOLDER wire format). */
   format: { codec: string; sampleRate: number; channels: number; roles: string[] | null };
   wire: string;
+  /** Set when an operator stopped the session (E3, E4). Discarded sessions are kept but left out of metrics. */
+  stopped?: "ended" | "discarded";
 }
 
 interface Live {
@@ -90,6 +92,15 @@ export class RawCaptureSink {
       return;
     }
     l.writer.write(kind, bytes, receivedAt);
+  }
+
+  /** Record an operator stop in the session's manifest (E4: discarded data is kept, tagged). */
+  tag(sessionId: string, stopped: "ended" | "discarded"): void {
+    const l = this.live.get(sessionId);
+    if (!l || l.manifest.stopped) return;
+    l.manifest.stopped = stopped;
+    writeFileSync(path.join(RawWriter.sessionDir(this.opts.staging, l.manifest.store_id, l.manifest.lane_id, sessionId), MANIFEST), JSON.stringify(l.manifest, null, 2));
+    this.track(this.putManifest(l.manifest));
   }
 
   close(sessionId: string): void {

@@ -135,6 +135,13 @@ export async function startService(engine: Engine, opts: ServeOptions = {}): Pro
         }
       : {}),
     allowQueryToken: cfg.ingest.allowQueryToken,
+    sessions: {
+      list: () => manager.sessions(),
+      stop: (sessionId, mode) => {
+        sink?.tag(sessionId, mode === "end" ? "ended" : "discarded");
+        return manager.stop(sessionId, mode, new Date().toISOString());
+      },
+    },
     enableDevRoutes: devRoutes,
     // Peers may name a fixture only for the free script transcriber (dev routes), never a paid one.
     resolveFixture: devRoutes && engine.streaming instanceof ScriptStreamingTranscriber ? fixtureResolver(cfg.paths.fixturesDir) : undefined,

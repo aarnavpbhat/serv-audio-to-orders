@@ -12,7 +12,7 @@
  * closes with 4413, and revoking a token closes its sessions with 4401.
  */
 import { readFileSync } from "node:fs";
-import { createServer as createHttp, type IncomingMessage, type Server } from "node:http";
+import { createServer as createHttp, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { createServer as createHttps } from "node:https";
 import type { Duplex } from "node:stream";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
@@ -30,7 +30,15 @@ export const MAX_BINARY_BYTES = 64 * 1024;
 export const MAX_TEXT_BYTES = 8 * 1024;
 export const MAX_PER_TOKEN = 4;
 
-export const CLOSE = { revoked: 4401, replaced: 4409, rateExceeded: 4413, tooBig: 1009 } as const;
+export const CLOSE = { stopped: 4000, revoked: 4401, replaced: 4409, rateExceeded: 4413, tooBig: 1009 } as const;
+
+export type StopMode = "end" | "discard";
+
+/** Dev routes on the feed service (localhost only): list sessions, stop one (E3). */
+export interface SessionControl {
+  list: () => unknown[];
+  stop: (sessionId: string, mode: StopMode) => Promise<boolean>;
+}
 
 export interface IngestServerOptions {
   db: DB;
@@ -56,6 +64,8 @@ export interface IngestServerOptions {
   pongTimeoutMs?: number;
   revocationPollMs?: number;
   log?: (line: Record<string, unknown>) => void;
+  /** GET /dev/sessions and POST /dev/sessions/:id/stop (dev routes only, local requests only). */
+  sessions?: SessionControl;
 }
 
 interface Live {
@@ -66,6 +76,8 @@ interface Live {
   laneId: string;
   lastPong: number;
   closing: boolean;
+  /** An operator stopped it: the decoder is killed, not drained. */
+  stopped: boolean;
 }
 
 const LOCAL_HOSTS = new Set(["127.0.0.1", "::1", "localhost"]);
@@ -96,8 +108,11 @@ export class IngestServer {
         allowTickets: opts.enableDevRoutes,
         log: (l) => opts.log?.(l),
       });
-    const handler = (_req: IncomingMessage, res: import("node:http").ServerResponse) => {
-      res.writeHead(404, { "content-type": "text/plain" }).end("not found");
+    const handler = (req: IncomingMessage, res: ServerResponse) => {
+      void this.onRequest(req, res).catch((e: unknown) => {
+        this.opts.log?.({ severity: "ERROR", event: "ingest_http_error", error: (e as Error).message.slice(0, 200) });
+        if (!res.headersSent) res.writeHead(500, { "content-type": "text/plain" }).end("error");
+      });
     };
     this.http = opts.tls ? createHttps({ cert: readFileSync(opts.tls.cert), key: readFileSync(opts.tls.key) }, handler) : createHttp(handler);
     this.wss = new WebSocketServer({ noServer: true, maxPayload: MAX_BINARY_BYTES });
@@ -142,6 +157,44 @@ export class IngestServer {
     await Promise.all([...this.draining]);
     this.wss.close();
     await new Promise<void>((resolve) => this.http.close(() => resolve()));
+  }
+
+  /**
+   * Operator stop (E3): close the client's socket with 4000 "stopped by operator"
+   * (the simulator never reconnects after it) and kill its decoder. Idempotent.
+   */
+  stopSocket(sessionId: string): boolean {
+    for (const l of this.live) {
+      if (l.conn.session.sessionId !== sessionId) continue;
+      l.stopped = true;
+      l.ws.close(CLOSE.stopped, "stopped by operator");
+      return true;
+    }
+    return false;
+  }
+
+  private async onRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    const json = (status: number, body: unknown) => res.writeHead(status, { "content-type": "application/json" }).end(JSON.stringify(body));
+    const url = new URL(req.url ?? "/", "http://ingest.local");
+    const control = this.opts.sessions;
+    // Dev routes answer only local callers (the web app on this machine), like the simulator's.
+    const local = isLocalHost(normalizeIp(req.socket.remoteAddress ?? "")) && isLocalHost((req.headers.host ?? "").replace(/:\d+$/, "").replace(/^\[|\]$/g, ""));
+    if (!this.opts.enableDevRoutes || !control || !local || !url.pathname.startsWith("/dev/sessions")) return void json(404, { error: "not found" });
+    if (req.method === "GET" && url.pathname === "/dev/sessions") return void json(200, { sessions: control.list() });
+    const m = /^\/dev\/sessions\/([^/]+)\/stop$/.exec(url.pathname);
+    if (req.method !== "POST" || !m) return void json(404, { error: "not found" });
+    // JSON only: a cross-site form post cannot send this content type without a CORS preflight.
+    if (!/^application\/json\b/i.test(req.headers["content-type"] ?? "")) return void json(400, { error: "content-type must be application/json" });
+    const id = decodeURIComponent(m[1] ?? "");
+    const body = await readJson(req);
+    const mode = (body as { mode?: unknown } | null)?.mode;
+    if (!isSafeId(id) || (mode !== "end" && mode !== "discard")) return void json(400, { error: "need a session id and mode end or discard" });
+    // The lane settles the conversation first, so the close that follows is not mistaken for a drop.
+    const stopping = control.stop(id, mode);
+    this.stopSocket(id);
+    const known = await stopping;
+    this.opts.log?.({ event: "ingest_session_stop", session_id: id, mode, known });
+    json(200, { stopped: known, mode });
   }
 
   /** Revoked tokens close their live sessions (another process may have revoked them). */
@@ -213,7 +266,7 @@ export class IngestServer {
       },
       onError: (e) => this.opts.log?.({ event: "ingest_decode_error", session_id: conn.session.sessionId, error: e.message.slice(0, 300) }),
     });
-    entry = { ws, conn, tokenId, storeId: params.storeId, laneId: params.laneId, lastPong: Date.now(), closing: false };
+    entry = { ws, conn, tokenId, storeId: params.storeId, laneId: params.laneId, lastPong: Date.now(), closing: false, stopped: false };
     this.live.add(entry);
     this.opts.onSessionOpened?.({
       sessionId: conn.session.sessionId,
@@ -244,8 +297,8 @@ export class IngestServer {
       if (!entry || entry.closing) return;
       entry.closing = true;
       this.live.delete(entry);
-      const drain = conn
-        .close("remote_close")
+      if (entry.stopped) conn.abort();
+      const drain = (entry.stopped ? Promise.resolve() : conn.close("remote_close"))
         .then(() => this.opts.onSessionClosed?.(conn.session.sessionId))
         // Never an unhandled rejection (it would end the process), and never blocks shutdown.
         .catch((e: unknown) => this.opts.log?.({ event: "ingest_session_close_error", session_id: conn.session.sessionId, error: (e as Error).message.slice(0, 200) }));
@@ -265,4 +318,32 @@ function toBytes(data: RawData): Uint8Array {
   if (Array.isArray(data)) return new Uint8Array(Buffer.concat(data));
   if (data instanceof ArrayBuffer) return new Uint8Array(data);
   return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+}
+
+/** "::ffff:127.0.0.1" -> "127.0.0.1". */
+function normalizeIp(ip: string): string {
+  return ip.replace(/^::ffff:/, "");
+}
+
+/** A small JSON body (the stop request); anything larger or malformed reads as null. */
+function readJson(req: IncomingMessage): Promise<unknown> {
+  return new Promise((resolve) => {
+    let size = 0;
+    const chunks: Buffer[] = [];
+    req.on("data", (c: Buffer) => {
+      size += c.length;
+      if (size > 4096) {
+        resolve(null);
+        req.destroy();
+      } else chunks.push(c);
+    });
+    req.on("end", () => {
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+      } catch {
+        resolve(null);
+      }
+    });
+    req.on("error", () => resolve(null));
+  });
 }

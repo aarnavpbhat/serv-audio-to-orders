@@ -24,7 +24,9 @@ export type FinalizeTrigger =
   | "stream_paused"
   | "grace_expired"
   | "max_length"
-  | "end_of_input";
+  | "end_of_input"
+  /** An operator ended the session (E3). */
+  | "ended_by_operator";
 
 export interface TrackerConfig {
   closeSettleS: number;
@@ -302,6 +304,28 @@ export class ConversationTracker {
   }
 
   /** A live-path flag for the open conversation (audio rate exceeded, audio dropped). */
+  /**
+   * Operator stop (E3). "end" finalizes the open conversation now (flag
+   * ended_by_operator; the outcome still comes from evidence). "discard" drops it:
+   * no finalize, nothing sent. Either way the reopen window closes, so nothing
+   * from this session reopens an order.
+   */
+  stop(at: string, mode: "end" | "discard"): TrackerAction[] {
+    const out = this.onTick(at);
+    const c = this.current;
+    if (c && mode === "end") {
+      c.flags.add("ended_by_operator");
+      out.push(this.finalize(at, "ended_by_operator", ["operator"]));
+    } else if (c) {
+      this.current = null;
+      this.last = null;
+      this.move("IDLE", c.id, at, "discarded_by_operator", ["operator"]);
+      return out;
+    }
+    this.endWindow(at);
+    return out;
+  }
+
   flagCurrent(flag: Flag): boolean {
     if (!this.current) return false;
     this.current.flags.add(flag);

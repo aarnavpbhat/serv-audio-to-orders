@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
 import { emptyLane } from "@/lib/live";
 import { SimLink, type LinkNote, type LinkState, type SimCodec } from "@/lib/sim-link";
 import { LaneView } from "../live/LaneView";
+import { StopButtons } from "../live/StopButtons";
 import { useLiveFeed } from "../live/use-live-feed";
+import { useSessions } from "../live/use-sessions";
 import { MockInbox } from "../MockInbox";
 import { Segmented } from "../Segmented";
 import { SaveFixture } from "./SaveFixture";
@@ -65,7 +67,15 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
   const linkRef = useRef<SimLink | null>(null);
   const audio = useRef<{ ctx: AudioContext; stream: MediaStream | null } | null>(null);
   // The worklet callback reads the latest switches through this ref.
-  const flags = useRef({ car, paused, audioMode, inputMode, maxMinutes, silenceS, sent: 0, lastLoud: 0, lastMeter: 0 });
+  const flags = useRef({ car, paused, audioMode, inputMode, maxMinutes, silenceS, sent: 0, lastLoud: 0, lastMeter: 0, stopping: false });
+  // The server's id for this simulator's session, so End and Discard reach the right one.
+  const { sessions, stop: stopSession, refresh: refreshSessions } = useSessions();
+  const sessionId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!running) return;
+    const mine = sessions.filter((s) => s.storeId === storeId && s.laneId === laneId).at(-1);
+    if (mine) sessionId.current = mine.sessionId;
+  }, [sessions, running, storeId, laneId]);
   useEffect(() => {
     Object.assign(flags.current, { car, paused, audioMode, inputMode, maxMinutes, silenceS });
   }, [car, paused, audioMode, inputMode, maxMinutes, silenceS]);
@@ -85,6 +95,30 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
   }, []);
 
   useEffect(() => () => stop(), [stop]);
+
+  /**
+   * End or Discard (E3): the server settles the open conversation and closes the
+   * socket with 4000, then the mic, the audio context and auto-reconnect stop here.
+   */
+  const finish = useCallback(
+    async (mode: "end" | "discard", why?: LinkNote) => {
+      if (flags.current.stopping) return;
+      flags.current.stopping = true;
+      if (linkRef.current) linkRef.current.autoReconnect = false;
+      const match = (s: { storeId: string; laneId: string }) => s.storeId === storeId && s.laneId === laneId;
+      const id = sessionId.current ?? (await refreshSessions()).filter(match).at(-1)?.sessionId ?? null;
+      let note: LinkNote | undefined = why;
+      if (id) {
+        const err = await stopSession(id, mode);
+        if (err) note = { tone: "error", text: err };
+        else note ??= { tone: "info", text: mode === "end" ? "Session ended: the open conversation was sent." : "Session discarded: nothing was sent." };
+      }
+      sessionId.current = null;
+      stop(note);
+      flags.current.stopping = false;
+    },
+    [laneId, refreshSessions, stop, stopSession, storeId],
+  );
 
   async function startAudio(l: SimLink): Promise<void> {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: false, autoGainControl: true } });
@@ -117,8 +151,9 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
         setSentS(f.sent / 16_000);
       }
       // Credit guards: stop after the minute limit, or after this long with no sound.
-      if (now - f.lastLoud > f.silenceS * 1000) return stop({ tone: "info", text: `Stopped after ${f.silenceS} s with no sound from the mic, to save Deepgram credit. Speak, or raise the limit, then press Start.` });
-      if (f.sent / 16_000 > f.maxMinutes * 60) return stop({ tone: "info", text: `Stopped at the ${f.maxMinutes} minute limit, to save Deepgram credit.` });
+      if (f.stopping) return;
+      if (now - f.lastLoud > f.silenceS * 1000) return void finish("end", { tone: "info", text: `Ended after ${f.silenceS} s with no sound from the mic, to save Deepgram credit. Speak, or raise the limit, then press Start.` });
+      if (f.sent / 16_000 > f.maxMinutes * 60) return void finish("end", { tone: "info", text: `Ended at the ${f.maxMinutes} minute limit, to save Deepgram credit.` });
       const send = !f.paused && (f.audioMode === "continuous" || f.car);
       if (send && l.open) {
         l.sendAudio(e.data.pcm);
@@ -129,6 +164,7 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
 
   async function start(): Promise<void> {
     setStopNote(null);
+    sessionId.current = null;
     labels.current = [];
     flags.current.sent = 0;
     setSentS(0);
@@ -210,13 +246,7 @@ export function Simulator({ menu, defaults, deepgram }: { menu: unknown; default
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {running ? (
-            <Button onClick={() => stop()} variant="secondary">
-              Stop
-            </Button>
-          ) : (
-            <Button onClick={() => void start()}>Start</Button>
-          )}
+          {running ? <StopButtons onStop={(mode) => finish(mode)} /> : <Button onClick={() => void start()}>Start</Button>}
           <Button
             variant="outline"
             disabled={!open || car}

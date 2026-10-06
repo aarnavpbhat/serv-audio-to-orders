@@ -27,6 +27,8 @@ export interface RunOptions {
   deliver?: boolean;
   /** Ignore cached Deepgram responses. */
   refresh?: boolean;
+  /** Cancel button: stops the replay (see replayFile). */
+  signal?: AbortSignal;
 }
 
 export interface RunUsage {
@@ -84,6 +86,7 @@ export async function runPipeline(engine: Engine, file: string, opts: RunOptions
     ...(opts.runId ? { runId: opts.runId } : {}),
     deliver: opts.deliver !== false,
     speed: "max",
+    ...(opts.signal ? { signal: opts.signal } : {}),
   });
   onStage?.("done");
   const billed = (files?.billedMinutes ?? 0) + r.usage.deepgram_minutes;

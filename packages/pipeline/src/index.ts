@@ -5,6 +5,7 @@ export { replay, type BuildState, type Line, type AppliedEvent } from "./build/r
 export { postprocess } from "./postprocess/postprocess";
 export { createEngine, defaultExtractor, defaultTranscriber, ConfigError, type Engine } from "./engine";
 export { runPipeline, type RunResult, type Stage } from "./run";
+export { RunCancelledError } from "./lane/replay";
 export { runEval, type EvalReport } from "./eval/run-eval";
 export { CHECKLIST } from "./eval/checklist";
 export * as store from "./store/db";

@@ -35,6 +35,8 @@ export const FLAGS = [
   "audio_rate_exceeded",
   /** A car arrived and left and nobody spoke (decision E1). */
   "no_speech",
+  /** An operator ended the session while this conversation was open (E3). */
+  "ended_by_operator",
 ] as const;
 export const Flag = z.enum(FLAGS);
 export type Flag = z.infer<typeof Flag>;

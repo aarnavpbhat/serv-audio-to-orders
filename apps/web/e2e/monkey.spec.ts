@@ -22,7 +22,7 @@ function rng(seed: number): () => number {
   };
 }
 
-const ACTIONS = ["Start", "Stop", "Car arrived", "Car left", "Pause stream", "Resume stream", "Drop connection", "Reconnect toggle", "Text (free)", "Microphone", "Continuous", "Only with a car", "Wait"] as const;
+const ACTIONS = ["Start", "End session", "Discard", "Yes, discard", "Keep", "Car arrived", "Car left", "Pause stream", "Resume stream", "Drop connection", "Reconnect toggle", "Text (free)", "Microphone", "Continuous", "Only with a car", "Wait"] as const;
 type Action = (typeof ACTIONS)[number];
 const RADIOS: Action[] = ["Text (free)", "Microphone", "Continuous", "Only with a car"];
 
@@ -76,7 +76,9 @@ test("random clicks with a silent microphone never produce an error", async ({ p
   }
 
   // Stop, then the audio counter must not move and nothing reconnects.
-  const stop = page.getByRole("button", { name: "Stop", exact: true });
+  const keep = page.getByRole("button", { name: "Keep", exact: true });
+  if (await keep.count()) await keep.click();
+  const stop = page.getByRole("button", { name: "End session", exact: true });
   if (await stop.count()) await stop.click();
   await expect(page.getByRole("button", { name: "Start", exact: true })).toBeVisible();
   const sentS = () => page.evaluate(() => /(\d+) s sent/.exec(document.body.innerText)?.[1] ?? null);

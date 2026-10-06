@@ -242,4 +242,27 @@ describe("ConversationTracker", () => {
       for (const id of finalized) expect(opened.has(id)).toBe(true);
     }
   });
+
+  it("operator End finalizes the open conversation now, flagged, and closes the reopen window", () => {
+    const t = tracker();
+    t.onUtterance(utt("crew", "Welcome, what can I get for you today?", 0));
+    t.onUtterance(utt("customer", "Can I get a cheeseburger?", 3));
+    const out = t.stop(at(8), "end");
+    expect(types(out)).toEqual(["finalize:ended_by_operator"]);
+    expect(out[0]?.type === "finalize" && out[0].flags).toContain("ended_by_operator");
+    expect(t.status.state).toBe("IDLE");
+    // A late line opens nothing old: the window is closed.
+    expect(types(t.onUtterance(utt("customer", "Oh, and a water", 10)))).not.toContain("reopen");
+  });
+
+  it("operator Discard drops the open conversation: nothing finalized; stopping again does nothing", () => {
+    const t = tracker();
+    t.onUtterance(utt("crew", "Welcome, what can I get for you today?", 0));
+    t.onUtterance(utt("customer", "Can I get a cheeseburger?", 3));
+    expect(t.stop(at(8), "discard")).toEqual([]);
+    expect(t.status.state).toBe("IDLE");
+    expect(t.decisions.at(-1)?.trigger).toBe("discarded_by_operator");
+    expect(t.stop(at(9), "discard")).toEqual([]);
+    expect(t.stop(at(9), "end")).toEqual([]);
+  });
 });

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { LaneState } from "@/lib/live";
 import { Artwork } from "../Artwork";
 import { LaneView } from "./LaneView";
+import { SessionsPanel } from "./SessionsPanel";
 import { useLiveFeed } from "./use-live-feed";
 
 /** Every lane the live service (or a replay) has reported, newest activity first; one shown at a time. */
@@ -28,6 +29,7 @@ export function LivePage({ menu }: { menu: unknown }) {
           <LaneChip key={l.key} lane={l} active={l.key === lane?.key} onClick={() => setPicked(l.key)} />
         ))}
       </div>
+      <SessionsPanel />
       {lane ? <LaneView lane={lane} name={name} /> : <Empty />}
     </div>
   );

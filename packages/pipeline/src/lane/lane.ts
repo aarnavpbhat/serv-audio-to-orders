@@ -36,7 +36,7 @@ export type LaneUpdate =
   | { type: "interim"; text: string; sessionId: string }
   | { type: "tracker"; decision: TrackerDecision }
   | { type: "order"; payload: OrderPayload }
-  | { type: "event"; event: ControlEvent["type"] | "disconnect" | "reconnect"; at: string }
+  | { type: "event"; event: ControlEvent["type"] | "disconnect" | "reconnect" | "ended_by_operator" | "discarded_by_operator"; at: string }
   /** Tracker state and timers (lane clock), sent when they change. */
   | { type: "status"; status: ConversationTracker["status"]; clock: string; audioMinutes: number }
   /** Keyword preview of the open conversation's order (free; the real order is built at close). */
@@ -64,6 +64,8 @@ interface SessionState {
   /** (sample offset, wall ms) per received frame, to date when a conversation's audio arrived. */
   receipts: { offset: number; wallMs: number }[];
   open: boolean;
+  /** Set once an operator stopped it (E3); later closes and audio are ignored. */
+  stopped?: "ended" | "discarded";
   /** Tracker decisions made before this session opened (the rest are recorded with it). */
   decisionsBefore: number;
 }
@@ -71,7 +73,7 @@ interface SessionState {
 /** A stream or vehicle event on the lane time axis. */
 interface LaneEvent {
   atMs: number;
-  type: ControlEvent["type"] | "disconnect" | "reconnect";
+  type: ControlEvent["type"] | "disconnect" | "reconnect" | "ended_by_operator" | "discarded_by_operator";
   sessionId: string;
 }
 
@@ -242,7 +244,8 @@ export class LaneSession {
         break;
       case "session_close": {
         const s = this.sessions.get(m.sessionId);
-        if (!s) return;
+        // An operator stop already closed it and settled its conversation.
+        if (!s || s.stopped) return;
         const atMs = Date.parse(m.at);
         s.open = false;
         await s.stream.end();
@@ -262,6 +265,56 @@ export class LaneSession {
     await this.drain();
     await this.tickTracker();
     if (this.opts.onUpdate) await this.report();
+  }
+
+  /**
+   * Operator stop (E3), in order with every other message: closes the session's
+   * transcriber (End lets it send its last words first), then ends or discards
+   * the open conversation and closes the reopen window. Works on a session that
+   * already dropped (reconnect backoff) too. Idempotent; false if the session is unknown.
+   */
+  stop(sessionId: string, mode: "end" | "discard", at: string): Promise<boolean> {
+    let found = false;
+    this.chain = this.chain.then(async () => {
+      found = await this.applyStop(sessionId, mode, at);
+      if (this.opts.onUpdate) await this.report();
+    });
+    return this.chain.then(() => found);
+  }
+
+  /** Sessions an operator can stop: open ones, and closed ones whose conversation is still held. */
+  get stoppable(): { sessionId: string; open: boolean; sourceType: string; openedAt: string; audioMinutes: number }[] {
+    const held = this.tracker.status.state === "ACTIVE" || this.tracker.status.state === "CLOSING";
+    const last = [...this.sessions.values()].at(-1);
+    return [...this.sessions.values()]
+      .filter((s) => !s.stopped && (s.open || (held && s === last)))
+      .map((s) => ({ sessionId: s.session.sessionId, open: s.open, sourceType: s.session.sourceType, openedAt: s.session.anchorAt, audioMinutes: s.stream.audioMinutes() }));
+  }
+
+  private async applyStop(sessionId: string, mode: "end" | "discard", at: string): Promise<boolean> {
+    const s = this.sessions.get(sessionId);
+    if (!s) return false;
+    if (s.stopped) return true;
+    s.stopped = mode === "end" ? "ended" : "discarded";
+    if (s.open) {
+      s.open = false;
+      if (mode === "end") await s.stream.end();
+      else s.stream.close();
+      this.streamMinutes += s.stream.audioMinutes();
+      this.emit({ type: "session", sessionId, open: false, at });
+    }
+    // End keeps the last words heard; Discard drops whatever was still waiting.
+    if (mode === "end") await this.drain();
+    else this.pending.splice(0, this.pending.length, ...this.pending.filter((u) => this.utteranceSession.get(u.id) !== sessionId));
+    const atMs = Date.parse(at);
+    this.advance(atMs);
+    const event = mode === "end" ? "ended_by_operator" : "discarded_by_operator";
+    this.events.push({ atMs, type: event, sessionId });
+    this.emit({ type: "event", event, at });
+    await this.act(this.tracker.stop(at, mode));
+    this.recordSession(sessionId, at, s.stopped);
+    this.log(`${this.key}: session ${sessionId} ${s.stopped} by operator`);
+    return true;
   }
 
   /** Live view: tracker status when it changes, and the open order's keyword preview when its lines change. */
