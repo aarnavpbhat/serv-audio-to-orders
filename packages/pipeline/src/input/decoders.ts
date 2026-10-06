@@ -157,6 +157,9 @@ class OpusFrameDecoder implements FrameDecoder {
 }
 
 /** Containers: one ffmpeg process per session, bytes in on stdin, canonical PCM out on stdout. */
+/** How long end() waits for ffmpeg to flush before killing it. */
+const END_KILL_MS = 10_000;
+
 class FfmpegStreamDecoder implements FrameDecoder {
   private readonly child: ChildProcessWithoutNullStreams;
   private carry = new Uint8Array(0);
@@ -211,7 +214,11 @@ class FfmpegStreamDecoder implements FrameDecoder {
 
   async end(): Promise<void> {
     if (!this.child.stdin.destroyed) this.child.stdin.end();
+    // ffmpeg flushes in well under a second; a stuck process is killed rather than awaited.
+    const kill = setTimeout(() => this.close(), END_KILL_MS);
+    kill.unref?.();
     await this.done;
+    clearTimeout(kill);
     this.stop();
   }
 

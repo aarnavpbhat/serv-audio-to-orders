@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * pnpm pipeline run <file.mp3>       transcribe, segment, extract, build, deliver
+ * pnpm pipeline run <file.mp3>       replay through the live path, extract, build, deliver
  * pnpm pipeline eval                 score every fixture against ground truth
  * pnpm pipeline resend <order_id>    resend a failed or dead-lettered delivery
  * pnpm pipeline worker               run the slow-phase retry worker
@@ -147,12 +147,20 @@ async function serveCommand(opts: EngineOptions): Promise<void> {
   await new Promise(() => {});
 }
 
+/** --speed: a positive number, or max (the default). */
+function parseSpeed(v: unknown): number | "max" {
+  if (v === undefined || v === "max") return "max";
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) throw new ConfigError(`--speed must be a positive number or max, got ${String(v)}`);
+  return n;
+}
+
 async function wsReplayCommand(ref: string, values: Record<string, unknown>): Promise<void> {
   const cfg = getConfig();
   const layout: "stereo" | "mono" = values.layout === "stereo" ? "stereo" : "mono";
   const file = resolveFixture(cfg.paths.fixturesDir, ref, layout);
   const scenario = values.scenario ? loadScenario(cfg.paths.fixturesDir, values.scenario as string) : { ...DEFAULT_SCENARIO, channels: layout };
-  const speed = !values.speed || values.speed === "max" ? ("max" as const) : Number(values.speed);
+  const speed = parseSpeed(values.speed);
   const token = (values.token as string | undefined) ?? process.env.INGEST_TOKEN;
   const laneId = (values.lane as string | undefined) ?? cfg.laneId.value;
   const storeId = (values.store as string | undefined) ?? cfg.storeId.value;
@@ -223,7 +231,7 @@ async function rawReplayCommand(sessionId: string | undefined, values: Record<st
   const { manifest } = await readRawSession(engine.data, sessionId);
   const tokenRow = listTokens(engine.db).find((t) => t.token_id === token.split("_")[1]);
   if (tokenRow && tokenRow.store_id !== manifest.store_id) throw new ConfigError(`Session ${sessionId} was captured for ${manifest.store_id}; this token is for ${tokenRow.store_id}`);
-  const speed = !values.speed || values.speed === "max" ? ("max" as const) : Number(values.speed);
+  const speed = parseSpeed(values.speed);
   const r = await replayRawOverWs(engine.data, sessionId, { url: (values.url as string | undefined) ?? engine.cfg.ingest.publicUrl, token, speed });
   console.log(`replayed ${r.messages} messages (${Math.round(r.bytes / 1024)} KB)${r.incomplete ? "; the capture has an incomplete part (the server stopped mid-session)" : ""}; closes: ${r.closes.map((c) => c.code).join(", ") || "-"}`);
 }
@@ -380,8 +388,7 @@ async function main(): Promise<void> {
       const engine = createEngine({ ...engineOpts(values), log: values.json ? () => {} : (m) => console.log(m) });
       const file = resolveFixture(engine.cfg.paths.fixturesDir, positionals[2], values.layout === "stereo" ? "stereo" : "mono");
       const scenario = values.scenario ? loadScenario(engine.cfg.paths.fixturesDir, values.scenario) : { ...DEFAULT_SCENARIO, channels: values.layout === "stereo" ? ("stereo" as const) : ("mono" as const) };
-      const speed = !values.speed || values.speed === "max" ? ("max" as const) : Number(values.speed);
-      if (speed !== "max" && !(speed > 0)) throw new ConfigError(`--speed must be a positive number or max, got ${values.speed}`);
+      const speed = parseSpeed(values.speed);
       const result = await replayFile(engine, file, {
         transcriber: engine.streaming,
         scenario,

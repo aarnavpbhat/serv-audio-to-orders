@@ -21,9 +21,9 @@ import { isSafeId } from "../lib/safe-id";
 import { TokenAuth, UNAUTHORIZED } from "../input/auth/token-auth";
 import { isRevoked } from "../input/auth/tokens";
 import type { IngestAuth } from "../input/auth/types";
-import { isWireCodec } from "../input/decoders";
 import { HmeConnection, type ConnectionParams } from "../input/hme/connection";
-import type { ChannelRole, SourceMessage } from "../input/types";
+import { parseFormat } from "../input/hme/handshake";
+import type { SourceMessage } from "../input/types";
 
 export const STREAM_PATH = "/hme/v1/stream";
 export const MAX_BINARY_BYTES = 64 * 1024;
@@ -74,23 +74,7 @@ export function isLocalHost(host: string): boolean {
   return LOCAL_HOSTS.has(host);
 }
 
-/** Validated connection format, or a reason it was refused. */
-export function parseFormat(q: URLSearchParams): { ok: true; codec: ConnectionParams["codec"]; sampleRate: number; channels: number; roles?: ChannelRole[] } | { ok: false; reason: string } {
-  const codec = q.get("codec") ?? "pcm_s16le";
-  if (codec !== "auto" && !isWireCodec(codec)) return { ok: false, reason: "codec" };
-  const sampleRate = Number(q.get("rate") ?? 16000);
-  if (!Number.isInteger(sampleRate) || sampleRate < 8000 || sampleRate > 48000) return { ok: false, reason: "rate" };
-  const channels = Number(q.get("channels") ?? 1);
-  if (!Number.isInteger(channels) || channels < 1 || channels > 2) return { ok: false, reason: "channels" };
-  const rolesRaw = q.get("roles");
-  let roles: ChannelRole[] | undefined;
-  if (rolesRaw) {
-    const parts = rolesRaw.split(",");
-    if (parts.length !== channels || !parts.every((r) => r === "customer" || r === "crew" || r === "mixed")) return { ok: false, reason: "roles" };
-    roles = parts as ChannelRole[];
-  }
-  return { ok: true, codec, sampleRate, channels, ...(roles ? { roles } : {}) };
-}
+export { parseFormat };
 
 export class IngestServer {
   private readonly http: Server;

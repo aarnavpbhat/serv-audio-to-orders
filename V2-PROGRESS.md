@@ -21,8 +21,8 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 11. Eval v2 | v2-step/11-eval | Done: PR #13 |
 | 12. Human-voiced held-out set | v2-step/12-heldout | Done: PR #14 (tooling; recordings need people) |
 | 13. Retire the batch path | v2-step/13-retire-batch | Done: PR #15 |
-| 14. Docs | v2-step/14-docs | PR #16 |
-| 15. Release review and merge | v2 into main | Next (merge into main waits for Aarnav) |
+| 14. Docs | v2-step/14-docs | Done: PR #16 |
+| 15. Release review and merge | v2-step/15-release, then v2 into main | Review fixes in a PR; merge into main waits for Aarnav |
 
 ## Decisions not covered by the plan
 
@@ -81,6 +81,25 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 15. Release review
+
+Two review agents read `main...v2` (the /security-review skill cannot target a branch range, so the security pass ran as an agent).
+
+- Security: every control in the plan's checklist passes (WS auth before audio, constant-time checks, message and connection caps, bounded buffers, whitelisted decoders, ffmpeg by argument array, ID validation before paths, keys server-side only, HMAC window and dedupe, schema-validated model output, D13 cap, 127.0.0.1 binding, dev-route gating). No findings at confidence 8 or above.
+- Code: matches the plan, pure modules have no I/O, no batch path left, strict types, no TODOs or em dashes. Nothing blocking.
+- Fixed here:
+  - `/live` and `/api/live/events` answer only requests addressed to a local host (DNS-rebinding defense; test added).
+  - The ffmpeg decoder is killed 10 s after `end()` if it has not exited, instead of waiting for the 6 h lifetime cap.
+  - Deepgram live messages are validated with zod; malformed ones are dropped and logged once per type (test added).
+  - The connect handshake parser moved to `src/input/hme/handshake.ts`, and the README says precisely what lives in `src/input/hme/`.
+  - `--speed` rejects anything but a positive number or `max`.
+  - The unused `segment` stage is gone from the run progress.
+  - Docs: `INGEST_TOKEN` in the configuration table, stale MP3-only and "batch" wording, test count, CLI header.
+- Left as is (noted, not blocking):
+  - `segmentTranscript` and `BoundaryJudge.isNewCustomer` are used only by tests now; kept as a reference for the old boundary logic until the held-out set says whether the tracker needs it.
+  - Dev tickets skip the 4-connections-per-token cap; save-fixture time windows are unbounded; the Settings panel shows `whsec_` plus 4 characters of the secret; a dev fixture's server path can appear in a session's `sourceRef`. All dev-only or negligible.
+  - `pnpm audit`: one high advisory (braces, dev-only through eslint-config-next and the shadcn CLI), no patched version yet.
 
 ### 14. Docs
 

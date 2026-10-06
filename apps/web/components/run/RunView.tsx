@@ -28,7 +28,7 @@ interface SiteValue {
   note: string;
 }
 
-const STAGES = ["ingest", "transcribe", "segment", "extract", "deliver", "done"] as const;
+const STAGES = ["ingest", "transcribe", "extract", "deliver", "done"] as const;
 const fmt = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
 
 export function RunView({

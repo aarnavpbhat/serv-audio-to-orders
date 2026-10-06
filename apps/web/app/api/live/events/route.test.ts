@@ -16,7 +16,7 @@ function insert(type: string, data: Record<string, unknown>): void {
 /** Read the stream until `want` data frames arrived, then abort. */
 async function read(headers: Record<string, string>, want: number): Promise<{ id: number; type: string }[]> {
   const ac = new AbortController();
-  const res = GET(new Request("http://localhost/api/live/events", { headers, signal: ac.signal }));
+  const res = GET(new Request("http://localhost/api/live/events", { headers: { host: "localhost:3000", ...headers }, signal: ac.signal }));
   expect(res.headers.get("content-type")).toMatch(/text\/event-stream/);
   const reader = (res.body as ReadableStream<Uint8Array>).getReader();
   let text = "";
@@ -45,5 +45,10 @@ describe("GET /api/live/events", () => {
     expect(rows.map((r) => r.type)).toEqual(["session", "utterance", "interim"]);
     const again = await read({ "last-event-id": String(rows[1]?.id) }, 1);
     expect(again.map((r) => r.type)).toEqual(["interim"]);
+  });
+
+  it("answers 404 to a request addressed to another host (DNS rebinding)", () => {
+    const res = GET(new Request("http://localhost/api/live/events", { headers: { host: "evil.example:3000" } }));
+    expect(res.status).toBe(404);
   });
 });

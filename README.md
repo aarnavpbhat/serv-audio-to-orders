@@ -22,7 +22,7 @@ Requirements: Node 22+ (`.nvmrc`), pnpm 9, macOS (for regenerating fixture audio
 ```bash
 pnpm install
 cp .env.example .env        # add DEEPGRAM_API_KEY and GEMINI_API_KEY
-pnpm test                   # 250 unit and route tests, no API calls
+pnpm test                   # 252 unit and route tests, no API calls
 ```
 
 Both providers have free tiers: Deepgram gives $200 of credit (console.deepgram.com) and Gemini has a free API tier (aistudio.google.com). Without keys, the pipeline still runs on fixture audio using the ground-truth transcriber and the keyword fallback extractor.
@@ -157,7 +157,7 @@ V2-PROGRESS.md   how v2 was built, step by step, with every decision the plan le
 
 **Transcribe.** Nova-3 with `smart_format`, `punctuate`, `utterances`, `utt_split=0.8`, `filler_words`, and every canonical menu item name as a `keyterm` (Deepgram rejects more than 500 keyterm tokens, so aliases are left to the extractor and fuzzy matcher). Stereo with `CHANNEL_MAP` set uses `multichannel` (roles from channels, preferred). Otherwise `diarize`, then the speaker who greets, asks "anything else" or reads a total is crew; a voice that only says headset chatter is crew too; ties go to a one-line LLM check, then to "first voice is the crew greeting". When diarization puts 90% or more of the lines under one voice (common on mono drive-thru audio, and on most of the synthetic fixtures), roles are inferred per line instead: customer phrases ("can I get", "that's it", "never mind") and crew phrases ("anything else", totals, "okay, large Sprite") decide first, then turn-taking fills the rest, keeping the speaker when a line continues an unfinished one. Those transcripts show `roles from wording`, and each guessed line is marked so the extractor treats the label as a hint. Words under 0.6 confidence are marked `low_conf`. Absolute time = `audio_start_utc` + offset, where the start comes from `AUDIO_START_UTC`, a filename pattern (`20261003T184000Z`, `2026-10-03_18-40-00`), or the file mtime, recorded as `timestamp_source`. 429 and 5xx are retried with backoff. Minutes billed are logged per run.
 
-**Live input.** An HME base station connects to `/hme/v1/stream` (path and wire format are PLACEHOLDERS until HME documents them; everything HME-specific lives in `packages/pipeline/src/input/`). It authenticates with a per-store bearer token and names its lane and audio format. Binary messages are audio in the declared codec (PCM, mu-law, a-law, Opus, or MP3, AAC, WAV, Ogg or FLAC through ffmpeg); text messages are JSON control events (`vehicle_arrived`, `vehicle_departed`, `stream_paused`, `stream_resumed`). Every message is captured raw before decoding. Audio becomes canonical 16 kHz PCM per channel, timed by our receive clock (`time_basis: receive_clock`; the service checks the machine's NTP offset at start). A replayed file uses its recording time instead (`recording_metadata`).
+**Live input.** An HME base station connects to `/hme/v1/stream` (path and wire format are PLACEHOLDERS until HME documents them; the handshake, message format and connection handling live in `packages/pipeline/src/input/hme/`; the server around them is generic). It authenticates with a per-store bearer token and names its lane and audio format. Binary messages are audio in the declared codec (PCM, mu-law, a-law, Opus, or MP3, AAC, WAV, Ogg or FLAC through ffmpeg); text messages are JSON control events (`vehicle_arrived`, `vehicle_departed`, `stream_paused`, `stream_resumed`). Every message is captured raw before decoding. Audio becomes canonical 16 kHz PCM per channel, timed by our receive clock (`time_basis: receive_clock`; the service checks the machine's NTP offset at start). A replayed file uses its recording time instead (`recording_metadata`).
 
 **Conversation tracker.** One lane per store and lane, surviving reconnects. Each final utterance goes to a state machine (IDLE, ACTIVE, CLOSING, FINALIZED). A conversation opens on a greeting, a customer line, or a car arriving followed by a greeting. It moves to CLOSING on a crew closing cue ("pull forward", "see you at the window"). It finalizes after `CLOSE_SETTLE_S` (3 s) without customer speech, after `IDLE_TIMEOUT_S` (45 s) of silence, when the next car starts, or at the 6 minute cap. A disconnect holds the conversation for `RECONNECT_GRACE_S` (180 s). A customer line within `REOPEN_WINDOW_S` (20 s) of finalizing reopens it, and the order is resent as `order.updated` version 2. Gray-zone "is this a new car?" questions get one LLM try with a 3 s deadline, no retries, and are skipped when the per-minute slot is busy; the rules decide otherwise. Timers never run past speech that is still being transcribed. Every decision is logged with its trigger and signals. The gap scoring, cue lexicon and chatter tagging are v1's segmentation rules, reused.
 
@@ -185,7 +185,7 @@ Every Serv-dependent value lives in `config/sandbox.ts`, shows a yellow Placehol
 |---|---|---|
 | HME wire format | PLACEHOLDER: `/hme/v1/stream`, audio as binary in a declared codec, events as JSON text (`src/input/hme/`) | HME documents its streaming interface |
 | Store and lane IDs | Live: the store comes from the ingest token, the lane from the connection. Replays: `STORE_ID=store_demo_001`, `LANE_ID=lane_1` | Serv shares site and lane IDs |
-| Audio is MP3, mono or stereo | Both supported; `CHANNEL_MAP` (e.g. `0=customer,1=crew`) unset means diarization | An HME sample confirms channels |
+| Audio codec and channels | Any whitelisted codec, mono or stereo; `CHANNEL_MAP` (e.g. `0=customer,1=crew`) unset means diarization | An HME sample confirms channels |
 | Recording wall-clock start is unknown | `AUDIO_START_UTC`, else filename pattern, else file mtime; `timestamp_source` recorded | HME metadata format is confirmed |
 | Generic invented menu | `menu/menu.json` ("Sandbox Burger") | Serv names a brand |
 | Serv accepts our webhook schema | Schema 2.0 above | Serv reviews it |
@@ -213,6 +213,7 @@ One deliberate change from the handoff doc: the default STT language is `multi` 
 | `ALLOW_INSECURE_WS` | `false` | Allow a non-local address without TLS (trusted networks only) |
 | `INGEST_AUTH_ALLOW_QUERY` | `false` | Accept `?token=` as well as the `Authorization` header |
 | `INGEST_URL` | `ws://127.0.0.1:8787` | The endpoint as clients reach it (the simulator, `--via ws`) |
+| `INGEST_TOKEN` | unset | Sender side only: the token `pnpm feed replay --via ws` and `feed replay-raw` send when `--token` is not given |
 | `ENABLE_DEV_ROUTES` | `false` | Simulator, review screen, ingest tickets. Local requests only; never on a server reachable by others, or behind a proxy |
 | `CLOSE_SETTLE_S`, `IDLE_TIMEOUT_S`, `RECONNECT_GRACE_S`, `REOPEN_WINDOW_S`, `JUDGE_TIMEOUT_MS` | 3, 45, 180, 20, 3000 | Tracker timers |
 | `DEEPGRAM_IDLE_CLOSE_S` | 30 | Close an idle Deepgram live connection after this long (reopened on resume) |
@@ -267,7 +268,7 @@ Close latency with real providers, estimated: p50 3.0 s, p95 45 s. Orders closed
 - **Lane bleed:** each store and lane gets its own lane, and two lanes run side by side without mixing (row 40), but audio from one lane's speaker reaching the other lane's microphone is not handled.
 - **Generic menu:** real menus have more items, regional names and promos.
 - **Gemini model choice:** the default is `gemini-3.5-flash-lite`, which completed the eval inside the free tier. `gemini-flash-latest` may extract better, but its free tier allows 20 requests per day, too few for a full eval; set `GEMINI_MODEL=gemini-flash-latest` to try it on single runs. Quotas are per model, and the pipeline keeps one ledger per model in `.data/`.
-- **Free-tier limits:** LLM rate limits and 503 "high demand" responses on the free tier slow batch runs (client-side limit `GEMINI_RPM`, default 10; daily cap `GEMINI_DAILY_CAP`, default 200).
+- **Free-tier limits:** LLM rate limits and 503 "high demand" responses on the free tier slow file replays and evals (client-side limit `GEMINI_RPM`, default 10; daily cap `GEMINI_DAILY_CAP`, default 200).
 - **Data handling:** sending audio to Deepgram and an LLM provider is assumed OK pending Serv's confirmation.
 - **Orders spanning files:** a replayed file's last conversation without a close is `undetermined` with `truncated_end`; files are not stitched together.
 - **Sandbox infrastructure:** SQLite and an in-process queue suit one machine; a deployment would move the outbox and worker to managed services.
