@@ -6,7 +6,10 @@
 import { readdirSync } from "node:fs";
 import path from "node:path";
 import type { Engine } from "../engine";
+import { issueTicket } from "../input/auth/tokens";
 import { FileReplaySource } from "../input/file-replay";
+import { replayOverWs } from "../input/ws-replay";
+import { startService } from "../server/serve";
 import { Scenario, type ScenarioInput } from "../input/scenario";
 import { loadTimeline } from "../transcribe/script";
 import { mergeSources } from "../input/merge";
@@ -126,8 +129,39 @@ async function unclearItem(engine: Engine): Promise<LiveCheck> {
   return { row: 39, pass, detail: `${o?.status ?? "no order"}; review ${o?.review.reasons.join(", ") ?? "-"}` };
 }
 
+/** Row 36: every wire codec over a real socket gives the same transcript as PCM. */
+async function wireCodecs(engine: Engine): Promise<LiveCheck> {
+  const service = await startService(engine, { host: "127.0.0.1", port: 0, devRoutes: true, rawRoot: null, skipClockCheck: true, deliver: false, log: () => {} });
+  const url = `ws://127.0.0.1:${service.server.address.port}`;
+  const file = audio(engine, "01_simple");
+  const codecs = ["pcm_s16le", "mulaw", "alaw", "opus", "mp3", "aac", "wav", "ogg", "flac"] as const;
+  try {
+    for (const codec of codecs) {
+      const laneId = `codec_${codec}`;
+      await replayOverWs(file, {
+        url,
+        ticket: () => issueTicket(engine.db, { storeId: "store_codecs", laneId }).ticket,
+        scenario: Scenario.parse({ name: `codec-${codec}`, codec, frame_ms: codec === "opus" ? 20 : 100 }),
+        storeId: "store_codecs",
+        laneId,
+        fixtureId: "01_simple",
+      });
+    }
+  } finally {
+    await service.stop();
+  }
+  const lane = (codec: string) => service.manager.lane("store_codecs", `codec_${codec}`);
+  const words = (codec: string) => lane(codec)?.transcript().utterances.map((u) => `${u.id}:${u.text}`).join("|") ?? "";
+  const reference = words("pcm_s16le");
+  const durations = codecs.map((c) => lane(c)?.transcript().audio.duration_s ?? 0);
+  const ref = durations[0] ?? 0;
+  const bad = codecs.filter((c, i) => words(c) !== reference || Math.abs((durations[i] ?? 0) - ref) > Math.max(0.5, ref * 0.03));
+  const pass = reference.length > 0 && bad.length === 0;
+  return { row: 36, pass, detail: pass ? `${codecs.length} codecs, same ${lane("pcm_s16le")?.transcript().utterances.length ?? 0} utterances, audio within 3%` : `differs: ${bad.join(", ")}` };
+}
+
 export async function runLiveChecks(engine: Engine): Promise<LiveCheck[]> {
-  const checks = [pauseAfterClose, pauseMidOrder, disconnectReconnect, disconnectLong, departsBeforeClose, oldRecording, boundariesFollowEvents, unclearItem, twoLanes];
+  const checks = [wireCodecs, pauseAfterClose, pauseMidOrder, disconnectReconnect, disconnectLong, departsBeforeClose, oldRecording, boundariesFollowEvents, unclearItem, twoLanes];
   const out: LiveCheck[] = [];
   for (const c of checks) {
     try {

@@ -204,3 +204,13 @@ Every row of the edge-case checklist has a fixture (rows 27 and 28 are exercised
 - **Payload carries the transcript:** each webhook includes the conversation's transcript, which Serv may not want for size or privacy reasons.
 - **Greedy combo search:** combo opportunities are found meal by meal in menu order, so with many items the best combination can be missed.
 - **No error monitoring:** dead-lettered webhooks and failed runs show in the UI and logs only; nothing alerts.
+
+### Ingest authentication
+The WebSocket endpoint uses per-store bearer tokens. A token proves the caller
+holds a secret we issued, not that the caller is a genuine HME base station,
+and a leaked token works until it is revoked. HME's installation guide shows
+only a provider URL and port, so we could not confirm what authentication HME
+supports. Before production: confirm HME's connection handshake, then add
+mutual TLS (client certificates), an IP allowlist for HME and store addresses,
+or signed timestamped connect requests. Each plugs into the IngestAuth
+interface. Also needed: a token rotation schedule and managed TLS.

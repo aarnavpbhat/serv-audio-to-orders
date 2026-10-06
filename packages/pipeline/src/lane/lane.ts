@@ -33,7 +33,8 @@ export type LaneUpdate =
 export interface LaneOptions {
   engine: Engine;
   transcriber: StreamingTranscriber;
-  runId: string;
+  /** Run id for the lane's orders: fixed (replays), or per lane (the live server). */
+  runId: string | ((storeId: string, laneId: string) => string);
   deliver: boolean;
   /** tracker (default): the live path. batch: v1 segmentation at end of input, for parity checks only. */
   mode?: "tracker" | "batch";
@@ -88,13 +89,14 @@ interface FinalizeArgs {
 
 export class LaneSession {
   readonly key: string;
+  readonly runId: string;
   private anchorMs: number | null = null;
   private readonly sessions = new Map<string, SessionState>();
   private readonly utterances: Utterance[] = [];
   private readonly byId = new Map<string, Utterance>();
   private readonly utteranceSession = new Map<string, string>();
   private readonly events: LaneEvent[] = [];
-  private readonly gaps: { fromMs: number; toMs: number }[] = [];
+  private readonly gaps: { fromMs: number; toMs: number; dropped: boolean }[] = [];
   private readonly levelSum: number[] = [];
   private readonly levelCount: number[] = [];
   private readonly pending: Utterance[] = [];
@@ -126,6 +128,7 @@ export class LaneSession {
     private readonly opts: LaneOptions,
   ) {
     this.key = laneKey(storeId, laneId);
+    this.runId = typeof opts.runId === "string" ? opts.runId : opts.runId(storeId, laneId);
     this.now = opts.now ?? Date.now;
     this.log = opts.log ?? opts.engine.log;
     this.mode = opts.mode ?? "tracker";
@@ -246,7 +249,7 @@ export class LaneSession {
       utterance: (u) => this.addUtterance(u),
       interim: (text, sessionId) => this.emit({ type: "interim", text, sessionId }),
       error: (e) => this.log(`${this.key}: transcriber error: ${e.message}`),
-      gap: (fromS, toS) => this.gaps.push({ fromMs: anchorMs + fromS * 1000, toMs: anchorMs + toS * 1000 }),
+      gap: (fromS, toS, reason) => this.gaps.push({ fromMs: anchorMs + fromS * 1000, toMs: anchorMs + toS * 1000, dropped: reason === "dropped" }),
     });
     this.sessions.set(session.sessionId, { session, stream, anchorMs, receipts: [], open: true });
     this.advance(anchorMs);
@@ -451,13 +454,13 @@ export class LaneSession {
     const startSample = Math.max(0, Math.round((args.segment.start_s + offsetS) * CANONICAL_RATE));
     const receipt = s?.receipts.find((r) => r.offset >= startSample - CANONICAL_RATE * 0.2) ?? s?.receipts[0];
     const done = await finalizeConversation(this.opts.engine, {
-      runId: this.opts.runId,
+      runId: this.runId,
       segment: args.segment,
       transcript,
       session: sessionFacts(s, sessionId, this.storeId, this.laneId, offsetS, this.codecIn, this.channels),
       levelsDb: this.levels(),
       signals: { vehicle: args.vehicle, stream: args.stream, silence: args.silence },
-      extraFlags: [...args.flags, ...(this.transcriptGap(args.segment) ? (["transcript_gap"] as Flag[]) : [])],
+      extraFlags: [...args.flags, ...this.gapFlags(args.segment)],
       rolesLowAgreement,
       receivedAt: new Date(receipt?.wallMs ?? conv.openedWallMs).toISOString(),
       ...(s?.session.sourceRef ? { audioFile: s.session.sourceRef } : {}),
@@ -482,9 +485,19 @@ export class LaneSession {
     for (const o of done.orders) this.emit({ type: "order", payload: o.payload });
   }
 
-  private transcriptGap(seg: Segment): boolean {
+  /** transcript_gap for provider gaps, audio_dropped when the buffer overflowed, inside this conversation. */
+  private gapFlags(seg: Segment): Flag[] {
     const base = this.anchorMs ?? 0;
-    return this.gaps.some((g) => g.toMs > base + seg.start_s * 1000 && g.fromMs < base + seg.end_s * 1000);
+    const inside = this.gaps.filter((g) => g.toMs > base + seg.start_s * 1000 && g.fromMs < base + seg.end_s * 1000);
+    const flags: Flag[] = [];
+    if (inside.some((g) => !g.dropped)) flags.push("transcript_gap");
+    if (inside.some((g) => g.dropped)) flags.push("audio_dropped");
+    return flags;
+  }
+
+  /** Flag the open conversation (the endpoint reports audio_rate_exceeded this way). */
+  flag(flag: Flag): void {
+    if (!this.tracker.flagCurrent(flag)) this.log(`${this.key}: ${flag} with no open conversation`);
   }
 
   private meter(startMs: number, mono: Int16Array): void {
@@ -514,7 +527,7 @@ export class LaneSession {
     const first = [...this.sessions.values()][0]?.session;
     const durS = Math.max(this.laneS(this.audioEndMs || this.clockMs), this.utterances.at(-1)?.end_s ?? 0);
     return {
-      transcript_id: `tr_${this.opts.runId}`,
+      transcript_id: `tr_${this.runId}`,
       source_file: first?.sourceRef?.split("/").pop() ?? `${this.storeId}/${this.laneId}`,
       audio: { codec: this.codecIn, sample_rate: CANONICAL_RATE, channels: this.channels, duration_s: Math.round(durS * 1000) / 1000 },
       audio_start_utc: base,

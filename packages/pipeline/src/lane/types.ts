@@ -31,8 +31,11 @@ export interface TranscriptHandlers {
   /** Interim (not final) text, for the UI only; never feeds the tracker. */
   interim?(text: string, sessionId: string): void;
   error?(e: Error): void;
-  /** Audio between these session offsets was not transcribed (provider error, reconnect). */
-  gap?(fromS: number, toS: number): void;
+  /**
+   * Audio between these session offsets was not transcribed: "provider" (error,
+   * reconnect) or "dropped" (the 30 s buffer overflowed and the oldest audio was dropped).
+   */
+  gap?(fromS: number, toS: number, reason?: "provider" | "dropped"): void;
 }
 
 export interface TranscriptStream {

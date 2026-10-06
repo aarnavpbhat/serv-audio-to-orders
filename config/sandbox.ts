@@ -47,6 +47,21 @@ export interface SandboxConfig {
   /** Gemini 3 thinking level. Low keeps output tokens (and free-tier usage) small. */
   geminiThinking: "minimal" | "low" | "medium" | "high";
   sttModel: string;
+  /** The WebSocket endpoint HME connects to (PLACEHOLDER path and format). */
+  ingest: {
+    host: string;
+    port: number;
+    /** Accept ?token= as well as the Authorization header (off by default: query strings end up in logs). */
+    allowQueryToken: boolean;
+    /** Listen on a non-local address without TLS (trusted networks only). */
+    allowInsecure: boolean;
+    tlsCert: string | null;
+    tlsKey: string | null;
+    /** URL clients use to reach the endpoint (the simulator, replays over ws). */
+    publicUrl: string;
+  };
+  /** Dev-only routes (simulator, mock receiver, review screen, ingest tickets); never in production. */
+  enableDevRoutes: boolean;
   /** Close an idle Deepgram live connection after this many seconds of pause (reopened on resume). */
   deepgramIdleCloseS: number;
   lowConfWord: number;
@@ -255,6 +270,16 @@ export function getConfig(): SandboxConfig {
     geminiThinking: thinking(env("GEMINI_THINKING")),
     sttModel: "nova-3",
     deepgramIdleCloseS: num("DEEPGRAM_IDLE_CLOSE_S", 30),
+    ingest: {
+      host: env("INGEST_HOST") ?? "127.0.0.1",
+      port: num("INGEST_PORT", 8787),
+      allowQueryToken: env("INGEST_AUTH_ALLOW_QUERY") === "true",
+      allowInsecure: env("ALLOW_INSECURE_WS") === "true",
+      tlsCert: env("INGEST_TLS_CERT"),
+      tlsKey: env("INGEST_TLS_KEY"),
+      publicUrl: env("INGEST_URL") ?? `ws://127.0.0.1:${num("INGEST_PORT", 8787)}`,
+    },
+    enableDevRoutes: env("ENABLE_DEV_ROUTES") === "true",
     lowConfWord: 0.6,
     lowAudioQualityMeanConf: num("LOW_AUDIO_QUALITY_CONF", 0.8),
     lowAudioSnrDb: num("LOW_AUDIO_SNR_DB", 15),

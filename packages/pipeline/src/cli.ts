@@ -8,15 +8,21 @@
  * pnpm pipeline settings             show Serv-dependent settings and placeholders
  * pnpm pipeline secret               generate a whsec_ signing secret
  * pnpm feed replay <fixture|file>    replay a recording as a live feed (lane path)
+ * pnpm feed serve                    run the live endpoint (HME WebSocket) and lanes
+ * pnpm pipeline token create|list|revoke   manage ingest tokens
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { parseChannelMap, servSettings } from "@serv/config";
+import { getConfig, parseChannelMap, servSettings } from "@serv/config";
 import { ConfigError, createEngine, type EngineOptions, type ExtractorKind, type TranscriberKind } from "./engine";
 import { formatReport, runEval } from "./eval/run-eval";
 import { IngestError } from "./ingest/probe";
+import { createToken, issueTicket, listTokens, revokeToken } from "./input/auth/tokens";
 import { DEFAULT_SCENARIO, loadScenario } from "./input/scenario";
+import { replayOverWs } from "./input/ws-replay";
+import { startService } from "./server/serve";
+import { openDb } from "./store/db";
 import { latencySummary, replayFile, type ReplayResult } from "./lane/replay";
 import { sleep } from "./lib/retry";
 import { runPipeline, type RunResult } from "./run";
@@ -34,6 +40,10 @@ Commands
   settings              List Serv-dependent settings and which are placeholders
   secret                Print a new whsec_ signing secret
   feed replay <f>       Replay a fixture id or audio file as a live feed through the lane path
+  feed serve            Run the live service: the HME WebSocket endpoint plus lanes
+  token create          Create an ingest token: --store <id> --lanes <a,b> [--note text] (printed once)
+  token list            List ingest tokens (never the secrets)
+  token revoke <id>     Revoke a token; its live sessions are closed (4401)
 
 Options
   --transcriber deepgram|script   Default: deepgram if DEEPGRAM_API_KEY is set, else script (fixtures only)
@@ -46,8 +56,9 @@ Options
   --json                          Print full JSON output
   eval: --layout mono|stereo (default mono), --only id1,id2, --no-compilations, --deliver, --no-webhook-check,
         --via file|lane (default file), --scenario <name> (lane only)
-  feed replay: --speed 1|4|max (default max), --via direct (ws arrives with the WebSocket endpoint),
-        --scenario <name>, --store <id>, --lane <id>, --layout mono|stereo
+  feed replay: --speed 1|4|max (default max), --via direct|ws, --scenario <name>, --store <id>, --lane <id>,
+        --layout mono|stereo; with --via ws: --url (default INGEST_URL), --token (default INGEST_TOKEN, or a
+        dev ticket when ENABLE_DEV_ROUTES=true)
 `;
 
 function engineOpts(v: Record<string, unknown>): EngineOptions {
@@ -82,6 +93,73 @@ function printRun(r: RunResult): void {
   console.log(`\n  Usage: STT ${u.stt.provider} ${u.stt.cached ? "cached (0 min)" : `${u.stt.audio_minutes} min`}; LLM ${u.llm.calls} calls (${u.llm.cached_calls} cached), ${u.llm.input_tokens} in / ${u.llm.output_tokens} out tokens; ${r.timings.total_ms} ms total`);
   const g = u.gemini_today;
   if (g) console.log(`  Gemini today (${g.day} PT): ${g.requests}/${g.cap} requests, tier ${g.tier}${g.exhausted ? ", daily quota used up" : ""}`);
+}
+
+function tokenCommand(sub: string | undefined, id: string | undefined, values: Record<string, unknown>): void {
+  const engine = createEngine({ transcriber: "script", extractor: "fuzzy", log: () => {} });
+  if (sub === "create") {
+    const store = values.store as string | undefined;
+    const lanes = (values.lanes as string | undefined)?.split(",").map((l) => l.trim()).filter(Boolean) ?? [];
+    if (!store || !lanes.length) throw new ConfigError("Usage: pnpm pipeline token create --store <id> --lanes <a,b> [--note text]");
+    const t = createToken(engine.db, { storeId: store, lanes, ...(values.note ? { note: values.note as string } : {}) });
+    console.log(`Token for ${store} (lanes ${lanes.join(", ")}). Shown once; store it as INGEST_TOKEN on the sender:\n\n${t.token}\n`);
+    return;
+  }
+  if (sub === "list") {
+    for (const t of listTokens(engine.db)) {
+      const when = (ms: number | null) => (ms ? new Date(ms).toISOString() : "-");
+      console.log(`${t.token_id}  ${t.store_id.padEnd(18)} lanes ${t.allowed_lanes}  created ${when(t.created_at)}  last used ${when(t.last_used_at)}${t.revoked_at ? `  REVOKED ${when(t.revoked_at)}` : ""}${t.note ? `  (${t.note})` : ""}`);
+    }
+    return;
+  }
+  if (sub === "revoke") {
+    if (!id) throw new ConfigError("Usage: pnpm pipeline token revoke <tokenId>");
+    console.log(revokeToken(engine.db, id) ? `Revoked ${id}. A running server closes its sessions within a few seconds (4401).` : `No active token ${id}`);
+    return;
+  }
+  throw new ConfigError("Usage: pnpm pipeline token create|list|revoke");
+}
+
+async function serveCommand(opts: EngineOptions): Promise<void> {
+  const engine = createEngine({ ...opts, log: (m) => console.log(m) });
+  const service = await startService(engine);
+  const stop = async () => {
+    console.log("stopping: finishing open conversations");
+    await service.stop();
+    process.exit(0);
+  };
+  process.once("SIGINT", () => void stop());
+  process.once("SIGTERM", () => void stop());
+  await new Promise(() => {});
+}
+
+async function wsReplayCommand(ref: string, values: Record<string, unknown>): Promise<void> {
+  const cfg = getConfig();
+  const layout: "stereo" | "mono" = values.layout === "stereo" ? "stereo" : "mono";
+  const file = resolveFixture(cfg.paths.fixturesDir, ref, layout);
+  const scenario = values.scenario ? loadScenario(cfg.paths.fixturesDir, values.scenario as string) : { ...DEFAULT_SCENARIO, channels: layout };
+  const speed = !values.speed || values.speed === "max" ? ("max" as const) : Number(values.speed);
+  const token = (values.token as string | undefined) ?? process.env.INGEST_TOKEN;
+  const laneId = (values.lane as string | undefined) ?? cfg.laneId.value;
+  const storeId = (values.store as string | undefined) ?? cfg.storeId.value;
+  let ticket: (() => string) | undefined;
+  if (!token) {
+    if (!cfg.enableDevRoutes) throw new ConfigError("No ingest token: pass --token or set INGEST_TOKEN (or ENABLE_DEV_ROUTES=true to use a dev ticket)");
+    const db = openDb(cfg.paths.dbPath);
+    ticket = () => issueTicket(db, { storeId, laneId }).ticket;
+  }
+  const fixtureId = path.basename(file).split(".")[0];
+  const r = await replayOverWs(file, {
+    url: (values.url as string | undefined) ?? cfg.ingest.publicUrl,
+    ...(token ? { token } : {}),
+    ...(ticket ? { ticket } : {}),
+    scenario,
+    speed,
+    laneId,
+    storeId,
+    ...(fixtureId && existsSync(path.join(cfg.paths.fixturesDir, "audio", `${fixtureId}.timeline.json`)) ? { fixtureId } : {}),
+  });
+  console.log(`sent ${r.messages} messages (${Math.round(r.bytes / 1024)} KB, ${scenario.codec}) over ${r.sessions} connection(s); closes: ${r.closes.map((c) => c.code).join(", ") || "-"}`);
 }
 
 /** A fixture id (01_simple, compilation_a) or a path to any audio file. */
@@ -130,6 +208,10 @@ async function main(): Promise<void> {
       speed: { type: "string" },
       store: { type: "string" },
       lane: { type: "string" },
+      lanes: { type: "string" },
+      note: { type: "string" },
+      url: { type: "string" },
+      token: { type: "string" },
       help: { type: "boolean", short: "h" },
     },
   });
@@ -198,9 +280,13 @@ async function main(): Promise<void> {
     case "secret":
       console.log(generateSecret());
       return;
+    case "token":
+      return tokenCommand(arg, positionals[2], values);
     case "feed": {
-      if (arg !== "replay" || !positionals[2]) throw new ConfigError("Usage: pnpm feed replay <fixture-id|file> [--speed 1|4|max] [--scenario name]");
-      if (values.via && values.via !== "direct") throw new ConfigError(`--via ${values.via} is not available yet; use --via direct`);
+      if (arg === "serve") return serveCommand(engineOpts(values));
+      if (arg !== "replay" || !positionals[2]) throw new ConfigError("Usage: pnpm feed replay <fixture-id|file> [--speed 1|4|max] [--scenario name] [--via direct|ws]\n       pnpm feed serve");
+      if (values.via === "ws") return wsReplayCommand(positionals[2], values);
+      if (values.via && values.via !== "direct") throw new ConfigError(`--via must be direct or ws, got ${values.via}`);
       const engine = createEngine({ ...engineOpts(values), log: values.json ? () => {} : (m) => console.log(m) });
       const file = resolveFixture(engine.cfg.paths.fixturesDir, positionals[2], values.layout === "stereo" ? "stereo" : "mono");
       const scenario = values.scenario ? loadScenario(engine.cfg.paths.fixturesDir, values.scenario) : { ...DEFAULT_SCENARIO, channels: values.layout === "stereo" ? ("stereo" as const) : ("mono" as const) };

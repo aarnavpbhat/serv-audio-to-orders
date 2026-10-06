@@ -12,3 +12,5 @@ export { handleMockWebhook } from "./webhook/mock-receiver";
 export { verify as verifyWebhook } from "./webhook/signing";
 export { IngestError } from "./ingest/probe";
 export { newId } from "./lib/ids";
+export { issueTicket } from "./input/auth/tokens";
+export { isSafeId } from "./lib/safe-id";
