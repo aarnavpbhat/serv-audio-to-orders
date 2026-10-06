@@ -11,7 +11,7 @@
  *
  * Held-out fixtures are never used for tuning (plan D8).
  */
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { readRawSession } from "../data/raw-sink";
@@ -75,7 +75,6 @@ export async function saveLiveFixture(engine: Engine, raw: SaveFixtureInput): Pr
   assertSafeId("lane", input.laneId);
   const root = path.join(engine.cfg.paths.fixturesDir, input.heldOut ? "heldout" : "live");
   const dir = path.join(root, assertSafeId("fixture", input.name));
-  if (existsSync(dir)) throw new Error(`A fixture named ${input.name} already exists`);
 
   // Every connection the simulator made on this store and lane during the session.
   const sessions = [
@@ -124,7 +123,14 @@ export async function saveLiveFixture(engine: Engine, raw: SaveFixtureInput): Pr
   const audio = new Int16Array(total);
   for (const c of chunks) audio.set(c.pcm, c.at);
 
-  mkdirSync(dir, { recursive: true });
+  // Created last-step-only, so an existing fixture (even one made a moment ago) is never written into.
+  mkdirSync(root, { recursive: true });
+  try {
+    mkdirSync(dir);
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "EEXIST") throw new Error(`A fixture named ${input.name} already exists`);
+    throw e;
+  }
   if (total) writeFileSync(path.join(dir, "audio.flac"), await encodeFlac([audio]));
   for (const s of sessions) {
     for (const r of engine.data.find({ sessionId: s, kind: "raw" })) {

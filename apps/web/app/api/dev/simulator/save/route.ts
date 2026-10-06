@@ -18,6 +18,6 @@ export const POST = wrapAsync(async (req: Request) => {
     const saved = await saveLiveFixture(engine, parsed.data);
     return Response.json({ ...saved, dir: saved.dir.slice(engine.cfg.repoRoot.length + 1) });
   } catch (e) {
-    throw new BadRequestError((e as Error).message.slice(0, 300));
+    throw new BadRequestError((e as Error).message.replaceAll(engine.cfg.repoRoot, ".").slice(0, 300));
   }
 });

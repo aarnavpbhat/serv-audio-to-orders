@@ -20,6 +20,19 @@ export function isLocalHeaders(headers: { get(name: string): string | null }): b
   return LOCAL.has(name ?? "") && loopbackOnly(headers.get("x-forwarded-for"));
 }
 
+/** A browser request from another site (or another origin) never reaches a dev route. */
+function crossSite(req: Request): boolean {
+  const site = req.headers.get("sec-fetch-site");
+  if (site && site !== "same-origin" && site !== "none") return true;
+  const origin = req.headers.get("origin");
+  if (!origin) return false;
+  try {
+    return !LOCAL.has(new URL(origin).hostname);
+  } catch {
+    return true;
+  }
+}
+
 const LOOPBACK = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 
 /**
@@ -35,5 +48,5 @@ function loopbackOnly(xff: string | null): boolean {
 
 /** Throws 404 (not 403, so the route's existence is not revealed) unless dev routes are on and the request is local. */
 export function assertDevRoute(req: Request): void {
-  if (!getConfig().enableDevRoutes || !isLocalRequest(req)) throw new NotFoundError("Not found");
+  if (!getConfig().enableDevRoutes || !isLocalRequest(req) || crossSite(req)) throw new NotFoundError("Not found");
 }

@@ -37,6 +37,12 @@ describe("POST /api/dev/ingest-ticket", () => {
     expect((await call({ store: "s", lane: "l" }, "localhost:3000", { "content-type": "application/x-www-form-urlencoded" })).status).toBe(400);
   });
 
+  it("is a 404 for a browser request from another site", async () => {
+    expect((await call({ store: "s", lane: "l" }, "localhost:3000", { "sec-fetch-site": "cross-site" })).status).toBe(404);
+    expect((await call({ store: "s", lane: "l" }, "localhost:3000", { origin: "https://evil.example" })).status).toBe(404);
+    expect((await call({ store: "s", lane: "l" }, "localhost:3000", { origin: "http://localhost:3000", "sec-fetch-site": "same-origin" })).status).toBe(200);
+  });
+
   it("rejects ids that are not safe", async () => {
     expect((await call({ store: "../x", lane: "lane_1" })).status).toBe(400);
   });

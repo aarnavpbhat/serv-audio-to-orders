@@ -15,8 +15,9 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 6. Deepgram streaming | v2-step/06-deepgram-live | Done: PR #7 |
 | 7. WebSocket endpoint and ingest auth (Part A) | v2-step/07-ws-endpoint | Done: PR #8 |
 | 7b. Long-term data store (Part B) | v2-step/07b-data-store | Done: PR #9 |
-| 8. Live UI | v2-step/08-live-ui | PR #10 |
-| 9. Live simulator | v2-step/09-simulator | Next |
+| 8. Live UI | v2-step/08-live-ui | Done: PR #10 |
+| 9. Live simulator | v2-step/09-simulator | PR #11 |
+| 10. Review screen | v2-step/10-review-screen | Next |
 
 ## Decisions not covered by the plan
 
@@ -55,9 +56,48 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **How the live view gets its data.** The live service and the web app are separate processes, so lane updates go through a `live_events` table in the shared SQLite database. `/api/live/events` streams them as server-sent events and resumes from `Last-Event-ID` after a reconnect. It is a display feed trimmed to the last 20,000 rows; the data store keeps the record. No dependency was added.
 - **"The open order building" is a keyword preview.** Running the LLM on every line would spend free-tier requests. Instead, the open conversation's customer lines go through the free keyword extractor, and the card says the real order is built when the conversation closes.
 - **Replays show up live.** `pnpm feed replay` (direct) also writes to the live feed, so a replay at `--speed 1` can be watched on the Live page.
+- **Acted scenarios, scripted.** The plan's five acted scenarios are scripted in text mode (`sim/acted-scenarios.ts`) and sent over the real endpoint exactly as the simulator page sends them. They run in CI with the keyword extractor (statuses, versions and flags), and with Gemini via `pnpm feed sim-check` (items too). Timers are shortened for the run: settle 0.6 s, reopen 8 s, grace 2 s. Acting them into a mic is the same check with Deepgram in front; that needs people and Deepgram credit, so it is left for Aarnav (see below).
+- **Typed lines are paced like speech.** The endpoint dates a typed line as if it were spoken (0.35 s a word, ending on arrival). Lines sent faster than that overlap, which made the tracker flag `crosstalk_suspected` and put the closing cue before the item. The scripted runner waits accordingly. Someone typing by hand is slower than that anyway.
+- **Saved fixtures come from the raw capture.** Save as fixture rebuilds the audio from what the endpoint received (pauses kept as silence), and copies the raw parts. So it needs the session stopped (the last part is stored at close) and the live service running with capture on. The expected order is written in the form: status plus items from the menu.
+- **Noise for the simulator** is the same synthetic engine, wind and radio mix the fixtures use (`fixtures/noise.ts`), served as a 20 s WAV by a dev route and looped under the mic.
+- **Dev-route guard fix.** Next.js sets `x-forwarded-for` to the socket address on every request, so the guard (which refused any forwarded request) made every dev route answer 404 in a running server. Unit tests had not caught this. The guard now accepts the header only when every hop is loopback.
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 9. Live simulator
+
+- `/simulator` is dev only: it gives a 404 unless `ENABLE_DEV_ROUTES=true` and the request is local, and the sidebar link shows only with dev routes on.
+  - **Input:** text mode (free) or the mic, through an AudioWorklet in a 16 kHz AudioContext.
+  - **Wire format:** PCM or mu-law over a WebSocket to `/hme/v1/stream`, with a one-time ticket per connection.
+  - **Controls:**
+    - audio mode (continuous, or only with a car)
+    - Car arrived and Car left
+    - Pause and Resume stream
+    - Drop connection, with HME-style reconnects (2, 4, 8 s) or staying down
+    - noise (engine, heavy)
+    - hold C to label the crew (saved as labels only)
+  - **Guards:** Deepgram minutes on the lane, a 15 minute limit, and a stop after 30 s with no audio (both can be changed).
+  - **Live panel:** the Live page's `LaneView` plus the mock inbox.
+- Save as fixture: `POST /api/dev/simulator/save` writes `fixtures/live/<name>/` (or `fixtures/heldout/<name>/`) with:
+  - `audio.flac`
+  - `raw/<session>/`
+  - `timeline.json`: start time, vehicle and stream events, typed lines, crew labels
+  - `expected.json`
+
+  The name is a safe id, and an existing fixture is never overwritten.
+- `pnpm feed sim-check`: the five acted scenarios over the real endpoint. With Gemini all **5/5 pass**:
+  - simple: completed, cheeseburger and fries
+  - correction: completed, hamburger and Sprite with no Coke
+  - late water: v2 `order.updated`, cheeseburger and water
+  - car left: abandoned
+  - dropped with no reconnect: undetermined, `stream_interrupted`
+
+  It took 9 Gemini requests across three runs (36/200 that day) and no Deepgram.
+- Checked in a browser, text mode, against `pnpm feed serve`:
+  - a typed order opened and finalized a conversation and showed live
+  - Save wrote the fixture (then deleted)
+- **Not done (needs Aarnav):** acting the five scenarios into a real mic. That uses Deepgram live: about 1 to 2 minutes of credit for all five.
 
 ### 8. Live UI
 
