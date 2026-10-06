@@ -20,6 +20,7 @@ import { getConfig, parseChannelMap, servSettings } from "@serv/config";
 import { ConfigError, createEngine, type EngineOptions, type ExtractorKind, type TranscriberKind } from "./engine";
 import { dataCommand } from "./data/cli";
 import { runActedScenarios } from "./sim/acted-scenarios";
+import { folderAudioMinutes, importRecording, runFolderEval } from "./eval/heldout";
 import { readRawSession } from "./data/raw-sink";
 import { formatReport, runEval } from "./eval/run-eval";
 import { IngestError } from "./ingest/probe";
@@ -52,6 +53,8 @@ Commands
   token revoke <id>     Revoke a token; its live sessions are closed (4401)
   feed sim-check        Run the simulator's five acted scenarios in text mode over the real endpoint
   feed replay-raw <s>   Replay a captured session byte for byte to the endpoint (--token, --url, --speed)
+  heldout import <f>    Import a phone recording as a held-out fixture (--name id); write its expected orders by hand
+  heldout eval          Score the held-out set apart from the main eval (--transcriber deepgram --yes)
   data <command>        The long-term data store: find, usage, verify, prune, delete, label (pnpm data for help)
 
 Options
@@ -171,6 +174,34 @@ async function wsReplayCommand(ref: string, values: Record<string, unknown>): Pr
   console.log(`sent ${r.messages} messages (${Math.round(r.bytes / 1024)} KB, ${scenario.codec}) over ${r.sessions} connection(s); closes: ${r.closes.map((c) => c.code).join(", ") || "-"}`);
 }
 
+/** The human-voiced held-out set (D8): import recordings, then score them apart from the main eval. */
+async function heldoutCommand(sub: string | undefined, file: string | undefined, values: Record<string, unknown>): Promise<void> {
+  const set = values.live ? ("live" as const) : ("heldout" as const);
+  const cfg = getConfig();
+  if (sub === "import") {
+    const name = values.name as string | undefined;
+    if (!file || !name) throw new ConfigError("Usage: pnpm pipeline heldout import <recording> --name <id> [--live]");
+    const r = await importRecording(cfg.paths.fixturesDir, path.resolve(process.env.INIT_CWD ?? process.cwd(), file), name, set);
+    console.log(`Imported ${r.seconds} s to ${path.relative(cfg.repoRoot, r.dir)}. Now write the expected orders in expected.json by listening to it.`);
+    return;
+  }
+  if (sub === "eval") {
+    const engine = createEngine({ ...engineOpts(values), log: () => {} });
+    if (engine.streaming.name.startsWith("script")) throw new ConfigError("Held-out recordings are real speech: run with --transcriber deepgram (the script transcriber only knows the synthetic fixtures)");
+    const minutes = await folderAudioMinutes(cfg.paths.fixturesDir, set);
+    if (!values.yes) {
+      console.log(`This sends ${minutes} min of audio to Deepgram live, plus one extraction per conversation. Add --yes to run it.`);
+      return;
+    }
+    const r = await runFolderEval(engine, { set, log: (m) => console.log(m) });
+    const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
+    console.log(`\n${set === "heldout" ? "Held-out set (never tuned on)" : "Simulator recordings"}: ${r.summary.passed}/${r.summary.fixtures} pass; items precision ${pct(r.summary.item_precision)}, recall ${pct(r.summary.item_recall)}; status ${pct(r.summary.status_accuracy)}; ${r.summary.orders_produced}/${r.summary.orders_expected} orders`);
+    console.log(`  ${r.usage.deepgram_minutes} Deepgram min, ${r.usage.llm_calls} LLM calls. Report written to eval/${set}-report.json`);
+    return;
+  }
+  throw new ConfigError("Usage: pnpm pipeline heldout import <recording> --name <id> [--live]\n       pnpm pipeline heldout eval [--live] --transcriber deepgram [--yes]");
+}
+
 /** The simulator's five acted scenarios in text mode over the real endpoint (free with the keyword extractor). */
 async function simCheckCommand(values: Record<string, unknown>): Promise<void> {
   const engine = createEngine({ transcriber: "script", ...engineOpts(values), log: () => {} });
@@ -254,6 +285,8 @@ async function main(): Promise<void> {
       verdict: { type: "string" },
       author: { type: "string" },
       yes: { type: "boolean" },
+      name: { type: "string" },
+      live: { type: "boolean" },
       help: { type: "boolean", short: "h" },
     },
   });
@@ -324,6 +357,8 @@ async function main(): Promise<void> {
       return;
     case "token":
       return tokenCommand(arg, positionals[2], values);
+    case "heldout":
+      return heldoutCommand(arg, positionals[2], values);
     case "data":
       return dataCommand(createEngine({ transcriber: "script", extractor: "fuzzy", log: () => {} }), arg, values);
     case "feed": {

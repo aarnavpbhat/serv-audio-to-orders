@@ -2,6 +2,9 @@
  * Wire encoders for replays: turn canonical PCM into what a base station might
  * send (PLACEHOLDER formats), so replays exercise the same decoders live audio uses.
  */
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { ffmpeg } from "../lib/ffmpeg";
 import type { WireCodec } from "./decoders";
 import { opusAudioPackets } from "./ogg";
@@ -56,9 +59,19 @@ export async function decodeFileCanonical(file: string, channels: number): Promi
   return out;
 }
 
-/** Canonical PCM -> FLAC (lossless; the per-order audio archive). */
+/**
+ * Canonical PCM -> FLAC (lossless; order audio archive, saved fixtures). Written
+ * to a temp file, not a pipe: ffmpeg fills in the stream header (length,
+ * duration) only when it can seek back, and players and probes need it.
+ */
 export async function encodeFlac(pcm: Int16Array[]): Promise<Uint8Array> {
   const raw = Buffer.from(int16ToS16le(interleave(pcm)));
-  const { stdout } = await ffmpeg(["-f", "s16le", "-ar", String(CANONICAL_RATE), "-ac", String(pcm.length), "-i", "pipe:0", "-c:a", "flac", "-f", "flac", "pipe:1"], raw);
-  return new Uint8Array(stdout);
+  const dir = mkdtempSync(path.join(os.tmpdir(), "serv-flac-"));
+  const out = path.join(dir, "out.flac");
+  try {
+    await ffmpeg(["-f", "s16le", "-ar", String(CANONICAL_RATE), "-ac", String(pcm.length), "-i", "pipe:0", "-c:a", "flac", "-y", out], raw);
+    return new Uint8Array(readFileSync(out));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
