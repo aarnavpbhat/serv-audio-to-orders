@@ -38,7 +38,8 @@ export const AudioInfo = z.object({
 });
 export type AudioInfo = z.infer<typeof AudioInfo>;
 
-export const TimestampSource = z.enum(["env", "filename", "mtime"]);
+/** File path: env, filename or mtime. Lane (live and replay): the session's time basis. */
+export const TimestampSource = z.enum(["env", "filename", "mtime", "source_clock", "receive_clock", "recording_metadata"]);
 export type TimestampSource = z.infer<typeof TimestampSource>;
 
 export const Transcript = z.object({

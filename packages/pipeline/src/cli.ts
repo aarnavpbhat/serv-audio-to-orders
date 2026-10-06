@@ -7,14 +7,18 @@
  * pnpm pipeline examples             write example orders to examples/
  * pnpm pipeline settings             show Serv-dependent settings and placeholders
  * pnpm pipeline secret               generate a whsec_ signing secret
+ * pnpm feed replay <fixture|file>    replay a recording as a live feed (lane path)
  */
-import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { parseChannelMap, servSettings } from "@serv/config";
 import { ConfigError, createEngine, type EngineOptions, type ExtractorKind, type TranscriberKind } from "./engine";
 import { formatReport, runEval } from "./eval/run-eval";
 import { IngestError } from "./ingest/probe";
+import { DEFAULT_SCENARIO, loadScenario } from "./input/scenario";
+import { replayFile, type ReplayResult } from "./lane/replay";
+import { ScriptStreamingTranscriber } from "./lane/script-transcriber";
 import { sleep } from "./lib/retry";
 import { runPipeline, type RunResult } from "./run";
 import { latestOrder, outboxForOrder } from "./store/db";
@@ -30,6 +34,7 @@ Commands
   examples              Write example orders (audio, transcript, order, payload) to examples/
   settings              List Serv-dependent settings and which are placeholders
   secret                Print a new whsec_ signing secret
+  feed replay <f>       Replay a fixture id or audio file as a live feed through the lane path
 
 Options
   --transcriber deepgram|script   Default: deepgram if DEEPGRAM_API_KEY is set, else script (fixtures only)
@@ -40,7 +45,10 @@ Options
   --no-judge                      Disable LLM tie-breakers for segmentation and roles
   --refresh                       Ignore cached Deepgram responses
   --json                          Print full JSON output
-  eval: --layout mono|stereo (default mono), --only id1,id2, --no-compilations, --deliver, --no-webhook-check
+  eval: --layout mono|stereo (default mono), --only id1,id2, --no-compilations, --deliver, --no-webhook-check,
+        --via file|lane (default file), --scenario <name> (lane only)
+  feed replay: --speed 1|4|max (default max), --via direct (ws arrives with the WebSocket endpoint),
+        --scenario <name>, --store <id>, --lane <id>, --layout mono|stereo
 `;
 
 function engineOpts(v: Record<string, unknown>): EngineOptions {
@@ -77,6 +85,26 @@ function printRun(r: RunResult): void {
   if (g) console.log(`  Gemini today (${g.day} PT): ${g.requests}/${g.cap} requests, tier ${g.tier}${g.exhausted ? ", daily quota used up" : ""}`);
 }
 
+/** A fixture id (01_simple, compilation_a) or a path to any audio file. */
+function resolveFixture(fixturesDir: string, ref: string, layout: "mono" | "stereo"): string {
+  const local = path.resolve(process.env.INIT_CWD ?? process.cwd(), ref);
+  if (existsSync(local)) return local;
+  const dir = path.join(fixturesDir, "audio");
+  const hit = readdirSync(dir).find((f) => f.startsWith(`${ref}.${layout}.`) && f.endsWith(".mp3"));
+  if (!hit) throw new ConfigError(`No audio file or fixture named "${ref}"`);
+  return path.join(dir, hit);
+}
+
+function printReplay(r: ReplayResult, scenario: string): void {
+  console.log(`\nReplay ${r.run_id} (scenario ${scenario}): ${r.transcript.utterances.length} utterances, ${r.segmentation.segments.length} conversation(s), ${r.orders.length} order(s)`);
+  for (const o of r.orders) {
+    const p = o.payload;
+    console.log(`  ${p.order_id} v${p.order_version} ${p.status}${p.review.required ? ` (review: ${p.review.reasons.join(", ")})` : ""}  ${p.times.started_at} to ${p.times.ended_at}  ${p.items.map((i) => `${i.quantity}x ${i.name}`).join(", ") || "-"}`);
+  }
+  for (const d of r.deliveries) console.log(`  ${d.webhook_id}  ${d.status}  attempts=${d.attempt_count}`);
+  console.log(`  ${r.timings.total_ms} ms; ${r.usage.deepgram_minutes} Deepgram min; LLM ${r.usage.llm.calls} calls (${r.usage.llm.cached_calls} cached)`);
+}
+
 async function main(): Promise<void> {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
@@ -95,6 +123,11 @@ async function main(): Promise<void> {
       "no-compilations": { type: "boolean" },
       "no-webhook-check": { type: "boolean" },
       once: { type: "boolean" },
+      via: { type: "string" },
+      scenario: { type: "string" },
+      speed: { type: "string" },
+      store: { type: "string" },
+      lane: { type: "string" },
       help: { type: "boolean", short: "h" },
     },
   });
@@ -128,6 +161,8 @@ async function main(): Promise<void> {
         compilations: !values["no-compilations"],
         deliver: values.deliver === true,
         webhook: !values["no-webhook-check"],
+        via: values.via === "lane" ? "lane" : "file",
+        ...(values.scenario ? { scenario: loadScenario(engine.cfg.paths.fixturesDir, values.scenario) } : {}),
       });
       console.log(formatReport(report));
       return;
@@ -161,6 +196,26 @@ async function main(): Promise<void> {
     case "secret":
       console.log(generateSecret());
       return;
+    case "feed": {
+      if (arg !== "replay" || !positionals[2]) throw new ConfigError("Usage: pnpm feed replay <fixture-id|file> [--speed 1|4|max] [--scenario name]");
+      if (values.via && values.via !== "direct") throw new ConfigError(`--via ${values.via} is not available yet; use --via direct`);
+      const engine = createEngine({ ...engineOpts(values), log: values.json ? () => {} : (m) => console.log(m) });
+      const file = resolveFixture(engine.cfg.paths.fixturesDir, positionals[2], values.layout === "stereo" ? "stereo" : "mono");
+      const scenario = values.scenario ? loadScenario(engine.cfg.paths.fixturesDir, values.scenario) : { ...DEFAULT_SCENARIO, channels: values.layout === "stereo" ? ("stereo" as const) : ("mono" as const) };
+      const speed = !values.speed || values.speed === "max" ? ("max" as const) : Number(values.speed);
+      if (speed !== "max" && !(speed > 0)) throw new ConfigError(`--speed must be a positive number or max, got ${values.speed}`);
+      const result = await replayFile(engine, file, {
+        transcriber: new ScriptStreamingTranscriber(),
+        scenario,
+        speed,
+        ...(values.store ? { storeId: values.store } : {}),
+        ...(values.lane ? { laneId: values.lane } : {}),
+        deliver: !values["no-deliver"],
+      });
+      if (values.json) console.log(JSON.stringify({ run_id: result.run_id, orders: result.orders.map((o) => o.payload), deliveries: result.deliveries, usage: result.usage }, null, 2));
+      else printReplay(result, scenario.name);
+      return;
+    }
     default:
       throw new ConfigError(`Unknown command "${cmd}"\n\n${HELP}`);
   }

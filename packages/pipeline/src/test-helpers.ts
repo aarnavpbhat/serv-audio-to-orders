@@ -1,4 +1,10 @@
 import path from "node:path";
+import { getConfig } from "@serv/config";
+import type { Engine } from "./engine";
+import { OracleExtractor } from "./extract/oracle";
+import { openDb } from "./store/db";
+import { ScriptTranscriber } from "./transcribe/script";
+import { Deliverer } from "./webhook/deliver";
 import { loadCatalog } from "./menu/load";
 import { FuzzyMatcher } from "./menu/fuzzy";
 import { sequentialIds } from "./lib/ids";
@@ -57,5 +63,24 @@ export function seg(overrides: Partial<SegmentContext> = {}): SegmentContext {
     crosstalk_suspected: false,
     signals: closingSignals(),
     ...overrides,
+  };
+}
+
+/** A free, offline engine: oracle extractor, no LLM judge, in-memory store, delivery to nowhere. */
+export function testEngine(): Engine {
+  const cfg = getConfig();
+  const db = openDb(":memory:");
+  return {
+    cfg,
+    catalog,
+    matcher,
+    db,
+    transcriber: new ScriptTranscriber(),
+    extractor: new OracleExtractor(path.join(repoRoot, "fixtures")),
+    judge: null,
+    gemini: null,
+    deliverer: new Deliverer(db, { url: "http://127.0.0.1:9/unused", secret: "whsec_dGVzdC1zZWNyZXQtMTIzNDU2Nzg=", timeoutMs: 100, fastScheduleS: [], slowScheduleS: [], userAgent: "test" }),
+    placeholders: false,
+    log: () => {},
   };
 }

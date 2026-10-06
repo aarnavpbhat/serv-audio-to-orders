@@ -9,7 +9,8 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 | 0. Freeze v1 | main | Done: PR #1 merged, `v1.0.0` tagged, `release/v1` and `v2` created |
 | 1. Outcome and review model | v2-step/01-outcomes | Done |
 | 2. Versioned corrections | v2-step/02-versions | Done |
-| 3. Input layer and replay | v2-step/03-input-layer | Next |
+| 3. Input layer and replay | v2-step/03-input-layer | Done |
+| 4. Clocks and IDs | v2-step/04-clocks-ids | Next |
 
 ## Decisions not covered by the plan
 
@@ -24,9 +25,27 @@ Running log for the v2 live-feed plan (October 5, 2026). Newest entries go at th
 - **Removed flag.** `needs_review_present` is replaced by the review reason `unclear_items`.
 - **New flags.** `stream_gap`, `stream_interrupted`, `transcript_gap`, `audio_dropped`, `capture_paused`, `audio_rate_exceeded`, added with schema v2.0 so later steps do not change the schema again.
 - **`STORE_ID`.** Replaces `LOCATION_ID` (the old name still works). `.env.example` is outside what I can edit in this setup, so new variables are listed in the README instead.
+- **Outcome rule for noisy vehicle events.** A vehicle event followed by more talk in the same conversation (other than the crew saying the car left, or the next car's greeting) is treated as a missed or ghost event and kept as context only. Without this, noisy sensors turned completed orders into abandoned ones.
+- **Expected status under noisy events.** With `vehicle_events: noisy`, the eval accepts either the audio-only status or `status_with_vehicle_events`, since a missed departure legitimately leaves the outcome undetermined.
+- **Paused audio is not truncation.** When audio stops because the stream paused or the car left, the conversation is not flagged `truncated_end`.
+- **Batch mode inside the lane (temporary).** Until the tracker (step 6), the lane collects the streamed transcript and runs v1 segmentation when the input ends. This keeps the step 3 parity check honest; the tracker replaces it, and step 13 retires it.
+- **Replay `--via direct` sends canonical PCM.** Wire codecs (mu-law, Opus, MP3 and so on) are exercised by the decoder tests now and over a real socket with `--via ws` in step 8 (row 36).
+- **Simulator text lines.** A dev-only `script_line` source message carries typed lines from the simulator's text mode. HME never sends it.
+- **Fixture recording start.** Every fixture's `recording_start_utc` is `2026-10-03T18:40:00Z`, the same start the v1 eval used.
 - **File runs and `time_basis`.** File recordings report `recording_metadata` (their start time comes from env, filename or mtime).
 
 ## Step notes
+
+### 3. Input layer and replay (direct)
+
+- `src/input/`: `AudioSource` and message types, canonical PCM helpers (G.711, resampling, levels), the decoder registry (`pcm_s16le`, `mulaw`, `alaw`, `opus` via `opus-decoder`, and MP3/AAC/WAV/Ogg/FLAC through one long-running ffmpeg per session, argument array, whitelist, lifetime cap), wire encoders for replays, `FileReplaySource`, scenarios, and RTSP/MQTT stubs.
+- `src/lane/`: `LaneSession` (keyed by `store_id:lane_id`, survives reconnects, one time axis), `LaneManager`, `ScriptStreamingTranscriber` (free; never transcribes audio that did not arrive), and `replayFile()`.
+- `src/orders/finalize.ts`: one finished conversation to orders and outbox, shared by the lane and the v1 file path.
+- Fixture timelines gained `recording_start_utc` and `vehicle_events` (`pnpm fixtures:annotate`).
+- `fixtures/scenarios/`: continuous, vehicle events, paused when no vehicle, noisy vehicle events, disconnect with and without reconnect, pause mid-order, stereo roles, and one per wire codec.
+- Commands: `pnpm feed replay <fixture|file> [--speed 1|4|max] [--scenario name] [--store id] [--lane id]`; `pnpm eval --via lane [--scenario name]`.
+- Done when: every fixture replays at max speed with the script transcriber and matches v1's ceiling: **24/24** via the lane (also 24/24 with vehicle events, paused-when-no-vehicle, noisy events and stereo).
+- New dependency: `opus-decoder` (the plan's allowed Opus decoder; MIT, WebAssembly, no native build).
 
 ### 2. Versioned corrections
 

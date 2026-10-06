@@ -18,6 +18,7 @@ import { decodePcm, encodePcm } from "../lib/ffmpeg";
 import { FixtureTimeline, type FixtureScript, type NoiseLevel } from "../schemas";
 import { CREW_CHATTER_CUES, matchesAny } from "../segment/cues";
 import { loadFixtureScripts } from "./load";
+import { deriveVehicleEvents } from "./vehicle-events";
 
 const SR = 16_000;
 const CREW_VOICE = "Eddy (English (US))";
@@ -206,6 +207,7 @@ async function writeVariants(
   r: Rendered,
   levels: NoiseLevel[],
   fixtureIds: string[],
+  scripts: Map<string, FixtureScript>,
 ): Promise<string[]> {
   const written: string[] = [];
   const speechRms = Math.max(rms(r.customer), rms(r.crew)) || 0.1;
@@ -245,6 +247,7 @@ async function writeVariants(
     utterances: r.utterances,
     orders: r.orders,
   });
+  timeline.vehicle_events = deriveVehicleEvents(timeline, scripts);
   writeFileSync(path.join(outDir, `${base}.timeline.json`), JSON.stringify(timeline, null, 2) + "\n");
   return written;
 }
@@ -280,6 +283,7 @@ async function main(): Promise<void> {
   mkdirSync(ttsDir, { recursive: true });
 
   const scripts = loadFixtureScripts(path.join(fixturesDir, "scripts"));
+  const byId = new Map(scripts.map((s) => [s.id, s]));
   const rendered = new Map<string, Rendered>();
   let count = 0;
   for (const [i, script] of scripts.entries()) {
@@ -289,7 +293,7 @@ async function main(): Promise<void> {
     const levels: NoiseLevel[] = values["all-noise"]
       ? [script.render.noise, ...(["clean", "moderate", "heavy"] as const).filter((l) => l !== script.render.noise)]
       : [script.render.noise];
-    const files = await writeVariants(script.id, outDir, r, levels, [script.id]);
+    const files = await writeVariants(script.id, outDir, r, levels, [script.id], byId);
     count += files.length;
     console.log(`${script.id.padEnd(36)} ${r.duration_s.toFixed(1).padStart(5)}s  ${files.join(", ")}`);
   }
@@ -304,7 +308,7 @@ async function main(): Promise<void> {
       return r;
     });
     const r = concat(parts, c.gap_s);
-    const files = await writeVariants(c.id, outDir, r, [c.noise], c.scripts);
+    const files = await writeVariants(c.id, outDir, r, [c.noise], c.scripts, byId);
     count += files.length;
     console.log(`${c.id.padEnd(36)} ${r.duration_s.toFixed(1).padStart(5)}s  ${files.join(", ")}`);
   }
