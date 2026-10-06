@@ -17,6 +17,8 @@ export const ReviewResolution = z.object({
   version: z.number().int().positive(),
   /** One choice per unclear item, by line_id: a catalog id, or null to drop it. */
   items: z.record(z.string().max(64), z.string().max(64).nullable()).default({}),
+  /** New quantities by line_id, for items already on the order or just resolved. */
+  quantities: z.record(z.string().max(64), z.number().int().min(1).max(99)).default({}),
   status: OrderStatus,
   author: z.string().min(1).max(100),
   note: z.string().max(2000).optional(),
@@ -71,6 +73,13 @@ export async function resolveReview(engine: Engine, orderId: string, raw: Review
     else notOrdered.push({ catalog_id: line.catalog_id, raw_text: line.raw_text, ordered: false, reason: "uncommitted", quantity: line.quantity, size: line.size, line_id: line.line_id, source_utterance_ids: line.source_utterance_ids });
   }
 
+  for (const [lineId, q] of Object.entries(input.quantities)) {
+    const i = items.findIndex((x) => x.line_id === lineId);
+    const item = items[i];
+    if (!item) throw new Error(`No item ${lineId} on order ${orderId}`);
+    items[i] = { ...item, quantity: q };
+  }
+
   const subtotal = items.reduce((s, i) => s + i.unit_price * i.quantity, 0);
   const computed = round2(subtotal * (1 + engine.cfg.taxRate.value));
   const spoken = prev.totals.spoken_by_crew;
@@ -113,7 +122,7 @@ export async function resolveReview(engine: Engine, orderId: string, raw: Review
   await putLabel(engine.db, engine.data, orderId, {
     order_version: prev.order_version,
     verdict: "incorrect",
-    corrected: { status: input.status, items: input.items, resolved_version: next.order_version },
+    corrected: { status: input.status, items: input.items, quantities: input.quantities, resolved_version: next.order_version },
     author: input.author,
     ...(input.note ? { note: input.note } : {}),
   });

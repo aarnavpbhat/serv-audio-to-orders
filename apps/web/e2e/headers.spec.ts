@@ -37,7 +37,8 @@ test("card headers never overlap at 1024, 1280 and 1440 px", async ({ page }) =>
   await page.getByRole("combobox", { name: "Extractor" }).click();
   await page.getByRole("option", { name: "Keyword + fuzzy" }).click();
   await page.getByRole("button", { name: "Start Run" }).click();
-  await expect(page).toHaveURL(/\/runs\/run_/);
+  // A cold dev server compiles the run page on first visit.
+  await expect(page).toHaveURL(/\/runs\/run_/, { timeout: 30_000 });
   await expect(page.getByText("Conversation 1")).toBeVisible({ timeout: 60_000 });
   const run = new URL(page.url()).pathname;
 

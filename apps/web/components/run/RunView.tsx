@@ -22,6 +22,7 @@ import { PlayerBar } from "./PlayerBar";
 import { Transcript } from "./Transcript";
 import { Waveform, type WaveformHandle } from "./Waveform";
 import { SectionHeader } from "@/components/SectionHeader";
+import { ExpectedVsExtracted } from "../review/ExpectedVsExtracted";
 
 interface SiteValue {
   value: string;
@@ -224,6 +225,8 @@ export function RunView({
           }}
         />}
 
+        {run.truth && run.status !== "running" && <ExpectedVsExtracted rows={run.truth} name={name} />}
+
         <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           {/* Orders as an album track list, one "disc" per conversation. */}
           <section className="min-w-0 space-y-7">
@@ -256,7 +259,7 @@ export function RunView({
                   <div className="space-y-5">
                     {shown.length === 0 && <div className="px-2 py-2 text-muted-foreground">{run.status === "running" ? "Extracting..." : "No order"}</div>}
                     {shown.map((o) => (
-                      <OrderCard key={o.order_id} order={o} phase={phase} name={name} />
+                      <OrderCard key={o.order_id} order={o} phase={phase} name={name} known={!!run.truth} />
                     ))}
                   </div>
                   {first && (

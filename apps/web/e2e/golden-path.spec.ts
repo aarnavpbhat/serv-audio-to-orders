@@ -12,7 +12,8 @@ test("a fixture run produces an order and a delivered webhook", async ({ page })
   await page.getByRole("option", { name: "Keyword + fuzzy" }).click();
 
   await page.getByRole("button", { name: "Start Run" }).click();
-  await expect(page).toHaveURL(/\/runs\/run_/);
+  // A cold dev server compiles the run page on first visit.
+  await expect(page).toHaveURL(/\/runs\/run_/, { timeout: 30_000 });
 
   await expect(page.getByText("Conversation 1")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByText("delivered", { exact: true }).first()).toBeVisible({ timeout: 60_000 });

@@ -15,7 +15,7 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 const BASE_URL = `http://localhost:${PORT}`;
 // The monkey test drives the simulator against its own feed service (free script
 // transcriber, fuzzy extractor: no API calls) and reads both servers' logs.
-const LIVE = /(monkey|stop)\.spec/;
+const LIVE = /(monkey|stop|review)\.spec/;
 const FEED_PORT = Number(process.env.E2E_FEED_PORT ?? 8797);
 export const LOG_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), ".e2e-logs");
 mkdirSync(LOG_DIR, { recursive: true });

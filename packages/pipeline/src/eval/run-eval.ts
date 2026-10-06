@@ -10,11 +10,12 @@ import type { RunResult } from "../run";
 import { FileOrLiveTranscriber } from "../lane/file-transcriber";
 import { probeAudio, sha256File } from "../ingest/probe";
 import { DeepgramTranscriber } from "../transcribe/deepgram";
-import type { ExpectedOrder, FixtureTimeline, NoiseLevel } from "../schemas";
+import type { ExpectedOrder, NoiseLevel } from "../schemas";
 import { loadTimeline } from "../transcribe/script";
 import { CHECKLIST } from "./checklist";
 import { runLiveChecks, type LiveCheck } from "./live-checks";
-import { compareOrders, passed, type OrderComparison } from "./compare";
+import type { OrderComparison } from "./compare";
+import { scoreOrders, spansOf } from "./ground-truth";
 import { samplePayload } from "../webhook/sample";
 import { webhookSelfCheck, type WebhookCheck } from "./webhook-check";
 import { latencySummary } from "../lane/replay";
@@ -122,9 +123,6 @@ function targets(fixturesDir: string, opts: EvalOptions): Target[] {
   return opts.only?.length ? out.filter((t) => opts.only?.includes(t.id)) : out;
 }
 
-function spansOf(timeline: FixtureTimeline): { start_s: number; end_s: number }[] {
-  return [...new Map(timeline.orders.map((o) => [`${o.start_s}-${o.end_s}`, { start_s: o.start_s, end_s: o.end_s }])).values()];
-}
 
 async function evalTarget(engine: Engine, t: Target, opts: EvalOptions, changes: WindowChange[] = []): Promise<FixtureReport> {
   const file = path.join(engine.cfg.paths.fixturesDir, "audio", `${t.id}.${opts.layout}.${t.noise}.mp3`);
@@ -170,19 +168,9 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions, changes:
 
   const spans = spansOf(timeline);
   const segs = result.segmentation.segments;
-  // Match each expected span to the produced segment it overlaps most.
-  const used = new Set<string>();
-  const matchFor = spans.map((sp) => {
-    let best: (typeof segs)[number] | undefined;
-    let bestOverlap = 0;
-    for (const s of segs) {
-      if (used.has(s.segment_id)) continue;
-      const ov = Math.min(sp.end_s, s.end_s) - Math.max(sp.start_s, s.start_s);
-      if (ov > bestOverlap) [best, bestOverlap] = [s, ov];
-    }
-    if (best) used.add(best.segment_id);
-    return best;
-  });
+  const scored = scoreOrders(engine.catalog, { expected: t.expected, spans }, segs, result.orders, compareOpts);
+  const matchFor = scored.matchFor;
+  const used = new Set(matchFor.filter((s) => s).map((s) => s?.segment_id));
   const startErr: number[] = [];
   const endErr: number[] = [];
   matchFor.forEach((s, i) => {
@@ -193,43 +181,8 @@ async function evalTarget(engine: Engine, t: Target, opts: EvalOptions, changes:
   });
   const missed = matchFor.filter((s) => !s).length;
   const extra = segs.length - used.size;
-
-  const comparisons: FixtureReport["orders"]["comparisons"] = [];
-  let countsOk = true;
-  spans.forEach((_, k) => {
-    const exp = t.expected.filter((e) => e.span === k).map((e) => e.order);
-    const seg = matchFor[k];
-    const produced = seg ? result.orders.filter((o) => o.order.segment_id === seg.segment_id).map((o) => ({ ...o.order, version: o.payload.order_version })) : [];
-    if (produced.length !== exp.length) countsOk = false;
-    for (const c of compareOrders(engine.catalog, exp, produced, compareOpts)) comparisons.push({ ...c, pass: passed(c) });
-    for (const extraOrder of produced.slice(exp.length)) {
-      comparisons.push({
-        checks: { items: false, needs_review: true, not_ordered: true, flags: true, status: true, review: true, group: true, declined_combo: true },
-        item_tp: 0,
-        item_fp: extraOrder.items.length,
-        item_fn: 0,
-        bucket_correct: 0,
-        bucket_total: 0,
-        diffs: [`unexpected extra order ${extraOrder.order_id}`],
-        pass: false,
-      });
-    }
-  });
-  // Orders from segments that match no expected span are false positives.
-  for (const s of segs.filter((x) => !used.has(x.segment_id))) {
-    for (const o of result.orders.filter((x) => x.order.segment_id === s.segment_id)) {
-      comparisons.push({
-        checks: { items: false, needs_review: true, not_ordered: true, flags: true, status: true, review: true, group: true, declined_combo: true },
-        item_tp: 0,
-        item_fp: o.order.items.length,
-        item_fn: 0,
-        bucket_correct: 0,
-        bucket_total: 0,
-        diffs: [`extra segment ${s.segment_id} produced ${o.order.order_id}`],
-        pass: false,
-      });
-    }
-  }
+  const comparisons: FixtureReport["orders"]["comparisons"] = scored.rows.map((r) => r.comparison);
+  const countsOk = scored.countsOk;
 
   // Layer B: a ticket for each completed expected order, opened 10 s into its span.
   const start = Date.parse(timeline.recording_start_utc);
