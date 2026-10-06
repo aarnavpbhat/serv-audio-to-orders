@@ -30,6 +30,14 @@ interface InboxRow {
   body: string;
 }
 
+interface KeptOrder {
+  order_id: string;
+  order_version: number;
+  webhook_id: string;
+  status: string | null;
+  received_at: number;
+}
+
 const MODES: { value: Settings["mode"]; label: string; help: string }[] = [
   { value: "ok", label: "Accept (200)", help: "Normal operation" },
   { value: "fail_500", label: "Fail with 500", help: "Row 27: sender retries with backoff" },
@@ -41,16 +49,18 @@ export function MockInbox() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [draft, setDraft] = useState<Settings>({ mode: "fail_500", remaining: 1, retry_after_s: 3 });
   const [inbox, setInbox] = useState<InboxRow[]>([]);
+  const [kept, setKept] = useState<KeptOrder[]>([]);
 
   // State is set in the promise callback, never synchronously inside the polling effect.
   const load = useCallback(
     () =>
       fetch("/api/mock-webhook", { cache: "no-store" })
-        .then((res) => (res.ok ? (res.json() as Promise<{ settings: Settings; inbox: InboxRow[] }>) : null))
+        .then((res) => (res.ok ? (res.json() as Promise<{ settings: Settings; inbox: InboxRow[]; orders: KeptOrder[] }>) : null))
         .then((json) => {
           if (!json) return;
           setSettings(json.settings);
           setInbox(json.inbox);
+          setKept(json.orders);
         }),
     [],
   );
@@ -121,6 +131,22 @@ export function MockInbox() {
       </Card>
 
       <section className="min-w-0">
+        {kept.length > 0 && (
+          <div className="mb-6">
+            <h2 className="section-title mb-2">Kept Orders</h2>
+            <p className="mb-2 text-[12px] text-muted-foreground">The highest version received per order_id, as a receiver should keep it.</p>
+            <div className="tracks">
+              {kept.map((o) => (
+                <div key={o.order_id} className="flex flex-wrap items-center gap-2 px-3 py-1.5">
+                  <span className="font-mono text-xs">{o.order_id}</span>
+                  <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">v{o.order_version}</span>
+                  {o.status && <Badge value={o.status} />}
+                  <span className="ml-auto font-mono text-xs text-muted-foreground">{new Date(o.received_at).toLocaleTimeString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="mb-2 flex items-baseline justify-between">
           <h2 className="section-title">Inbox</h2>
           <div className="flex items-center gap-3 text-[12px] text-muted-foreground">

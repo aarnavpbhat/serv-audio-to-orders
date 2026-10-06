@@ -2,11 +2,12 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { getMockSettings, listMockInbox, openDb, setMockSettings, type DB } from "../store/db";
+import { getMockSettings, getOutbox, listMockInbox, listMockOrders, openDb, setMockSettings, type DB } from "../store/db";
 import { Deliverer, parseRetryAfter, type DeliveryConfig } from "../webhook/deliver";
 import { handleMockWebhook } from "../webhook/mock-receiver";
 import { generateSecret, sign, signedHeaders, verify } from "../webhook/signing";
 import type { OrderPayload } from "../schemas";
+import { correctedPayload } from "./corrections";
 import { samplePayload } from "./sample";
 
 const secret = generateSecret();
@@ -160,5 +161,55 @@ describe("delivery", () => {
     clock = Date.now(); // the receiver checks timestamps against the real clock
     expect((await d.resend(id)).status).toBe("delivered");
     expect(d.attempts(id).at(-1)?.phase).toBe("manual");
+  });
+});
+
+describe("versioned corrections", () => {
+  const v2Of = (orderId: string) =>
+    correctedPayload(payload(orderId), { status: "abandoned", outcome_evidence: [] }, "late_evidence", new Date().toISOString());
+
+  it("correctedPayload keeps the order_id and raises the version", () => {
+    const v2 = v2Of("ord_corr");
+    expect(v2).toMatchObject({ order_id: "ord_corr", order_version: 2, supersedes_version: 1, event_type: "order.updated", correction_reason: "late_evidence", status: "abandoned" });
+    expect(correctedPayload(v2, {}, "human_review", v2.times.finalized_at).order_version).toBe(3);
+  });
+
+  it("a forced v2 waits for v1, is delivered after it, with no duplicates", async () => {
+    setMockSettings(db, { mode: "fail_500", remaining: 2, retry_after_s: 0 });
+    const d = new Deliverer(db, cfg(), { rand: () => 0 });
+    const v1 = d.enqueue(payload("ord_ver"), null);
+    const v2 = d.enqueue(v2Of("ord_ver"), null);
+    expect(getOutbox(db, v2)?.status).toBe("waiting");
+    // Asking for v2 first must not send it.
+    expect((await d.deliver(v2)).status).toBe("waiting");
+    expect((await d.deliver(v1)).status).toBe("delivered");
+    await d.settle();
+    expect(getOutbox(db, v2)?.status).toBe("delivered");
+    const order = listMockInbox(db).filter((r) => r.webhook_id?.startsWith("ord_ver_") && r.status_returned === 200);
+    expect(order.map((r) => r.webhook_id).reverse()).toEqual([v1, v2]);
+    expect(order.every((r) => r.duplicate === 0)).toBe(true);
+    expect(listMockOrders(db).find((o) => o.order_id === "ord_ver")?.order_version).toBe(2);
+  });
+
+  it("a dead-lettered v1 releases v2", async () => {
+    forcedStatus = 422;
+    const d = new Deliverer(db, cfg());
+    const v1 = d.enqueue(payload("ord_ver_fail"), null);
+    const v2 = d.enqueue(v2Of("ord_ver_fail"), null);
+    expect((await d.deliver(v1)).status).toBe("failed");
+    forcedStatus = null;
+    await d.settle();
+    expect(getOutbox(db, v2)?.status).toBe("delivered");
+  });
+
+  it("the mock receiver keeps the highest version even when versions arrive out of order", async () => {
+    const send = (p: OrderPayload) => {
+      const body = JSON.stringify(p);
+      return handleMockWebhook(db, secret, { headers: { ...signedHeaders(secret, `${p.order_id}_v${p.order_version}`, body) }, body });
+    };
+    await send(v2Of("ord_ooo"));
+    const res = await send(payload("ord_ooo"));
+    expect(res.json).toMatchObject({ received: true, kept_version: 2 });
+    expect(listMockOrders(db).find((o) => o.order_id === "ord_ooo")?.order_version).toBe(2);
   });
 });

@@ -82,6 +82,14 @@ CREATE TABLE IF NOT EXISTS mock_inbox (
   headers TEXT NOT NULL,
   body TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS mock_orders (
+  order_id TEXT PRIMARY KEY,
+  order_version INTEGER NOT NULL,
+  webhook_id TEXT NOT NULL,
+  status TEXT,
+  body TEXT NOT NULL,
+  received_at INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS mock_settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   mode TEXT NOT NULL,
@@ -188,13 +196,24 @@ export function ordersForRun(db: DB, runId: string): OrderRow[] {
   return db.prepare(`SELECT * FROM orders WHERE run_id = ? ORDER BY created_at, order_id`).all(runId) as OrderRow[];
 }
 
+/** Next version number for an order (1 when it has none yet). Versions are never deleted. */
+export function nextOrderVersion(db: DB, orderId: string): number {
+  const row = db.prepare(`SELECT MAX(version) AS v FROM orders WHERE order_id = ?`).get(orderId) as { v: number | null };
+  return (row.v ?? 0) + 1;
+}
+
+export function orderVersions(db: DB, orderId: string): OrderRow[] {
+  return db.prepare(`SELECT * FROM orders WHERE order_id = ? ORDER BY version`).all(orderId) as OrderRow[];
+}
+
 export function latestOrder(db: DB, orderId: string): OrderRow | undefined {
   return db.prepare(`SELECT * FROM orders WHERE order_id = ? ORDER BY version DESC LIMIT 1`).get(orderId) as OrderRow | undefined;
 }
 
 // ---------------------------------------------------------------- outbox
 
-export type OutboxStatus = "pending" | "delivering" | "delivered" | "failed" | "dead";
+/** waiting: a later order version held until every earlier version is delivered, failed or dead. */
+export type OutboxStatus = "pending" | "waiting" | "delivering" | "delivered" | "failed" | "dead";
 
 export interface OutboxRow {
   webhook_id: string;
@@ -283,6 +302,20 @@ export interface MockInboxRow {
   mode: string;
   headers: string;
   body: string;
+}
+
+/** What the mock receiver kept: the highest version per order_id. */
+export interface MockOrderRow {
+  order_id: string;
+  order_version: number;
+  webhook_id: string;
+  status: string | null;
+  body: string;
+  received_at: number;
+}
+
+export function listMockOrders(db: DB, limit = 200): MockOrderRow[] {
+  return db.prepare(`SELECT * FROM mock_orders ORDER BY received_at DESC LIMIT ?`).all(limit) as MockOrderRow[];
 }
 
 export function listMockInbox(db: DB, limit = 100): MockInboxRow[] {

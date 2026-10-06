@@ -51,8 +51,19 @@ export interface DeliveryView extends Omit<store.OutboxRow, "body"> {
   attempts: store.AttemptRow[];
 }
 
+export interface OrderVersionSummary {
+  version: number;
+  status: string;
+  event_type: string;
+  correction_reason: string | null;
+  created_at: number;
+}
+
 export interface OrderView {
   order_id: string;
+  /** Latest version first fields; earlier versions are summarized in `versions`. */
+  version: number;
+  versions: OrderVersionSummary[];
   segment_id: string;
   status: string;
   payload: OrderPayload;
@@ -100,8 +111,13 @@ export function getRunDetail(id: string): RunDetail | null {
     segmentation: parse(r.segmentation),
     usage: parse(r.usage),
     timings: parse(r.timings),
-    orders: store.ordersForRun(d, id).map((o) => ({
+    orders: latestVersions(store.ordersForRun(d, id)).map(({ latest: o, all }) => ({
       order_id: o.order_id,
+      version: o.version,
+      versions: all.map((v) => {
+        const p = JSON.parse(v.payload) as Partial<OrderPayload>;
+        return { version: v.version, status: v.status, event_type: p.event_type ?? "", correction_reason: p.correction_reason ?? null, created_at: v.created_at };
+      }),
       segment_id: o.segment_id,
       status: o.status,
       payload: JSON.parse(o.payload) as OrderPayload,
@@ -113,6 +129,16 @@ export function getRunDetail(id: string): RunDetail | null {
         .map(({ body: _body, ...rest }) => ({ ...rest, attempts: store.attemptsFor(d, rest.webhook_id) })),
     })),
   };
+}
+
+/** One entry per order: its latest version plus every version in order. */
+function latestVersions(rows: store.OrderRow[]): { latest: store.OrderRow; all: store.OrderRow[] }[] {
+  const by = new Map<string, store.OrderRow[]>();
+  for (const r of rows) by.set(r.order_id, [...(by.get(r.order_id) ?? []), r]);
+  return [...by.values()].map((all) => {
+    const sorted = [...all].sort((a, b) => a.version - b.version);
+    return { latest: sorted[sorted.length - 1] as store.OrderRow, all: sorted };
+  });
 }
 
 export function runAudioPath(id: string): string | null {
