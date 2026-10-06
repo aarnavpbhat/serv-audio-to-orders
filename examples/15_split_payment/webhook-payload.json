@@ -1,20 +1,49 @@
 [
   {
-    "schema_version": "1.0",
-    "event_type": "order.completed",
-    "order_id": "ord_01M443TAR3EWR3Q9YRRW1MFVJM",
+    "schema_version": "2.0",
+    "event_type": "order.finalized",
+    "order_id": "ord_01M47MMT5MJ9JDJNZ2X60WJ74T",
     "order_version": 1,
-    "group_id": "grp_01M443TAR3WX870YNMGWM4HTV0",
-    "location_id": "store_demo_001",
+    "supersedes_version": null,
+    "correction_reason": null,
+    "group_id": "grp_01M47MMT5PV8CNAN116PTD36AN",
+    "store_id": "store_demo_001",
     "lane_id": "lane_1",
+    "session_id": "ses_01M47MMT29H5WDGDCS9EF6WKYY",
     "status": "completed",
-    "started_at": "2026-10-03T18:40:01.120Z",
-    "ended_at": "2026-10-03T18:40:30.985Z",
-    "timestamp_source": "env",
-    "audio": {
-      "source_file": "15_split_payment.mono.clean.mp3",
-      "offset_start_s": 1.12,
-      "offset_end_s": 30.985
+    "outcome_evidence": [
+      {
+        "type": "spoken_cue",
+        "kind": "closing",
+        "cue": "that's $8",
+        "utterance_id": "u5",
+        "at": "2026-10-03T18:40:12.080Z"
+      }
+    ],
+    "review": {
+      "required": false,
+      "reasons": []
+    },
+    "times": {
+      "started_at": "2026-10-03T18:40:01.120Z",
+      "ended_at": "2026-10-03T18:40:30.985Z",
+      "time_basis": "recording_metadata",
+      "received_at": "2026-10-06T03:38:17.035Z",
+      "finalized_at": "2026-10-06T03:38:17.142Z"
+    },
+    "audio_ref": {
+      "session_id": "ses_01M47MMT29H5WDGDCS9EF6WKYY",
+      "sample_start": 17920,
+      "sample_end": 495760,
+      "archive_uri": null
+    },
+    "source": {
+      "type": "file_replay",
+      "codec_in": "pcm_s16le",
+      "channels": 1,
+      "channel_roles": [
+        "mixed"
+      ]
     },
     "items": [
       {
@@ -64,6 +93,7 @@
       {
         "id": "u1",
         "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:01.120Z",
         "end_utc": "2026-10-03T18:40:04.880Z",
         "text": "Welcome to Sandbox Burger. What can I get for you today?",
@@ -72,6 +102,7 @@
       {
         "id": "u2",
         "speaker": "customer",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:05.520Z",
         "end_utc": "2026-10-03T18:40:07.760Z",
         "text": "Hi. Can we pay separately?",
@@ -80,6 +111,7 @@
       {
         "id": "u3",
         "speaker": "customer",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:07.840Z",
         "end_utc": "2026-10-03T18:40:10.560Z",
         "text": "First order is a number five with a Coke.",
@@ -88,6 +120,7 @@
       {
         "id": "u4",
         "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:11.200Z",
         "end_utc": "2026-10-03T18:40:12.000Z",
         "text": "Okay.",
@@ -96,6 +129,7 @@
       {
         "id": "u5",
         "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:12.080Z",
         "end_utc": "2026-10-03T18:40:15.920Z",
         "text": "Number five with a Coke. That's $8.99.",
@@ -103,7 +137,8 @@
       },
       {
         "id": "u6",
-        "speaker": "customer",
+        "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:16.295Z",
         "end_utc": "2026-10-03T18:40:17.815Z",
         "text": "And the second order?",
@@ -112,6 +147,7 @@
       {
         "id": "u7",
         "speaker": "customer",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:18.615Z",
         "end_utc": "2026-10-03T18:40:22.855Z",
         "text": "Second order is a six piece nuggets with barbecue sauce and a small fry.",
@@ -120,6 +156,7 @@
       {
         "id": "u8",
         "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:23.865Z",
         "end_utc": "2026-10-03T18:40:29.625Z",
         "text": "Six piece nuggets with barbecue and a small fry. That's $6.58.",
@@ -128,6 +165,7 @@
       {
         "id": "u9",
         "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:29.865Z",
         "end_utc": "2026-10-03T18:40:30.985Z",
         "text": "Pull forward, please.",
@@ -139,25 +177,54 @@
       "extractor": "gemini/gemini-3.5-flash-lite",
       "menu_version": "sandbox-1",
       "pipeline_version": "0.1.0",
-      "latency_ms": 101
+      "latency_ms": 1
     }
   },
   {
-    "schema_version": "1.0",
-    "event_type": "order.completed",
-    "order_id": "ord_01M443TAR3XH0PW3PPWA54H3RG",
+    "schema_version": "2.0",
+    "event_type": "order.finalized",
+    "order_id": "ord_01M47MMT5P14WGJ31VJSY4VX0Q",
     "order_version": 1,
-    "group_id": "grp_01M443TAR3WX870YNMGWM4HTV0",
-    "location_id": "store_demo_001",
+    "supersedes_version": null,
+    "correction_reason": null,
+    "group_id": "grp_01M47MMT5PV8CNAN116PTD36AN",
+    "store_id": "store_demo_001",
     "lane_id": "lane_1",
+    "session_id": "ses_01M47MMT29H5WDGDCS9EF6WKYY",
     "status": "completed",
-    "started_at": "2026-10-03T18:40:01.120Z",
-    "ended_at": "2026-10-03T18:40:30.985Z",
-    "timestamp_source": "env",
-    "audio": {
-      "source_file": "15_split_payment.mono.clean.mp3",
-      "offset_start_s": 1.12,
-      "offset_end_s": 30.985
+    "outcome_evidence": [
+      {
+        "type": "spoken_cue",
+        "kind": "closing",
+        "cue": "that's $6",
+        "utterance_id": "u8",
+        "at": "2026-10-03T18:40:23.865Z"
+      }
+    ],
+    "review": {
+      "required": false,
+      "reasons": []
+    },
+    "times": {
+      "started_at": "2026-10-03T18:40:01.120Z",
+      "ended_at": "2026-10-03T18:40:30.985Z",
+      "time_basis": "recording_metadata",
+      "received_at": "2026-10-06T03:38:17.035Z",
+      "finalized_at": "2026-10-06T03:38:17.144Z"
+    },
+    "audio_ref": {
+      "session_id": "ses_01M47MMT29H5WDGDCS9EF6WKYY",
+      "sample_start": 17920,
+      "sample_end": 495760,
+      "archive_uri": null
+    },
+    "source": {
+      "type": "file_replay",
+      "codec_in": "pcm_s16le",
+      "channels": 1,
+      "channel_roles": [
+        "mixed"
+      ]
     },
     "items": [
       {
@@ -212,6 +279,7 @@
       {
         "id": "u1",
         "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:01.120Z",
         "end_utc": "2026-10-03T18:40:04.880Z",
         "text": "Welcome to Sandbox Burger. What can I get for you today?",
@@ -220,6 +288,7 @@
       {
         "id": "u2",
         "speaker": "customer",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:05.520Z",
         "end_utc": "2026-10-03T18:40:07.760Z",
         "text": "Hi. Can we pay separately?",
@@ -228,6 +297,7 @@
       {
         "id": "u3",
         "speaker": "customer",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:07.840Z",
         "end_utc": "2026-10-03T18:40:10.560Z",
         "text": "First order is a number five with a Coke.",
@@ -236,6 +306,7 @@
       {
         "id": "u4",
         "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:11.200Z",
         "end_utc": "2026-10-03T18:40:12.000Z",
         "text": "Okay.",
@@ -244,6 +315,7 @@
       {
         "id": "u5",
         "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:12.080Z",
         "end_utc": "2026-10-03T18:40:15.920Z",
         "text": "Number five with a Coke. That's $8.99.",
@@ -251,7 +323,8 @@
       },
       {
         "id": "u6",
-        "speaker": "customer",
+        "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:16.295Z",
         "end_utc": "2026-10-03T18:40:17.815Z",
         "text": "And the second order?",
@@ -260,6 +333,7 @@
       {
         "id": "u7",
         "speaker": "customer",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:18.615Z",
         "end_utc": "2026-10-03T18:40:22.855Z",
         "text": "Second order is a six piece nuggets with barbecue sauce and a small fry.",
@@ -268,6 +342,7 @@
       {
         "id": "u8",
         "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:23.865Z",
         "end_utc": "2026-10-03T18:40:29.625Z",
         "text": "Six piece nuggets with barbecue and a small fry. That's $6.58.",
@@ -276,6 +351,7 @@
       {
         "id": "u9",
         "speaker": "crew",
+        "speaker_guessed": true,
         "start_utc": "2026-10-03T18:40:29.865Z",
         "end_utc": "2026-10-03T18:40:30.985Z",
         "text": "Pull forward, please.",
@@ -287,7 +363,7 @@
       "extractor": "gemini/gemini-3.5-flash-lite",
       "menu_version": "sandbox-1",
       "pipeline_version": "0.1.0",
-      "latency_ms": 101
+      "latency_ms": 1
     }
   }
 ]

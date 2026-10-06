@@ -22,86 +22,36 @@
         "has_closing": true,
         "truncated_start": false,
         "truncated_end": false,
-        "trailing_silence_s": 3.575,
+        "trailing_silence_s": 3,
         "language": "en",
         "non_english": false,
         "mean_word_conf": 0.995,
         "crosstalk_suspected": false
       }
     ],
-    "boundaries": [
-      {
-        "after_index": 0,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 1,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 2,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 3,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 4,
-        "score": 0.25,
-        "signals": [
-          "end_cue"
-        ],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 5,
-        "score": 0.15,
-        "signals": [
-          "end_cue_prev"
-        ],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 6,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 7,
-        "score": 0.25,
-        "signals": [
-          "end_cue"
-        ],
-        "decided_by": "rules",
-        "is_boundary": false
-      }
-    ],
+    "boundaries": [],
     "llm_calls": 0
   },
   "orders": [
     {
       "order": {
-        "order_id": "ord_01M443TAR3EWR3Q9YRRW1MFVJM",
-        "group_id": "grp_01M443TAR3WX870YNMGWM4HTV0",
+        "order_id": "ord_01M47MMT5MJ9JDJNZ2X60WJ74T",
+        "group_id": "grp_01M47MMT5PV8CNAN116PTD36AN",
         "segment_id": "seg_1",
         "status": "completed",
+        "outcome_evidence": [
+          {
+            "type": "spoken_cue",
+            "kind": "closing",
+            "cue": "that's $8",
+            "utterance_id": "u5",
+            "at": "2026-10-03T18:40:12.080Z"
+          }
+        ],
+        "review": {
+          "required": false,
+          "reasons": []
+        },
         "started_s": 1.12,
         "ended_s": 30.985,
         "items": [
@@ -167,7 +117,7 @@
           "type": "SPLIT_ORDER",
           "target_line_ref": null,
           "catalog_id": null,
-          "raw_text": "Can we pay separately?",
+          "raw_text": "pay separately",
           "quantity": null,
           "size": null,
           "modifiers": [],
@@ -237,11 +187,6 @@
               "catalog_id": "combo_5",
               "quantity": 1,
               "size": null
-            },
-            {
-              "catalog_id": "coke",
-              "quantity": 1,
-              "size": null
             }
           ],
           "amount": 8.99,
@@ -256,9 +201,9 @@
         {
           "event_id": "e5",
           "type": "SPLIT_ORDER",
-          "target_line_ref": "e6",
+          "target_line_ref": null,
           "catalog_id": null,
-          "raw_text": "Second order",
+          "raw_text": "second order",
           "quantity": null,
           "size": null,
           "modifiers": [],
@@ -426,10 +371,23 @@
     },
     {
       "order": {
-        "order_id": "ord_01M443TAR3XH0PW3PPWA54H3RG",
-        "group_id": "grp_01M443TAR3WX870YNMGWM4HTV0",
+        "order_id": "ord_01M47MMT5P14WGJ31VJSY4VX0Q",
+        "group_id": "grp_01M47MMT5PV8CNAN116PTD36AN",
         "segment_id": "seg_1",
         "status": "completed",
+        "outcome_evidence": [
+          {
+            "type": "spoken_cue",
+            "kind": "closing",
+            "cue": "that's $6",
+            "utterance_id": "u8",
+            "at": "2026-10-03T18:40:23.865Z"
+          }
+        ],
+        "review": {
+          "required": false,
+          "reasons": []
+        },
         "started_s": 1.12,
         "ended_s": 30.985,
         "items": [
@@ -500,7 +458,7 @@
           "type": "SPLIT_ORDER",
           "target_line_ref": null,
           "catalog_id": null,
-          "raw_text": "Can we pay separately?",
+          "raw_text": "pay separately",
           "quantity": null,
           "size": null,
           "modifiers": [],
@@ -570,11 +528,6 @@
               "catalog_id": "combo_5",
               "quantity": 1,
               "size": null
-            },
-            {
-              "catalog_id": "coke",
-              "quantity": 1,
-              "size": null
             }
           ],
           "amount": 8.99,
@@ -589,9 +542,9 @@
         {
           "event_id": "e5",
           "type": "SPLIT_ORDER",
-          "target_line_ref": "e6",
+          "target_line_ref": null,
           "catalog_id": null,
-          "raw_text": "Second order",
+          "raw_text": "second order",
           "quantity": null,
           "size": null,
           "modifiers": [],

@@ -1,15 +1,19 @@
 # Serv Audio-to-Orders Sandbox
 
-Turns an HME drive-thru recording (MP3) into structured orders and POSTs each order to a signed webhook. A Next.js app shows every step: waveform, transcript, segmentation, the events the model proposed, the order that code built from them, and every webhook attempt.
+A live drive-thru order service, built as a sandbox. HME base stations stream lane audio over a WebSocket (or a recording is replayed as if it were live). Each lane's conversations are tracked as they happen, each finished conversation becomes a structured order, and the order is POSTed to a signed webhook within seconds, with corrections sent as new versions. A Next.js app shows it all: lanes live, every past run step by step, a browser simulator that acts as a base station, a review screen, and the eval.
 
 **Core principle: the LLM proposes, code decides.** The model never writes the final order. It emits events (`ADD`, `REPLACE`, `CHANGE_QTY`, `READBACK`, ...) that reference catalog IDs. A pure function, `replay(events)`, validates and applies them to build the order, so corrections, cancellations and readbacks are deterministic and unit-testable.
 
 ```
-MP3 -> ingest -> transcribe -> segment -> extract -> replay -> post-process -> webhook
-       ffprobe    Deepgram     rules +    Gemini     pure      buckets,         signed,
-       sha256     Nova-3       LLM tie    events     code      combos, flags    outbox + retries
-       cache                   breaker
+HME base station ─ WebSocket /hme/v1/stream ─┐      (token auth, raw capture, decoders)
+recording (pnpm feed replay / pipeline run) ──┼─> input layer -> lane (one per store + lane)
+browser simulator ───────────────────────────┘        streaming transcriber (Deepgram)
+                                                       conversation tracker (cues, vehicle and stream events, timers)
+                                                       finished conversation -> extract (Gemini) -> replay -> post-process
+                                                       -> order.finalized / order.updated -> signed webhook (outbox + retries)
 ```
+
+Everything kept along the way (raw capture, order audio, provider responses, events, labels) goes to a local data store under `.data/`, catalogued in SQLite.
 
 ## Setup
 
@@ -18,7 +22,7 @@ Requirements: Node 22+ (`.nvmrc`), pnpm 9, macOS (for regenerating fixture audio
 ```bash
 pnpm install
 cp .env.example .env        # add DEEPGRAM_API_KEY and GEMINI_API_KEY
-pnpm test                   # 107 unit and route tests, no API calls
+pnpm test                   # 250 unit and route tests, no API calls
 ```
 
 Both providers have free tiers: Deepgram gives $200 of credit (console.deepgram.com) and Gemini has a free API tier (aistudio.google.com). Without keys, the pipeline still runs on fixture audio using the ground-truth transcriber and the keyword fallback extractor.
@@ -45,6 +49,12 @@ pnpm pipeline resend <order_id>                   # resend a failed or dead-lett
 pnpm pipeline worker                              # slow-phase retries (the web app runs this for you)
 pnpm pipeline examples                            # regenerate examples/
 pnpm pipeline settings                            # which Serv-dependent values are still placeholders
+pnpm feed serve                                   # the live service: HME WebSocket endpoint + lanes (127.0.0.1:8787)
+pnpm pipeline token create --store s1 --lanes lane_1,lane_2   # an ingest token for a base station (shown once)
+pnpm feed replay lane_stream_a --speed 1          # replay a recording as a live feed (watch it on /live)
+pnpm feed replay 01_simple --via ws --scenario codec-mulaw   # ...as a fake base station over the real socket
+pnpm feed sim-check                               # the simulator's five acted scenarios, typed, over the real endpoint
+pnpm pipeline heldout import rec.m4a --name heldout_01      # add a human recording to the held-out set
 pnpm fixtures:build [--all-noise]                 # regenerate fixture audio from fixtures/scripts
 pnpm data usage                                   # data store size against DATA_DISK_BUDGET_GB
 pnpm data find --order <order_id>                 # everything kept for an order: audio, LLM calls, labels, raw capture
@@ -58,11 +68,13 @@ The live service (`pnpm feed serve`) keeps every incoming message (zstd parts, r
 
 Start `pnpm dev` before `pnpm pipeline run` so the mock webhook is listening. If it is not, deliveries go through the fast retry phase (about a minute) and are then scheduled for the slow phase.
 
-Useful flags: `--transcriber deepgram|script`, `--extractor gemini|fuzzy|oracle`, `--channel-map 0=customer,1=crew`, `--start-utc <iso>`, `--no-deliver`, `--no-judge`, `--json`. For eval: `--layout mono|stereo`, `--only 01_simple,04_correction`, `--deliver`.
+Useful flags: `--transcriber deepgram|script`, `--extractor gemini|fuzzy|oracle`, `--channel-map 0=customer,1=crew`, `--start-utc <iso>`, `--no-deliver`, `--no-judge`, `--live-stt`, `--json`. For eval: `--layout mono|stereo`, `--only 01_simple,04_correction`, `--scenario vehicle-events`, `--deliver`, `--yes` (allow Deepgram minutes that are not cached; without it the eval stops and says how many).
+
+Every file, whether from `pnpm pipeline run`, a web upload or the eval, is replayed into a lane at max speed (plan D1), so files and live feeds share one tracker, finalize and delivery. With a Deepgram key, a file is transcribed once with the prerecorded API and cached, and its utterances are released as the audio arrives. HME connections and the simulator's mic stream to Deepgram live. `--live-stt` streams files live as well (billed every run).
 
 | Transcriber | What it is |
 |---|---|
-| `deepgram` | Deepgram Nova-3. Raw responses are cached in `.cache/<sha256>/`, so reruns cost nothing |
+| `deepgram` | Deepgram Nova-3: prerecorded for files (raw responses cached in `.cache/<sha256>/`, so reruns cost nothing), live streaming for HME connections and the simulator |
 | `script` | Fixture ground truth from `<id>.timeline.json`. Free; isolates segmentation and extraction from ASR errors |
 
 | Extractor | What it is |
@@ -80,9 +92,12 @@ Useful flags: `--transcriber deepgram|script`, `--extractor gemini|fuzzy|oracle`
 | `/runs/[id]` orders | Three buckets per order (items, needs review, not ordered), flags, combo opportunities, the event log, raw LLM output. Tick "Replay events with the audio" and the order rebuilds itself as the audio plays (the same pure `replay()` runs in the browser) |
 | `/runs/[id]` deliveries | Every attempt with time, phase, status code and latency; payload viewer; Resend |
 | `/mock-webhook` | Received payloads, signature check result, dedupe, and toggles for 500, 429 (Retry-After) and timeout |
-| `/eval` | Latest `eval/report.json`: metrics, the edge-case checklist, per-fixture diffs |
+| `/live` | Every lane as it runs: connection, rolling transcript with interim text, tracker state and timers counting down, the open order building, close decisions with their evidence, orders and webhook status (server-sent events from the live service) |
+| `/simulator` | Dev only. A fake HME base station in the browser: mic or typed lines, car and stream buttons, drop and reconnect, noise, Save as fixture (see "Simulator" below) |
+| `/review` | Dev only. Orders that need a person: pick what each unclear item was, confirm the outcome, and send `order.updated` |
+| `/eval` | Latest `eval/report.json`: Layer A (heard), Layer B (rung up, against POS tickets), live-path metrics, the checklist, per-fixture diffs, and the held-out set's own report |
 
-Runs execute server-side in an in-process queue; pages poll for status. The webhook retry worker runs inside the Next.js server (`instrumentation.ts`).
+Runs execute server-side in an in-process queue; pages poll for status. The webhook retry worker runs inside the Next.js server (`instrumentation.ts`). The live service is a separate process (`pnpm feed serve`); the web app reads what it writes to the shared SQLite database. Dev-only pages and routes answer only with `ENABLE_DEV_ROUTES=true` and a local request.
 
 ## Code standards
 
@@ -109,23 +124,31 @@ Deliberate deviations:
 
 ```
 packages/pipeline/src/
+  input/         AudioSource, canonical PCM, decoders, file replay, scenarios, HME placeholder parser, ingest auth, fake base station
+  lane/          lane session, conversation tracker, Deepgram live, file transcriber, live feed, recorder, replay
+  server/        the HME WebSocket endpoint and the live service
+  orders/        one finished conversation -> order versions -> outbox
+  data/          blob store, artifact catalog, raw capture, labels, pnpm data
+  review/        resolving an order that needs review
+  sim/           simulator back end: save as fixture, acted scenarios
   ingest/        ffprobe, silence check, SHA-256, recording start time
   transcribe/    Transcriber interface, deepgram.ts, normalize.ts, roles.ts, script.ts
-  segment/       cue lexicon, gap scoring, LLM tie-breaker
+  segment/       cue lexicon, gap scoring, LLM tie-breaker (used by the tracker)
   extract/       Extractor interface, gemini.ts, prompt.ts, llm-schema.ts, validate.ts, fuzzy + oracle
   build/         replay(events) -> order state (pure)
   postprocess/   buckets, combo detection, flags, status (pure)
   webhook/       payload, Standard Webhooks signing, outbox + retries, mock receiver logic
-  store/         SQLite (runs, orders, outbox, attempts, mock inbox)
-  eval/          comparison, checklist, eval runner, webhook self-check
+  store/         SQLite (runs, orders and versions, outbox, attempts, mock inbox, live events), raw capture parts
+  eval/          comparison, checklist, eval runner, live-path checks, POS matcher (Layer B), held-out set, webhook self-check
   fixtures/      audio generator
   cli.ts
 apps/web/        Next.js App Router UI and API routes (including /api/mock-webhook)
 menu/menu.json   "Sandbox Burger": 27 items, 6 combos, 29 modifiers
 config/sandbox.ts every Serv-dependent value, with placeholder tracking
-fixtures/        22 scripts, 2 multi-car compilations, generated audio and timelines
+fixtures/        24 scripts, 2 compilations and 2 lane streams, scenarios, POS window changes, held-out set (to record)
 examples/        deliverable example orders
 eval/report.json latest eval
+V2-PROGRESS.md   how v2 was built, step by step, with every decision the plan left open
 ```
 
 ## Pipeline details
@@ -134,19 +157,25 @@ eval/report.json latest eval
 
 **Transcribe.** Nova-3 with `smart_format`, `punctuate`, `utterances`, `utt_split=0.8`, `filler_words`, and every canonical menu item name as a `keyterm` (Deepgram rejects more than 500 keyterm tokens, so aliases are left to the extractor and fuzzy matcher). Stereo with `CHANNEL_MAP` set uses `multichannel` (roles from channels, preferred). Otherwise `diarize`, then the speaker who greets, asks "anything else" or reads a total is crew; a voice that only says headset chatter is crew too; ties go to a one-line LLM check, then to "first voice is the crew greeting". When diarization puts 90% or more of the lines under one voice (common on mono drive-thru audio, and on most of the synthetic fixtures), roles are inferred per line instead: customer phrases ("can I get", "that's it", "never mind") and crew phrases ("anything else", totals, "okay, large Sprite") decide first, then turn-taking fills the rest, keeping the speaker when a line continues an unfinished one. Those transcripts show `roles from wording`, and each guessed line is marked so the extractor treats the label as a hint. Words under 0.6 confidence are marked `low_conf`. Absolute time = `audio_start_utc` + offset, where the start comes from `AUDIO_START_UTC`, a filename pattern (`20261003T184000Z`, `2026-10-03_18-40-00`), or the file mtime, recorded as `timestamp_source`. 429 and 5xx are retried with backoff. Minutes billed are logged per run.
 
-**Segment.** Every gap between utterances gets a score from crew end cues ("your total is", "pull forward"), crew start cues ("welcome to", "order when you're ready"), silence (above `SEGMENT_GAP_S`, default 8s) and restart cues ("start over", which keep the order together). Score at or above 0.7 is a boundary, below 0.35 is the same order, and in between asks the LLM "does a new customer start here?" with three utterances on either side. No segment exceeds 6 minutes. Crew-to-crew chatter is tagged `non_customer` and excluded from extraction. A first segment with no greeting near the file start is `truncated_start`; a last segment with no closing near the file end is `truncated_end`; no closing followed by silence is abandoned.
+**Live input.** An HME base station connects to `/hme/v1/stream` (path and wire format are PLACEHOLDERS until HME documents them; everything HME-specific lives in `packages/pipeline/src/input/`). It authenticates with a per-store bearer token and names its lane and audio format. Binary messages are audio in the declared codec (PCM, mu-law, a-law, Opus, or MP3, AAC, WAV, Ogg or FLAC through ffmpeg); text messages are JSON control events (`vehicle_arrived`, `vehicle_departed`, `stream_paused`, `stream_resumed`). Every message is captured raw before decoding. Audio becomes canonical 16 kHz PCM per channel, timed by our receive clock (`time_basis: receive_clock`; the service checks the machine's NTP offset at start). A replayed file uses its recording time instead (`recording_metadata`).
+
+**Conversation tracker.** One lane per store and lane, surviving reconnects. Each final utterance goes to a state machine (IDLE, ACTIVE, CLOSING, FINALIZED). A conversation opens on a greeting, a customer line, or a car arriving followed by a greeting. It moves to CLOSING on a crew closing cue ("pull forward", "see you at the window"). It finalizes after `CLOSE_SETTLE_S` (3 s) without customer speech, after `IDLE_TIMEOUT_S` (45 s) of silence, when the next car starts, or at the 6 minute cap. A disconnect holds the conversation for `RECONNECT_GRACE_S` (180 s). A customer line within `REOPEN_WINDOW_S` (20 s) of finalizing reopens it, and the order is resent as `order.updated` version 2. Gray-zone "is this a new car?" questions get one LLM try with a 3 s deadline, no retries, and are skipped when the per-minute slot is busy; the rules decide otherwise. Timers never run past speech that is still being transcribed. Every decision is logged with its trigger and signals. The gap scoring, cue lexicon and chatter tagging are v1's segmentation rules, reused.
 
 **Extract.** One Gemini call per conversation at temperature 0, with the compact catalog, the utterances with IDs and roles (guessed roles shown as `[customer?]`), low-confidence words marked, and the rules (only the customer adds items, questions are INQUIRE, crew suggestions count only when accepted, catalog IDs only). Output is validated against the zod schema; unknown IDs are fuzzy-matched through aliases, and anything still unknown triggers one repair retry, then becomes a `needs_review` line with candidates. Recognition confidence is capped at the mean ASR confidence of the source words.
 
 **Build.** `replay()` applies events in time order. Lines are referenced by the ID of the event that created them, and references follow replacement chains. Removed, replaced, cancelled and out-of-stock lines are kept with a reason. Per-unit modifiers split lines. Combo modifiers land on the component they apply to. Readbacks are compared with the order at that moment. "Can we pay separately?" before anything is ordered splits at each spoken total.
 
-**Post-process.** Every mention lands in exactly one bucket: `items` (recognition and commitment at or above 0.75), `needs_review` (committed but unsure what, with the top 3 catalog candidates; an item nobody could identify lands here whatever its commitment), or `not_ordered` (cancelled, replaced, declined upsell, out of stock, inquired, uncommitted). Combo opportunities (separate lines that fill every slot of a meal for less) are flagged with the savings, never auto-converted. Status precedence: cancelled, incomplete, abandoned, needs_review, completed. `low_audio_quality` is set when mean word confidence is under `LOW_AUDIO_QUALITY_CONF` (0.8) or the conversation's speech-to-noise-floor ratio is under `LOW_AUDIO_SNR_DB` (15 dB); ASR confidence stays high on loud, steady noise, so the level check catches what confidence misses. `non_english` uses Deepgram's language tags or the language the extractor reports.
+**Post-process.** Every mention lands in exactly one bucket: `items` (recognition and commitment at or above 0.75), `needs_review` (committed but unsure what, with the top 3 catalog candidates; an item nobody could identify lands here whatever its commitment), or `not_ordered` (cancelled, replaced, declined upsell, out of stock, inquired, uncommitted). Combo opportunities (separate lines that fill every slot of a meal for less) are flagged with the savings, never auto-converted.
 
-**Deliver.** Each order is written to an SQLite outbox and sent the moment it is built. Signing follows [Standard Webhooks](https://www.standardwebhooks.com) (verified against the spec's reference vector): `webhook-id` (= `order_id` + version, constant across retries), `webhook-timestamp`, `webhook-signature: v1,<base64 HMAC-SHA256 of id.timestamp.body>`, plus `x-delivery-attempt`. 10s timeout; any 2xx is success. Network errors, timeouts, 408, 429 and 5xx are retried (Retry-After honored); other 4xx are marked failed with the response body. Fast phase about 1, 2, 4, 8, 16, 32s with full jitter, then 5m, 30m, 2h, 5h, 10h, 10h, then dead letter. For a real AWS endpoint (API Gateway in front of a Lambda), only `WEBHOOK_URL` and `WEBHOOK_SECRET` change; the receiver verifies with any Standard Webhooks library.
+**Outcome.** Status is how the visit ended: `completed` (a closing cue after an item), `cancelled`, `abandoned` (the car left: a `vehicle_departed` event, the crew saying so, or the next car arriving), or `undetermined` (no evidence either way). A pause or a dropped connection never sets the outcome by itself (D10). `outcome_evidence` lists what decided it; events that were only context are marked so. Review is separate and can sit on any status: `review.required` with reasons (`unclear_items`, `readback_mismatch`, `total_mismatch`, `missing_required_slot`, `low_audio_quality`, `stream_gap`, `transcript_gap`, `outcome_undetermined`, `roles_guessed_low_agreement`, `safety_cap` for a quantity above 10 or a total above $150). `low_audio_quality` is set when mean word confidence is under `LOW_AUDIO_QUALITY_CONF` (0.8) or the conversation's speech-to-noise-floor ratio is under `LOW_AUDIO_SNR_DB` (15 dB). `non_english` uses Deepgram's language tags or the language the extractor reports.
 
-## Webhook payload (schema v1.0)
+**Deliver.** Each order version is written to an SQLite outbox and sent the moment it is built. Version N waits until version N-1 is delivered or dead-lettered, so a receiver sees them in order. Signing follows [Standard Webhooks](https://www.standardwebhooks.com) (verified against the spec's reference vector): `webhook-id` (= `order_id` + version, constant across retries), `webhook-timestamp`, `webhook-signature: v1,<base64 HMAC-SHA256 of id.timestamp.body>`, plus `x-delivery-attempt`. 10s timeout; any 2xx is success. Network errors, timeouts, 408, 429 and 5xx are retried (Retry-After honored); other 4xx are marked failed with the response body. Fast phase about 1, 2, 4, 8, 16, 32s with full jitter, then 5m, 30m, 2h, 5h, 10h, 10h, then dead letter. For a real AWS endpoint (API Gateway in front of a Lambda), only `WEBHOOK_URL` and `WEBHOOK_SECRET` change; the receiver verifies with any Standard Webhooks library.
 
-See `examples/*/webhook-payload.json` for real ones. Top-level fields: `schema_version`, `event_type` (`order.completed|cancelled|abandoned|needs_review|incomplete|updated`), `order_id`, `order_version`, `group_id` (shared by split-payment orders), `location_id`, `lane_id`, `status`, `started_at`, `ended_at`, `timestamp_source`, `audio`, `items`, `needs_review`, `not_ordered`, `combo_opportunities`, `customer_declined_combo`, `flags`, `totals` (`computed`, `spoken_by_crew`), `overall_confidence`, `transcript`, `processing`. Additions to the draft schema: `customer_declined_combo` at the top level, `unit_price` on items, and `non_customer: true` on transcript lines that were crew chatter.
+## Webhook payload (schema 2.0)
+
+See `examples/*/webhook-payload.json` for real ones. `event_type` is `order.finalized` for version 1 and `order.updated` for later versions (a reopen, late evidence that changes the outcome, or a person resolving a review), which keep the `order_id` and add `supersedes_version` and `correction_reason`. The `webhook-id` header is `{order_id}_v{order_version}`, so retries of one version dedupe and each version is distinct; receivers should keep the highest version per order (the mock receiver does).
+
+Top-level fields: `schema_version`, `event_type`, `order_id`, `order_version`, `supersedes_version`, `correction_reason`, `group_id` (shared by split-payment orders), `store_id`, `lane_id`, `session_id`, `status`, `outcome_evidence`, `review`, `times` (`started_at`, `ended_at`, `time_basis`, `received_at`, `finalized_at`), `audio_ref` (session, sample range, archive URI), `source` (`hme_ws`, `file_replay` or `rtsp`; codec in; channels; channel roles), `items`, `needs_review`, `not_ordered`, `combo_opportunities`, `customer_declined_combo`, `flags`, `totals` (`computed`, `spoken_by_crew`), `overall_confidence`, `transcript` (D9; guessed roles marked `speaker_guessed`), `processing`.
 
 ## Assumptions and placeholders
 
@@ -154,61 +183,105 @@ Every Serv-dependent value lives in `config/sandbox.ts`, shows a yellow Placehol
 
 | Assumption | Sandbox placeholder | Replace when |
 |---|---|---|
-| One lane per audio file | `LOCATION_ID=store_demo_001`, `LANE_ID=lane_1` | Serv shares site and lane IDs |
+| HME wire format | PLACEHOLDER: `/hme/v1/stream`, audio as binary in a declared codec, events as JSON text (`src/input/hme/`) | HME documents its streaming interface |
+| Store and lane IDs | Live: the store comes from the ingest token, the lane from the connection. Replays: `STORE_ID=store_demo_001`, `LANE_ID=lane_1` | Serv shares site and lane IDs |
 | Audio is MP3, mono or stereo | Both supported; `CHANNEL_MAP` (e.g. `0=customer,1=crew`) unset means diarization | An HME sample confirms channels |
 | Recording wall-clock start is unknown | `AUDIO_START_UTC`, else filename pattern, else file mtime; `timestamp_source` recorded | HME metadata format is confirmed |
 | Generic invented menu | `menu/menu.json` ("Sandbox Burger") | Serv names a brand |
-| Serv accepts our webhook schema | Schema v1.0 above | Serv reviews it |
+| Serv accepts our webhook schema | Schema 2.0 above | Serv reviews it |
 | Webhook endpoint | Next.js mock route `/api/mock-webhook` via `WEBHOOK_URL` | Serv shares a URL |
 | Signing secret | Generated dev secret in `.data/dev-webhook-secret` unless `WEBHOOK_SECRET` is set | Serv issues one |
 | English primary language | `STT_LANGUAGE=multi` (Nova-3 English/Spanish code-switching); non-English customer speech sets `non_english`, still processed | Serv says otherwise |
-| Batch per file, not live streaming | Each order is sent the moment it is built | Real-time is required |
-| Send all order outcomes | completed, cancelled, abandoned, needs_review, incomplete | Serv narrows it |
+| Close timing | Settle 3 s after a closing cue, idle 45 s, reopen window 20 s, reconnect grace 180 s | Real traffic shows the right trade-off |
+| Send all order outcomes | completed, cancelled, abandoned, undetermined, each with a review flag | Serv narrows it |
+| POS tickets for Layer B | Synthetic tickets from the fixtures' expected orders | Serv shares POS data |
 | Audio may go to third-party APIs | Deepgram and Gemini allowed in the sandbox | Serv confirms data rules |
 | Spoken totals include tax | `TAX_RATE=0` | The site is known |
 | Bucket thresholds | 0.75 recognition and commitment | Real audio with actual orders is available |
 
 One deliberate change from the handoff doc: the default STT language is `multi` rather than `en`. Nova-3 multilingual supports keyterm prompting and returns a per-word language, which gives the `non_english` flag without a second pass. Set `STT_LANGUAGE=en` to go back.
 
+## Configuration
+
+`.env` holds the keys and any overrides; nothing else needs setting for the sandbox. Variables added in v2:
+
+| Variable | Default | What it does |
+|---|---|---|
+| `STORE_ID` (was `LOCATION_ID`), `LANE_ID` | `store_demo_001`, `lane_1` | Store and lane for replays (live sessions get them from the token and connection) |
+| `INGEST_HOST`, `INGEST_PORT` | `127.0.0.1`, `8787` | Where `pnpm feed serve` listens. A non-local address needs TLS |
+| `INGEST_TLS_CERT`, `INGEST_TLS_KEY` | unset | TLS for the endpoint |
+| `ALLOW_INSECURE_WS` | `false` | Allow a non-local address without TLS (trusted networks only) |
+| `INGEST_AUTH_ALLOW_QUERY` | `false` | Accept `?token=` as well as the `Authorization` header |
+| `INGEST_URL` | `ws://127.0.0.1:8787` | The endpoint as clients reach it (the simulator, `--via ws`) |
+| `ENABLE_DEV_ROUTES` | `false` | Simulator, review screen, ingest tickets. Local requests only; never on a server reachable by others, or behind a proxy |
+| `CLOSE_SETTLE_S`, `IDLE_TIMEOUT_S`, `RECONNECT_GRACE_S`, `REOPEN_WINDOW_S`, `JUDGE_TIMEOUT_MS` | 3, 45, 180, 20, 3000 | Tracker timers |
+| `DEEPGRAM_IDLE_CLOSE_S` | 30 | Close an idle Deepgram live connection after this long (reopened on resume) |
+| `REVIEW_MAX_QUANTITY`, `REVIEW_MAX_TOTAL` | 10, 150 | The model safety cap (D13): above either, the order goes to review |
+| `DATA_DISK_BUDGET_GB` | 50 | Data store budget: warn at 80%, pause raw capture and audio archiving at 95% |
+| `RETENTION_POLICY` | `keep_all` | The only policy; `pnpm data prune` and `pnpm data delete` are manual |
+
+## Simulator
+
+`/simulator` (with `ENABLE_DEV_ROUTES=true` and `pnpm feed serve` running) is a fake HME base station in the browser. It connects to the same `/hme/v1/stream` endpoint HME will use, with a one-time ticket, so everything after the input layer is the real pipeline. The browser never sees the provider keys.
+
+- **Text mode** (free): type what the crew and the customer say. Lines skip transcription, so this tests the tracker, extraction and delivery at no cost.
+- **Microphone**: speak; the page converts the mic to 16 kHz PCM (or mu-law) in an AudioWorklet. This uses Deepgram live: the page shows the minutes and stops after 15 minutes, or after 30 s with no audio (both can be changed).
+- **Buttons**: Car arrived and Car left, Pause and Resume stream, Drop connection (reconnects at 2, 4 and 8 s like HME, or stays down), and engine or heavy noise mixed under the mic. Hold C while the crew speaks to label it; the labels are saved with the fixture and never sent.
+- **Live panel**: the same lane view as `/live`, plus the mock inbox.
+- **Save as fixture**: after Stop, saves the session (raw capture, audio, timeline, events) to `fixtures/live/<name>/` with the expected orders you write in the form. Tick "held out" to save to `fixtures/heldout/` instead (see `fixtures/heldout/README.md`).
+
+The five acted scenarios from the plan (a simple order, Coke changed to Sprite, a late "add a water", the car leaving mid-order, the connection dropping with no reconnect) run typed over the real endpoint with `pnpm feed sim-check`.
+
 ## Synthetic test data
 
-`fixtures/scripts/*.json` holds 22 scripted conversations. Each has turns (speaker, text, pause), hand-written events, and an expected block (items, needs_review, not_ordered, flags, status, group). `pnpm fixtures:build` renders them with two macOS voices (free, local), writes stereo (customer left, crew right, 16 kHz) and a mono headset mix (band-limited, 8 kHz), mixes in synthetic engine idle, wind and car radio at clean, moderate or heavy levels, and concatenates scripts into two multi-car compilations. Each file gets a `.timeline.json` with exact utterance and order spans.
+`fixtures/scripts/*.json` holds 24 scripted conversations. Each has turns (speaker, text, pause), hand-written events, and an expected block (items, needs_review, not_ordered, flags, status, group). `pnpm fixtures:build` renders them with two macOS voices (free, local), writes stereo (customer left, crew right, 16 kHz) and a mono headset mix (band-limited, 8 kHz), mixes in synthetic engine idle, wind and car radio at clean, moderate or heavy levels, and concatenates scripts into two multi-car compilations and two lane streams (about 23 minutes and 19 cars each, with realistic gaps). Each file gets a `.timeline.json` with exact utterance and order spans, the recording start, and vehicle events.
 
-Every row of the edge-case checklist has a fixture (rows 27 and 28 are exercised by the webhook self-check in `pnpm eval` and by unit tests).
+`fixtures/scenarios/*.json` describe how a replay behaves like a live feed: continuous or paused when no car is present, vehicle events (off, on, noisy), disconnects with and without reconnect, pauses, stereo roles, and one per wire codec. `fixtures/pos/window-changes.json` lists what the crew rang up differently at the window, for Layer B.
+
+Every row of the edge-case checklist (41 rows: v1's 28 plus 13 for the live path) is covered by a fixture or a live-path check in `pnpm eval`; rows 27 and 28 run against the webhook self-check. The human-voiced held-out set (`fixtures/heldout/`) is scored separately and is never used for tuning; it still has to be recorded.
 
 ## Eval results
 
-`pnpm eval` reports segmentation (missed and extra orders, boundary error), item precision and recall (exact match on catalog ID, quantity, size, modifiers and combo components), bucket accuracy, status and flags (exact match, ignoring `placeholder_values`), and pass or fail per checklist row. Results go to the console and `eval/report.json`; the `/eval` page reads the report.
+`pnpm eval` replays every fixture through the live path and reports two layers, as Serv asked:
 
-| Configuration | Fixtures passed | Item P / R | Bucket acc. | Segments | Notes |
-|---|---|---|---|---|---|
-| ground-truth transcript + oracle events | 24/24 | 100% / 100% | 100% | 34/34 | Pipeline ceiling |
-| ground-truth transcript + keyword fallback | 0/24 | 100% / 0% | 1% | 34/34 | Fallback sends everything to needs_review, by design |
-| Deepgram Nova-3 + Gemini 3.5 Flash-Lite | 24/24 | 100% / 100% | 100% | 34/34 | 2026-10-04, mono fixtures, prompt extract-v4, 34 LLM calls, about 102k tokens, 0 new Deepgram min (cached). The first run that day scored 12/24 (93.5% / 80.6%): diarization heard one voice, so every line was labeled crew. One run at temperature 0; expect some run-to-run variation, and these fixtures informed the fixes |
-| Deepgram Nova-3 + Gemini Flash (latest alias) | not measured | | | | Free tier allows 20 requests per day per model, and 503 retries count against it, so a full eval (about 34 requests) does not fit in one day |
+- **Layer A, "heard":** our orders against what was said (hand-checked expected orders). It covers segmentation (missed and extra conversations, boundary error), item precision and recall (exact match on catalog ID, quantity, size, modifiers and combo components), bucket accuracy, status, review and flags, and pass or fail per checklist row.
+- **Layer B, "rung up":** our orders against POS tickets, matched on store and lane within ±90 s, by items in common and then time. Every difference is an `extraction_error` (we were wrong), a `window_change` (we heard it right; it was rung up differently) or `unmatched`. The tickets are synthetic until Serv shares real ones.
+- **Live path:** close latency (conversation end to order sent; estimated at max speed, measured at 1x), reopens (and premature ones), and duplicate versions.
+
+Results go to the console and `eval/report.json`; the `/eval` page reads the report. The eval stops before sending any audio to Deepgram that is not cached, unless given `--yes`.
+
+| Configuration | Fixtures | Rows | Item P / R | Buckets | Conversations | Layer B exact | Notes |
+|---|---|---|---|---|---|---|---|
+| ground truth + oracle events (v2, live path) | 28/28 | 41/41 | 100% / 100% | 100% | 74/74 | 66/67 | Pipeline ceiling, free. The one Layer B difference is the planted window change |
+| Deepgram Nova-3 + Gemini 3.5 Flash-Lite (v2, live path) | 27/28 | 40/41 | 100% / 100% | 99.5% | 74/74 | 66/67 | 2026-10-05, mono, files transcribed prerecorded (cached) and streamed through the lane. The one difference: `lane_stream_a` leaves a hesitated cookie off `not_ordered`. One run at temperature 0, on fixtures that informed the fixes |
+| Deepgram Nova-3 + Gemini 3.5 Flash-Lite (v1, batch) | 24/24 | 28/28 | 100% / 100% | 100% | 34/34 | | 2026-10-04, before the lane streams existed |
+
+Close latency with real providers, estimated: p50 3.0 s, p95 45 s. Orders closed by a closing cue settle in 3 s (63 of 77). The tail is 7 idle timeouts (45 s) and 5 closes on the next car (34 to 43 s). The one real-time run, `lane_stream_a` at 1x with Deepgram live and Gemini (step 6), measured p50 5.6 s and p95 47.1 s.
 
 ## Known gaps
 
 - **Synthetic audio:** TTS voices and mixed noise are cleaner and more predictable than real drive-thru audio. Accuracy on real HME files is unknown until we test them.
 - **Uncalibrated thresholds:** the 0.75 bucket thresholds and the low-audio-quality cutoffs (confidence 0.8, 15 dB) are guesses until we have real audio with actual orders.
 - **Channel layout:** speaker roles rely on diarization, or on wording when diarization hears one voice, unless HME audio has separate crew and customer channels. Wording-based roles were 98% right on the fixture lines (229 of 234), against 74% from diarization alone; the cue lists were tuned on those same fixtures, so expect less on real audio.
-- **Wall-clock time:** car matching needs real start times; the sandbox uses a configured value.
-- **Single lane:** dual-lane sites and lane bleed are out of scope.
-- **Batch, not streaming:** orders are sent as soon as each is built, but only after the file is processed.
+- **Wall-clock time:** live orders are timed by our receive clock (checked against NTP at start), not by a timestamp from HME; replayed files use a configured or inferred start. Matching cars to POS tickets is only as good as those clocks.
+- **Lane bleed:** each store and lane gets its own lane, and two lanes run side by side without mixing (row 40), but audio from one lane's speaker reaching the other lane's microphone is not handled.
 - **Generic menu:** real menus have more items, regional names and promos.
 - **Gemini model choice:** the default is `gemini-3.5-flash-lite`, which completed the eval inside the free tier. `gemini-flash-latest` may extract better, but its free tier allows 20 requests per day, too few for a full eval; set `GEMINI_MODEL=gemini-flash-latest` to try it on single runs. Quotas are per model, and the pipeline keeps one ledger per model in `.data/`.
 - **Free-tier limits:** LLM rate limits and 503 "high demand" responses on the free tier slow batch runs (client-side limit `GEMINI_RPM`, default 10; daily cap `GEMINI_DAILY_CAP`, default 200).
 - **Data handling:** sending audio to Deepgram and an LLM provider is assumed OK pending Serv's confirmation.
-- **Orders spanning files:** flagged as incomplete, not stitched together.
+- **Orders spanning files:** a replayed file's last conversation without a close is `undetermined` with `truncated_end`; files are not stitched together.
 - **Sandbox infrastructure:** SQLite and an in-process queue suit one machine; a deployment would move the outbox and worker to managed services.
-- **No held-out test set:** the same 24 fixtures guided the prompt and cue-list tuning and measured the result, and the real-provider eval was a single run. 24/24 shows the approach can work, not that it generalizes.
-- **Stereo path untested live:** every Deepgram call so far was mono with diarization. The multichannel path is unit-tested but has never been sent to Deepgram, and the stereo layout has not been evaluated (`pnpm eval --layout stereo`, about 16 Deepgram minutes).
+- **No held-out results yet:** the fixtures that measure the pipeline also guided its prompt, cue-list and tracker fixes, and each real-provider eval is a single run. The tooling for a human-voiced held-out set is in place (`fixtures/heldout/README.md`), but recording 8 to 12 conversations needs people, and scoring them needs about 10 Deepgram minutes. Until then, high fixture scores show the approach can work, not that it generalizes.
+- **HME interface unknown:** the endpoint path, wire format, control messages and authentication are placeholders. The service is built so only `src/input/` changes when HME documents them; nothing has been tested against a real base station.
+- **Close latency when no closing cue is heard:** a conversation that ends without one waits for the 45 s idle timeout (or the next car), because a pause never sets the outcome (D10). Cue-closed orders arrive in about 3 s plus extraction. Vehicle events from HME, or a shorter `IDLE_TIMEOUT_S`, would shorten the tail; the trade-off needs real traffic.
+- **Live speech recognition barely exercised:** Deepgram live has run once (one 23 minute lane stream at 1x). The simulator's mic path and the five acted scenarios with real voices have not been run; the typed versions pass.
+- **Stereo path untested with Deepgram:** every Deepgram call so far was mono with diarization. The multichannel path is unit-tested (and the stereo scenario passes on the ceiling) but has never been sent to Deepgram; `pnpm eval --layout stereo` would bill the stereo fixtures once.
 - **Tax:** `TAX_RATE=0`. Real spoken totals include tax, so `total_mismatch` will fire on most real orders until the rate is set per site.
-- **No authentication:** anyone who can reach the web app can start runs (spending Deepgram credit and Gemini quota), upload files, read every payload in the mock inbox and change its failure mode. Keep it on localhost.
+- **No authentication on the web app:** anyone who can reach it can start runs (spending Deepgram credit and Gemini quota), upload files, read every payload, the live view and the mock inbox, and change the mock's failure mode. It binds to 127.0.0.1; keep it there. Dev routes (simulator, review, tickets) also check for a local request, but a reverse proxy on the same machine that forwards `Host: localhost` without `X-Forwarded-For` would expose them, so never enable them behind one.
 - **Runs lost on restart:** the run queue lives in memory. A server restart drops queued runs and leaves their rows `queued` or `running`. Webhook deliveries are safe; the outbox recovers.
 - **Serial queue:** one run at a time, and Gemini is paced at 10 requests per minute, so a recording with 60 cars needs at least 6 minutes of extraction.
 - **Retries need a running process:** slow-phase webhook retries only happen while `pnpm dev` or `pnpm pipeline worker` is running.
-- **No human-review loop:** the schema defines `order.updated` and `order_version`, but nothing produces a version 2 yet.
+- **Reviews have no sign-in:** the review screen records the reviewer's typed name, not an identity.
 - **Payload carries the transcript:** each webhook includes the conversation's transcript, which Serv may not want for size or privacy reasons.
 - **Greedy combo search:** combo opportunities are found meal by meal in menu order, so with many items the best combination can be missed.
 - **No error monitoring:** dead-lettered webhooks and failed runs show in the UI and logs only; nothing alerts.

@@ -1,19 +1,50 @@
 {
-  "schema_version": "1.0",
-  "event_type": "order.needs_review",
-  "order_id": "ord_01M443TAMPKVZ6S5MAQ5NZFAK7",
+  "schema_version": "2.0",
+  "event_type": "order.finalized",
+  "order_id": "ord_01M47MMSY576B8DPC59G3T3JJ3",
   "order_version": 1,
+  "supersedes_version": null,
+  "correction_reason": null,
   "group_id": null,
-  "location_id": "store_demo_001",
+  "store_id": "store_demo_001",
   "lane_id": "lane_1",
-  "status": "needs_review",
-  "started_at": "2026-10-03T18:40:01.120Z",
-  "ended_at": "2026-10-03T18:40:19.205Z",
-  "timestamp_source": "env",
-  "audio": {
-    "source_file": "14_garbled.mono.clean.mp3",
-    "offset_start_s": 1.12,
-    "offset_end_s": 19.205
+  "session_id": "ses_01M47MMSVDEF1YQVNRP3B8XC0B",
+  "status": "completed",
+  "outcome_evidence": [
+    {
+      "type": "spoken_cue",
+      "kind": "closing",
+      "cue": "pull forward",
+      "utterance_id": "u7",
+      "at": "2026-10-03T18:40:18.005Z"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reasons": [
+      "unclear_items"
+    ]
+  },
+  "times": {
+    "started_at": "2026-10-03T18:40:01.120Z",
+    "ended_at": "2026-10-03T18:40:19.205Z",
+    "time_basis": "recording_metadata",
+    "received_at": "2026-10-06T03:38:16.814Z",
+    "finalized_at": "2026-10-06T03:38:16.910Z"
+  },
+  "audio_ref": {
+    "session_id": "ses_01M47MMSVDEF1YQVNRP3B8XC0B",
+    "sample_start": 17920,
+    "sample_end": 307280,
+    "archive_uri": null
+  },
+  "source": {
+    "type": "file_replay",
+    "codec_in": "pcm_s16le",
+    "channels": 1,
+    "channel_roles": [
+      "mixed"
+    ]
   },
   "items": [
     {
@@ -34,11 +65,15 @@
   "needs_review": [
     {
       "line_id": "e2",
-      "catalog_id": null,
+      "catalog_id": "shake_straw",
       "raw_text": "medium, uh, flourblberry shake",
       "quantity": 1,
       "size": "medium",
       "candidates": [
+        {
+          "catalog_id": "shake_straw",
+          "score": 0.79
+        },
         {
           "catalog_id": "shake_choc",
           "score": 0.79
@@ -46,17 +81,14 @@
         {
           "catalog_id": "shake_van",
           "score": 0.79
-        },
-        {
-          "catalog_id": "shake_straw",
-          "score": 0.79
         }
       ],
-      "recognition_confidence": 0.1,
-      "commitment_confidence": 0.2,
+      "recognition_confidence": 0.4,
+      "commitment_confidence": 0.9,
       "source_utterance_ids": [
         "u2",
-        "u3"
+        "u3",
+        "u5"
       ]
     }
   ],
@@ -64,7 +96,6 @@
   "combo_opportunities": [],
   "customer_declined_combo": false,
   "flags": [
-    "needs_review_present",
     "placeholder_values"
   ],
   "totals": {
@@ -72,11 +103,12 @@
     "spoken_by_crew": null,
     "currency": "USD"
   },
-  "overall_confidence": 0.51,
+  "overall_confidence": 0.66,
   "transcript": [
     {
       "id": "u1",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:01.120Z",
       "end_utc": "2026-10-03T18:40:04.880Z",
       "text": "Welcome to Sandbox Burger. What can I get for you today?",
@@ -85,6 +117,7 @@
     {
       "id": "u2",
       "speaker": "customer",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:05.520Z",
       "end_utc": "2026-10-03T18:40:09.120Z",
       "text": "Can I get a cheeseburger and a medium, uh, flourblberry",
@@ -93,6 +126,7 @@
     {
       "id": "u3",
       "speaker": "customer",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:09.120Z",
       "end_utc": "2026-10-03T18:40:09.920Z",
       "text": "shake?",
@@ -101,6 +135,7 @@
     {
       "id": "u4",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:10.480Z",
       "end_utc": "2026-10-03T18:40:12.880Z",
       "text": "Sorry. What kind of shake was that?",
@@ -109,6 +144,7 @@
     {
       "id": "u5",
       "speaker": "customer",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:13.845Z",
       "end_utc": "2026-10-03T18:40:16.245Z",
       "text": "Yeah. That one. Thanks.",
@@ -117,6 +153,7 @@
     {
       "id": "u6",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:16.805Z",
       "end_utc": "2026-10-03T18:40:17.765Z",
       "text": "Okay.",
@@ -125,6 +162,7 @@
     {
       "id": "u7",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:18.005Z",
       "end_utc": "2026-10-03T18:40:19.205Z",
       "text": "Pull forward, please.",
@@ -136,6 +174,6 @@
     "extractor": "gemini/gemini-3.5-flash-lite",
     "menu_version": "sandbox-1",
     "pipeline_version": "0.1.0",
-    "latency_ms": 104
+    "latency_ms": 8
   }
 }

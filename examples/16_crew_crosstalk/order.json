@@ -21,61 +21,36 @@
         "has_closing": true,
         "truncated_start": false,
         "truncated_end": false,
-        "trailing_silence_s": 3.553,
+        "trailing_silence_s": 3,
         "language": "en",
         "non_english": false,
         "mean_word_conf": 0.971,
         "crosstalk_suspected": false
       }
     ],
-    "boundaries": [
-      {
-        "after_index": 0,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 1,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 2,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 3,
-        "score": 0,
-        "signals": [],
-        "decided_by": "rules",
-        "is_boundary": false
-      },
-      {
-        "after_index": 4,
-        "score": 0.25,
-        "signals": [
-          "end_cue"
-        ],
-        "decided_by": "rules",
-        "is_boundary": false
-      }
-    ],
+    "boundaries": [],
     "llm_calls": 0
   },
   "orders": [
     {
       "order": {
-        "order_id": "ord_01M443TAVF9BRTMSTDPTBBQ686",
+        "order_id": "ord_01M47MMTCA8EA5VZEJVXETJ5Y2",
         "group_id": null,
         "segment_id": "seg_1",
         "status": "completed",
+        "outcome_evidence": [
+          {
+            "type": "spoken_cue",
+            "kind": "closing",
+            "cue": "your total is",
+            "utterance_id": "u5",
+            "at": "2026-10-03T18:40:19.735Z"
+          }
+        ],
+        "review": {
+          "required": false,
+          "reasons": []
+        },
         "started_s": 1.12,
         "ended_s": 25.175,
         "items": [

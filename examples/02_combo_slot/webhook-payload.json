@@ -1,19 +1,48 @@
 {
-  "schema_version": "1.0",
-  "event_type": "order.completed",
-  "order_id": "ord_01M443TAAA4Q8AQ00M4QMBCVP7",
+  "schema_version": "2.0",
+  "event_type": "order.finalized",
+  "order_id": "ord_01M47MMS9Y53F4CDGESSJPDJCP",
   "order_version": 1,
+  "supersedes_version": null,
+  "correction_reason": null,
   "group_id": null,
-  "location_id": "store_demo_001",
+  "store_id": "store_demo_001",
   "lane_id": "lane_1",
+  "session_id": "ses_01M47MMS72E8DHR7A2PYPGHB7V",
   "status": "completed",
-  "started_at": "2026-10-03T18:40:01.120Z",
-  "ended_at": "2026-10-03T18:40:20.157Z",
-  "timestamp_source": "env",
-  "audio": {
-    "source_file": "02_combo_slot.mono.clean.mp3",
-    "offset_start_s": 1.12,
-    "offset_end_s": 20.157
+  "outcome_evidence": [
+    {
+      "type": "spoken_cue",
+      "kind": "closing",
+      "cue": "that'll be $1",
+      "utterance_id": "u6",
+      "at": "2026-10-03T18:40:15.917Z"
+    }
+  ],
+  "review": {
+    "required": false,
+    "reasons": []
+  },
+  "times": {
+    "started_at": "2026-10-03T18:40:01.120Z",
+    "ended_at": "2026-10-03T18:40:20.157Z",
+    "time_basis": "recording_metadata",
+    "received_at": "2026-10-06T03:38:16.165Z",
+    "finalized_at": "2026-10-06T03:38:16.256Z"
+  },
+  "audio_ref": {
+    "session_id": "ses_01M47MMS72E8DHR7A2PYPGHB7V",
+    "sample_start": 17920,
+    "sample_end": 322512,
+    "archive_uri": null
+  },
+  "source": {
+    "type": "file_replay",
+    "codec_in": "pcm_s16le",
+    "channels": 1,
+    "channel_roles": [
+      "mixed"
+    ]
   },
   "items": [
     {
@@ -62,6 +91,7 @@
     {
       "id": "u1",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:01.120Z",
       "end_utc": "2026-10-03T18:40:04.400Z",
       "text": "Welcome to Sandbox Burger. Order when you're ready.",
@@ -70,6 +100,7 @@
     {
       "id": "u2",
       "speaker": "customer",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:05.040Z",
       "end_utc": "2026-10-03T18:40:09.280Z",
       "text": "Yeah. Let me get a number two with a Sprite and make it large.",
@@ -78,6 +109,7 @@
     {
       "id": "u3",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:10.000Z",
       "end_utc": "2026-10-03T18:40:12.160Z",
       "text": "Large number two with a Sprite.",
@@ -86,6 +118,7 @@
     {
       "id": "u4",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:12.240Z",
       "end_utc": "2026-10-03T18:40:13.440Z",
       "text": "Anything else for you?",
@@ -94,6 +127,7 @@
     {
       "id": "u5",
       "speaker": "customer",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:14.317Z",
       "end_utc": "2026-10-03T18:40:15.357Z",
       "text": "That's all.",
@@ -102,6 +136,7 @@
     {
       "id": "u6",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:15.917Z",
       "end_utc": "2026-10-03T18:40:18.477Z",
       "text": "That'll be $10.39",
@@ -110,6 +145,7 @@
     {
       "id": "u7",
       "speaker": "crew",
+      "speaker_guessed": true,
       "start_utc": "2026-10-03T18:40:18.477Z",
       "end_utc": "2026-10-03T18:40:20.157Z",
       "text": "at the window. Pull around.",
@@ -121,6 +157,6 @@
     "extractor": "gemini/gemini-3.5-flash-lite",
     "menu_version": "sandbox-1",
     "pipeline_version": "0.1.0",
-    "latency_ms": 91
+    "latency_ms": 1
   }
 }

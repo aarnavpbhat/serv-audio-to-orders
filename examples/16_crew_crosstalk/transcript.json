@@ -1,17 +1,17 @@
 {
-  "transcript_id": "tr_01M443TAVEG67ZGGFRRKWX6Y7F",
+  "transcript_id": "tr_run_01M47MMT7FDR989DFCS9R9TBGB",
   "source_file": "16_crew_crosstalk.mono.clean.mp3",
   "audio": {
-    "codec": "mp3",
-    "sample_rate": 8000,
+    "codec": "pcm_s16le",
+    "sample_rate": 16000,
     "channels": 1,
-    "duration_s": 28.728
+    "duration_s": 28.528
   },
   "audio_start_utc": "2026-10-03T18:40:00.000Z",
-  "timestamp_source": "env",
-  "role_source": "wording",
-  "stt": "deepgram/nova-3",
-  "language": "en",
+  "timestamp_source": "recording_metadata",
+  "role_source": "diarization",
+  "stt": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+  "language": null,
   "utterances": [
     {
       "id": "u1",
@@ -203,8 +203,7 @@
           "w": "These",
           "start_s": 10.24,
           "end_s": 10.64,
-          "conf": 0.275,
-          "low_conf": true
+          "conf": 0.275
         },
         {
           "w": "fries",
