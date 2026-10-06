@@ -1,7 +1,7 @@
 /** Server-side reads shaped for the UI. */
 import { readFileSync } from "node:fs";
 import { getConfig, servSettings } from "@serv/config";
-import { store, type EvalReport, type OrderEvent, type OrderPayload, type Segmentation, type Transcript, type AppliedEvent } from "@serv/pipeline";
+import { dataUsage, store, type DataUsage, type EvalReport, type OrderEvent, type OrderPayload, type Segmentation, type Transcript, type AppliedEvent } from "@serv/pipeline";
 import { queuePosition } from "./jobs";
 
 export function db() {
@@ -160,6 +160,7 @@ export function settings() {
     keys: { deepgram: !!cfg.deepgramApiKey, gemini: !!cfg.geminiApiKey },
     geminiModel: cfg.geminiModel,
     language: cfg.language,
+    data: dataUsage(db(), cfg.data.budgetBytes) satisfies DataUsage,
   };
 }
 

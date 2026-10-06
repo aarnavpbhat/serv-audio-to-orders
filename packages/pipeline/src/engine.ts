@@ -1,6 +1,8 @@
 /** Wires config, catalog, providers, store and webhook into one object the CLI and the web app share. */
 import path from "node:path";
 import { anyPlaceholders, getConfig, type SandboxConfig } from "@serv/config";
+import { LocalBlobStore } from "./data/blob-store";
+import { DataStore } from "./data/store";
 import { FuzzyExtractor } from "./extract/fuzzy-extractor";
 import { GeminiClient, GeminiExtractor, GeminiJudge } from "./extract/gemini";
 import { OracleExtractor } from "./extract/oracle";
@@ -41,6 +43,8 @@ export interface Engine {
   judge: BoundaryJudge | null;
   gemini: GeminiClient | null;
   deliverer: Deliverer;
+  /** Long-term data store: blobs under DATA_DIR/blobs, catalog in SQLite. */
+  data: DataStore;
   placeholders: boolean;
   log: (msg: string) => void;
 }
@@ -104,5 +108,10 @@ export function createEngine(opts: EngineOptions = {}): Engine {
     },
     { log },
   );
-  return { cfg, catalog, matcher, db, transcriber, streaming, extractor, judge, gemini, deliverer, placeholders: anyPlaceholders(cfg), log };
+  const data = new DataStore(db, new LocalBlobStore(path.join(cfg.paths.dataDir, "blobs")), {
+    pipelineVersion: cfg.pipelineVersion,
+    budgetBytes: cfg.data.budgetBytes,
+    retention: cfg.data.retention,
+  });
+  return { cfg, catalog, matcher, db, transcriber, streaming, extractor, judge, gemini, deliverer, data, placeholders: anyPlaceholders(cfg), log };
 }

@@ -5,6 +5,8 @@
  * the network path, auth, raw capture and decoders end to end.
  */
 import WebSocket from "ws";
+import { readRawSession } from "../data/raw-sink";
+import type { DataStore } from "../data/store";
 import { sleep as realSleep } from "../lib/retry";
 import { encodeForWire } from "./encoders";
 import { FileReplaySource, type ReplayOptions } from "./file-replay";
@@ -142,4 +144,41 @@ async function closeSocket(ws: WebSocket): Promise<void> {
     ws.close(1000, "replay done");
     setTimeout(resolve, 3000).unref?.();
   });
+}
+
+export interface RawReplayOptions {
+  url: string;
+  token?: string;
+  ticket?: () => string | Promise<string>;
+  /** "max" (default) or a multiple of the original pace (1 = as received). */
+  speed?: number | "max";
+}
+
+/**
+ * Replay a captured session byte for byte: same declared format, same
+ * messages in the same order (binary stays binary, text stays text).
+ */
+export async function replayRawOverWs(data: DataStore, sessionId: string, opts: RawReplayOptions): Promise<WsReplayResult & { incomplete: boolean }> {
+  const { manifest, messages, incomplete } = await readRawSession(data, sessionId);
+  const f = manifest.format;
+  const q = new URLSearchParams({ lane: manifest.lane_id, codec: f.codec, rate: String(f.sampleRate), channels: String(f.channels), ...(f.roles ? { roles: f.roles.join(",") } : {}) });
+  const headers: Record<string, string> = {};
+  if (opts.ticket) q.set("ticket", await opts.ticket());
+  else if (opts.token) headers.authorization = `Bearer ${opts.token}`;
+  const result: WsReplayResult = { sessions: 1, messages: 0, bytes: 0, closes: [] };
+  const ws = await open(`${opts.url.replace(/\/$/, "")}/hme/v1/stream?${q}`, headers, result);
+  const speed = opts.speed ?? "max";
+  const t0 = Date.parse(messages[0]?.receivedAt ?? manifest.opened_at);
+  const wallStart = Date.now();
+  for (const m of messages) {
+    if (speed !== "max") {
+      const wait = wallStart + (Date.parse(m.receivedAt) - t0) / speed - Date.now();
+      if (wait > 0) await realSleep(wait);
+    } else if (ws.bufferedAmount > 256 * 1024) await realSleep(5);
+    ws.send(m.kind === "binary" ? m.bytes : new TextDecoder().decode(m.bytes), { binary: m.kind === "binary" });
+    result.messages++;
+    result.bytes += m.bytes.length;
+  }
+  await closeSocket(ws);
+  return { ...result, incomplete };
 }

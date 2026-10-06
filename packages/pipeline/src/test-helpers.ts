@@ -1,3 +1,5 @@
+import { mkdtempSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { getConfig } from "@serv/config";
 import type { Engine } from "./engine";
@@ -6,6 +8,8 @@ import { openDb } from "./store/db";
 import { ScriptStreamingTranscriber } from "./lane/script-transcriber";
 import { ScriptTranscriber } from "./transcribe/script";
 import { Deliverer } from "./webhook/deliver";
+import { LocalBlobStore } from "./data/blob-store";
+import { DataStore, type DataStoreOptions } from "./data/store";
 import { loadCatalog } from "./menu/load";
 import { FuzzyMatcher } from "./menu/fuzzy";
 import { sequentialIds } from "./lib/ids";
@@ -67,10 +71,13 @@ export function seg(overrides: Partial<SegmentContext> = {}): SegmentContext {
   };
 }
 
-/** A free, offline engine: oracle extractor, no LLM judge, in-memory store, delivery to nowhere. */
-export function testEngine(): Engine {
+/** A free, offline engine: oracle extractor, no LLM judge, its own temp database and blobs, delivery to nowhere. */
+export function testEngine(data: Partial<DataStoreOptions> = {}): Engine {
   const cfg = getConfig();
-  const db = openDb(":memory:");
+  // A private database and blob root per engine (openDb shares one handle per path, ":memory:" included).
+  const dir = mkdtempSync(path.join(os.tmpdir(), "serv-data-"));
+  const db = openDb(path.join(dir, "test.db"));
+  const blobs = new LocalBlobStore(path.join(dir, "blobs"));
   return {
     cfg,
     catalog,
@@ -82,6 +89,7 @@ export function testEngine(): Engine {
     judge: null,
     gemini: null,
     deliverer: new Deliverer(db, { url: "http://127.0.0.1:9/unused", secret: "whsec_dGVzdC1zZWNyZXQtMTIzNDU2Nzg=", timeoutMs: 100, fastScheduleS: [], slowScheduleS: [], userAgent: "test" }),
+    data: new DataStore(db, blobs, { pipelineVersion: "test", budgetBytes: 50 * 1024 ** 3, retention: "keep_all", ...data }),
     placeholders: false,
     log: () => {},
   };

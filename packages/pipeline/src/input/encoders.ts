@@ -55,3 +55,10 @@ export async function decodeFileCanonical(file: string, channels: number): Promi
   for (let i = 0; i < n; i++) for (let c = 0; c < channels; c++) (out[c] as Int16Array)[i] = all[i * channels + c] ?? 0;
   return out;
 }
+
+/** Canonical PCM -> FLAC (lossless; the per-order audio archive). */
+export async function encodeFlac(pcm: Int16Array[]): Promise<Uint8Array> {
+  const raw = Buffer.from(int16ToS16le(interleave(pcm)));
+  const { stdout } = await ffmpeg(["-f", "s16le", "-ar", String(CANONICAL_RATE), "-ac", String(pcm.length), "-i", "pipe:0", "-c:a", "flac", "-f", "flac", "pipe:1"], raw);
+  return new Uint8Array(stdout);
+}

@@ -60,6 +60,13 @@ export interface SandboxConfig {
     /** URL clients use to reach the endpoint (the simulator, replays over ws). */
     publicUrl: string;
   };
+  /** Long-term data store (raw capture, audio, ASR and LLM responses, events, labels). */
+  data: {
+    /** DATA_DISK_BUDGET_GB in bytes: warn at 80%, pause raw capture and audio archiving at 95%. */
+    budgetBytes: number;
+    /** keep_all: nothing is deleted on a schedule (pnpm data prune and delete are manual). */
+    retention: "keep_all";
+  };
   /** Dev-only routes (simulator, mock receiver, review screen, ingest tickets); never in production. */
   enableDevRoutes: boolean;
   /** Close an idle Deepgram live connection after this many seconds of pause (reopened on resume). */
@@ -151,6 +158,11 @@ export function parseChannelMap(raw: string | null): Record<number, "crew" | "cu
 }
 
 /** Dev secret is generated once and stored in .data so the sender and the mock receiver agree. */
+function retentionPolicy(v: string | null): "keep_all" {
+  if (v === null || v === "keep_all") return "keep_all";
+  throw new Error(`RETENTION_POLICY=${v} is not supported; the sandbox only has keep_all`);
+}
+
 function devWebhookSecret(dataDir: string): string {
   const file = path.join(dataDir, "dev-webhook-secret");
   if (existsSync(file)) return readFileSync(file, "utf8").trim();
@@ -278,6 +290,10 @@ export function getConfig(): SandboxConfig {
       tlsCert: env("INGEST_TLS_CERT"),
       tlsKey: env("INGEST_TLS_KEY"),
       publicUrl: env("INGEST_URL") ?? `ws://127.0.0.1:${num("INGEST_PORT", 8787)}`,
+    },
+    data: {
+      budgetBytes: num("DATA_DISK_BUDGET_GB", 50) * 1024 ** 3,
+      retention: retentionPolicy(env("RETENTION_POLICY")),
     },
     enableDevRoutes: env("ENABLE_DEV_ROUTES") === "true",
     lowConfWord: 0.6,

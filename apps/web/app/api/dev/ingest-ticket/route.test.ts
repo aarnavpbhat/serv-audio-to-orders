@@ -32,6 +32,11 @@ describe("POST /api/dev/ingest-ticket", () => {
     expect(issueTicket).not.toHaveBeenCalled();
   });
 
+  it("only accepts JSON (no cross-site form posts)", async () => {
+    expect((await call({ store: "s", lane: "l" }, "localhost:3000", { "content-type": "text/plain" })).status).toBe(400);
+    expect((await call({ store: "s", lane: "l" }, "localhost:3000", { "content-type": "application/x-www-form-urlencoded" })).status).toBe(400);
+  });
+
   it("rejects ids that are not safe", async () => {
     expect((await call({ store: "../x", lane: "lane_1" })).status).toBe(400);
   });
