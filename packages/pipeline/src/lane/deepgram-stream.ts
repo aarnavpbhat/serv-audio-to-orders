@@ -13,6 +13,7 @@
  *   recorded so results map back to session time (and then recording time).
  */
 import { DeepgramClient } from "@deepgram/sdk";
+import { z } from "zod";
 import { sleep } from "../lib/retry";
 import { CANONICAL_RATE, type AudioFrame, type StreamSession } from "../input/types";
 import { int16ToS16le, interleave, mixdown } from "../input/pcm";
@@ -24,7 +25,7 @@ export const DEEPGRAM_LIVE_MODEL = "nova-3";
 /** The parts of the SDK's live socket this adapter uses (a fake implements it in tests). */
 export interface LiveSocket {
   on(event: "open", cb: () => void): void;
-  on(event: "message", cb: (m: LiveMessage) => void): void;
+  on(event: "message", cb: (m: unknown) => void): void;
   on(event: "close", cb: (e: { code?: number; reason?: string }) => void): void;
   on(event: "error", cb: (e: Error) => void): void;
   connect(): unknown;
@@ -51,6 +52,25 @@ export type LiveMessage =
   | { type: "UtteranceEnd"; channel: number[]; last_word_end: number }
   | { type: "SpeechStarted"; channel: number[]; timestamp: number }
   | { type: "Metadata"; [k: string]: unknown };
+
+const Num = z.number().finite();
+const IntList = z.array(z.number().int().nonnegative());
+const LiveWordSchema = z.looseObject({ word: z.string(), start: Num, end: Num, confidence: Num, punctuated_word: z.string().optional(), speaker: z.number().int().optional(), language: z.string().optional() });
+/** Deepgram messages are external input: anything that does not match the shapes we read is dropped. */
+const LiveMessageSchema = z.discriminatedUnion("type", [
+  z.looseObject({
+    type: z.literal("Results"),
+    channel_index: IntList,
+    start: Num,
+    duration: Num,
+    is_final: z.boolean().optional(),
+    speech_final: z.boolean().optional(),
+    channel: z.looseObject({ alternatives: z.array(z.looseObject({ transcript: z.string(), confidence: Num, words: z.array(LiveWordSchema) })) }),
+  }),
+  z.looseObject({ type: z.literal("UtteranceEnd"), channel: IntList, last_word_end: Num }),
+  z.looseObject({ type: z.literal("SpeechStarted"), channel: IntList, timestamp: Num }),
+  z.looseObject({ type: z.literal("Metadata") }),
+]);
 
 export type SocketFactory = (params: Record<string, string | string[]>) => Promise<LiveSocket>;
 
@@ -121,6 +141,8 @@ class DeepgramStream implements TranscriptStream {
   /** Every message on the current connection, handed to handlers.raw when it closes (data store). */
   private connection = 0;
   private rawMessages: unknown[] = [];
+  /** Message types already reported as malformed (logged once each). */
+  private readonly unknownTypes = new Set<string>();
 
   constructor(
     private readonly session: StreamSession,
@@ -254,8 +276,18 @@ class DeepgramStream implements TranscriptStream {
     return (mark.sessionSample + (sample - mark.dgSample)) / CANONICAL_RATE;
   }
 
-  private onMessage(m: LiveMessage): void {
-    if (this.handlers.raw) this.rawMessages.push(m);
+  private onMessage(msg: unknown): void {
+    if (this.handlers.raw) this.rawMessages.push(msg);
+    const parsed = LiveMessageSchema.safeParse(msg);
+    if (!parsed.success) {
+      const type = typeof msg === "object" && msg !== null && "type" in msg ? String((msg as { type: unknown }).type) : typeof msg;
+      if (!this.unknownTypes.has(type)) {
+        this.unknownTypes.add(type);
+        this.opts.log?.(`deepgram: ignored a ${type} message that did not match the expected shape`);
+      }
+      return;
+    }
+    const m = parsed.data as LiveMessage;
     if (m.type === "SpeechStarted") {
       for (const ch of m.channel.slice(0, 1)) if (!this.inProgress.has(ch)) this.inProgress.set(ch, this.toSession(m.timestamp));
       return;

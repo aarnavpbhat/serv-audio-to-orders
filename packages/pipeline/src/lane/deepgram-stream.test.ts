@@ -112,6 +112,20 @@ describe("Deepgram live adapter", () => {
     expect(stream.watermarkS()).toBe(Number.POSITIVE_INFINITY);
   });
 
+  it("drops messages that do not match the shapes it reads", async () => {
+    const { sockets, stream, utts, interim } = setup();
+    stream.push(frame(0, 3));
+    await tick();
+    const s = sockets[0] as FakeSocket;
+    const bad = { type: "Results", channel_index: [0], start: "0", duration: 1, is_final: true, speech_final: true, channel: { alternatives: [{ transcript: "x", words: "nope" }] } };
+    s.fire(bad as unknown as LiveMessage);
+    s.fire("not json" as unknown as LiveMessage);
+    expect(utts).toHaveLength(0);
+    expect(interim).toHaveLength(0);
+    s.fire(results([word("Hi.", 0.5)], true, true));
+    expect(utts.map((u) => u.text)).toEqual(["Hi."]);
+  });
+
   it("the watermark waits for audio Deepgram has not processed yet", async () => {
     const { sockets, stream } = setup();
     stream.push(frame(0, 10));

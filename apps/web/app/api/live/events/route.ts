@@ -6,6 +6,7 @@
  */
 import { liveAfter, liveRecent, type LiveEvent } from "@serv/pipeline";
 import { db } from "@/lib/data";
+import { isLocalRequest } from "@/lib/dev-routes";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -19,6 +20,8 @@ function frame(r: LiveEvent): string {
 }
 
 export function GET(req: Request): Response {
+  // Live transcripts: answer only requests addressed to a local host (a DNS-rebinding page gets 404).
+  if (!isLocalRequest(req)) return new Response("Not found", { status: 404 });
   const url = new URL(req.url);
   const raw = req.headers.get("last-event-id") ?? url.searchParams.get("after");
   const resumeFrom = raw !== null && /^\d{1,15}$/.test(raw) ? Number(raw) : null;

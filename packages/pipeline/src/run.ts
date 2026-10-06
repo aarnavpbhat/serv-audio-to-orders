@@ -47,7 +47,7 @@ export interface RunResult {
   timings: Record<string, number>;
 }
 
-export type Stage = "ingest" | "transcribe" | "segment" | "extract" | "deliver" | "done";
+export type Stage = "ingest" | "transcribe" | "extract" | "deliver" | "done";
 
 export async function runPipeline(engine: Engine, file: string, opts: RunOptions = {}, onStage?: (s: Stage) => void): Promise<RunResult> {
   const { cfg } = engine;
