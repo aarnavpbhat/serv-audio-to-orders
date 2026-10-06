@@ -1,9 +1,9 @@
 import path from "node:path";
-import { loadCatalog } from "../src/menu/load";
-import { FuzzyMatcher } from "../src/menu/fuzzy";
-import { sequentialIds } from "../src/lib/ids";
-import type { PostprocessOptions, SegmentContext } from "../src/postprocess/postprocess";
-import { OrderEvent, type OrderEventInput } from "../src/schemas";
+import { loadCatalog } from "./menu/load";
+import { FuzzyMatcher } from "./menu/fuzzy";
+import { sequentialIds } from "./lib/ids";
+import type { PostprocessOptions, SegmentContext } from "./postprocess/postprocess";
+import { OrderEvent, type OrderEventInput } from "./schemas";
 
 export const repoRoot = path.resolve(import.meta.dirname, "../../..");
 export const catalog = loadCatalog(path.join(repoRoot, "menu/menu.json"));

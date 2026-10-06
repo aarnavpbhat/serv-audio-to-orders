@@ -1,4 +1,3 @@
-/// <reference path="../types/ffprobe-static.d.ts" />
 import { spawn } from "node:child_process";
 import ffmpegStatic from "ffmpeg-static";
 import ffprobeStatic from "ffprobe-static";

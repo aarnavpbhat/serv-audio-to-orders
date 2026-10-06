@@ -4,13 +4,13 @@
  */
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { replay } from "../src/build/replay";
-import { compareOrders, passed } from "../src/eval/compare";
-import { loadFixtureScripts } from "../src/fixtures/load";
-import { postprocess } from "../src/postprocess/postprocess";
-import { END_CUES, matchesAny } from "../src/segment/cues";
-import type { FixtureScript } from "../src/schemas";
-import { catalog, ppOptions, repoRoot, seg } from "./helpers";
+import { replay } from "../build/replay";
+import { compareOrders, passed } from "../eval/compare";
+import { loadFixtureScripts } from "../fixtures/load";
+import { postprocess } from "../postprocess/postprocess";
+import { END_CUES, matchesAny } from "../segment/cues";
+import type { FixtureScript } from "../schemas";
+import { catalog, ppOptions, repoRoot, seg } from "../test-helpers";
 
 const scripts = loadFixtureScripts(path.join(repoRoot, "fixtures/scripts"));
 const uIndex = (id: string) => Number(id.slice(1));

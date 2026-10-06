@@ -1,38 +1,52 @@
+import { Badge as UiBadge } from "@/components/ui/Badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/Tooltip";
+import { cn } from "@/lib/utils";
+
+const GOOD = "bg-emerald-500/12 text-emerald-700 dark:text-emerald-400";
+const BUSY = "bg-sky-500/12 text-sky-700 dark:text-sky-400";
+const BAD = "bg-rose-500/12 text-rose-700 dark:text-rose-400";
+const IDLE = "bg-muted text-muted-foreground";
+
 const TONES: Record<string, string> = {
-  completed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  delivered: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  pass: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  needs_review: "bg-amber-50 text-amber-800 ring-amber-200",
-  pending: "bg-sky-50 text-sky-700 ring-sky-200",
-  running: "bg-sky-50 text-sky-700 ring-sky-200",
-  queued: "bg-slate-50 text-slate-600 ring-slate-200",
-  delivering: "bg-sky-50 text-sky-700 ring-sky-200",
-  cancelled: "bg-slate-100 text-slate-600 ring-slate-200",
-  abandoned: "bg-orange-50 text-orange-700 ring-orange-200",
-  incomplete: "bg-violet-50 text-violet-700 ring-violet-200",
-  failed: "bg-rose-50 text-rose-700 ring-rose-200",
-  dead: "bg-rose-50 text-rose-700 ring-rose-200",
-  fail: "bg-rose-50 text-rose-700 ring-rose-200",
+  completed: GOOD,
+  delivered: GOOD,
+  pass: GOOD,
+  needs_review: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+  pending: BUSY,
+  running: BUSY,
+  delivering: BUSY,
+  queued: IDLE,
+  cancelled: IDLE,
+  abandoned: "bg-orange-500/12 text-orange-700 dark:text-orange-400",
+  incomplete: "bg-violet-500/12 text-violet-700 dark:text-violet-400",
+  failed: BAD,
+  dead: BAD,
+  fail: BAD,
 };
 
+/** Status pill: a shadcn Badge tinted by status. */
 export function Badge({ value, label }: { value: string; label?: string }) {
-  return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${TONES[value] ?? "bg-slate-50 text-slate-700 ring-slate-200"}`}>
-      {label ?? value.replace(/_/g, " ")}
-    </span>
-  );
+  return <UiBadge className={cn("h-auto text-[11px] font-semibold capitalize", TONES[value] ?? IDLE)}>{label ?? value.replace(/_/g, " ")}</UiBadge>;
 }
 
 export function Flag({ value }: { value: string }) {
-  const tone = value === "placeholder_values" ? "bg-yellow-50 text-yellow-800 ring-yellow-300" : value.includes("mismatch") || value.includes("missing") ? "bg-rose-50 text-rose-700 ring-rose-200" : "bg-slate-50 text-slate-700 ring-slate-200";
-  return <span className={`inline-flex rounded-md px-1.5 py-0.5 font-mono text-[11px] ring-1 ring-inset ${tone}`}>{value}</span>;
+  const tone =
+    value === "placeholder_values"
+      ? "bg-yellow-400/20 text-yellow-800 dark:text-yellow-300"
+      : value.includes("mismatch") || value.includes("missing")
+        ? BAD
+        : IDLE;
+  return <UiBadge className={cn("h-auto rounded px-1.5 font-mono text-[10.5px] font-normal", tone)}>{value}</UiBadge>;
 }
 
 /** Yellow badge for any value that is still a sandbox default rather than a real Serv value. */
 export function Placeholder({ note }: { note?: string }) {
+  const badge = <UiBadge className="h-auto bg-yellow-400/20 px-1.5 py-px text-[10px] font-semibold text-yellow-800 dark:text-yellow-300">Placeholder</UiBadge>;
+  if (!note) return badge;
   return (
-    <span title={note} className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-[11px] font-semibold text-yellow-800 ring-1 ring-inset ring-yellow-300">
-      Placeholder
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>{badge}</TooltipTrigger>
+      <TooltipContent className="max-w-xs">{note}</TooltipContent>
+    </Tooltip>
   );
 }

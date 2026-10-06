@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { validateEvents } from "../src/extract/validate";
-import { snrDb } from "../src/ingest/probe";
-import { diarizationCollapsed, inferTurnRoles } from "../src/transcribe/roles";
-import { catalog, matcher } from "./helpers";
+import { validateEvents } from "../extract/validate";
+import { snrDb } from "../ingest/probe";
+import { diarizationCollapsed, inferTurnRoles } from "../transcribe/roles";
+import { catalog, matcher } from "../test-helpers";
 
 const lines = (texts: string[]) => texts.map((text, i) => ({ text, start_s: i * 3, end_s: i * 3 + 2 }));
 

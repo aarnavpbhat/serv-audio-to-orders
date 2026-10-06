@@ -2,11 +2,11 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { getMockSettings, listMockInbox, openDb, setMockSettings, type DB } from "../src/store/db";
-import { Deliverer, parseRetryAfter, type DeliveryConfig } from "../src/webhook/deliver";
-import { handleMockWebhook } from "../src/webhook/mock-receiver";
-import { generateSecret, sign, signedHeaders, verify } from "../src/webhook/signing";
-import type { OrderPayload } from "../src/schemas";
+import { getMockSettings, listMockInbox, openDb, setMockSettings, type DB } from "../store/db";
+import { Deliverer, parseRetryAfter, type DeliveryConfig } from "../webhook/deliver";
+import { handleMockWebhook } from "../webhook/mock-receiver";
+import { generateSecret, sign, signedHeaders, verify } from "../webhook/signing";
+import type { OrderPayload } from "../schemas";
 
 const secret = generateSecret();
 let db: DB;

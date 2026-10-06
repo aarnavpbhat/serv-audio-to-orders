@@ -3,11 +3,11 @@ import { readdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { getConfig } from "@serv/config";
-import { ingest } from "../src/ingest/ingest";
-import { segmentTranscript, type SegmentConfig } from "../src/segment/segment";
-import { ScriptTranscriber, loadTimeline } from "../src/transcribe/script";
-import type { TranscribeOptions } from "../src/transcribe/types";
-import { repoRoot } from "./helpers";
+import { ingest } from "../ingest/ingest";
+import { segmentTranscript, type SegmentConfig } from "../segment/segment";
+import { ScriptTranscriber, loadTimeline } from "../transcribe/script";
+import type { TranscribeOptions } from "../transcribe/types";
+import { repoRoot } from "../test-helpers";
 
 const cfg = getConfig();
 const segCfg: SegmentConfig = { ...cfg.segment, lowAudioQualityMeanConf: cfg.lowAudioQualityMeanConf };

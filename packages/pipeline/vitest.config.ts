@@ -1,3 +1,15 @@
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({ test: { include: ["test/**/*.test.ts"], testTimeout: 20_000 } });
+// Gone standard Vitest config (gone-standards patterns/testing): node environment,
+// tests colocated with source as *.test.ts, explicit imports (no globals).
+export default defineConfig({
+  test: {
+    environment: "node",
+    include: ["src/**/*.{test,spec}.ts"],
+    exclude: ["node_modules/**", "dist/**"],
+    globals: false,
+    restoreMocks: true,
+    clearMocks: true,
+    testTimeout: 20_000,
+  },
+});

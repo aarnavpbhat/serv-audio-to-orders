@@ -83,7 +83,6 @@ function describe(
   isLast: boolean,
   nextStart: number,
   duration: number,
-  cfg: SegmentConfig,
 ): Segment {
   const first = utts[0] as Utterance;
   const last = utts[utts.length - 1] as Utterance;
@@ -175,13 +174,13 @@ export async function segmentTranscript(
     const chunk = utts.slice((edges[k] ?? -1) + 1, (edges[k + 1] ?? 0) + 1);
     if (!chunk.length) continue;
     const next = utts[(edges[k + 1] ?? 0) + 1];
-    segments.push(describe(chunk, segments.length, k === 0, k === edges.length - 2, next?.start_s ?? duration, duration, cfg));
+    segments.push(describe(chunk, segments.length, k === 0, k === edges.length - 2, next?.start_s ?? duration, duration));
   }
   // A segment of only crew chatter or a lone crew line is noise, not a car: merge it into its neighbour.
-  return { segments: mergeEmpty(segments, utts, duration, cfg), boundaries, llm_calls: llmCalls };
+  return { segments: mergeEmpty(segments, utts, duration), boundaries, llm_calls: llmCalls };
 }
 
-function mergeEmpty(segments: Segment[], utts: Utterance[], duration: number, cfg: SegmentConfig): Segment[] {
+function mergeEmpty(segments: Segment[], utts: Utterance[], duration: number): Segment[] {
   const byId = new Map(utts.map((u) => [u.id, u]));
   const out: Segment[] = [];
   for (const s of segments) {
@@ -190,7 +189,7 @@ function mergeEmpty(segments: Segment[], utts: Utterance[], duration: number, cf
     if (!hasCustomer && prev) {
       const merged = [...prev.utterance_ids, ...s.utterance_ids].map((id) => byId.get(id) as Utterance);
       const after = utts[utts.indexOf(merged[merged.length - 1] as Utterance) + 1];
-      out[out.length - 1] = describe(merged, prev.index, prev.index === 0, s === segments[segments.length - 1], after?.start_s ?? duration, duration, cfg);
+      out[out.length - 1] = describe(merged, prev.index, prev.index === 0, s === segments[segments.length - 1], after?.start_s ?? duration, duration);
       continue;
     }
     out.push(s);

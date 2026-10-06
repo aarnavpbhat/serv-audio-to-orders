@@ -1,10 +1,10 @@
 import { readFileSync, statSync } from "node:fs";
 import { runAudioPath } from "@/lib/data";
+import { assertFound, wrapAsync } from "@/lib/error-handler";
 
-export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
+export const GET = wrapAsync(async (req: Request, ctx: { params: Promise<{ id: string }> }) => {
   const { id } = await ctx.params;
-  const file = runAudioPath(id);
-  if (!file) return new Response("not found", { status: 404 });
+  const file = assertFound(runAudioPath(id), "Run audio");
   const size = statSync(file).size;
   const range = /bytes=(\d*)-(\d*)/.exec(req.headers.get("range") ?? "");
   const buf = readFileSync(file);
@@ -17,4 +17,4 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     });
   }
   return new Response(buf, { headers: { "content-type": "audio/mpeg", "accept-ranges": "bytes", "content-length": String(size) } });
-}
+});

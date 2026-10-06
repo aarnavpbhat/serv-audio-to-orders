@@ -13,12 +13,12 @@ MP3 -> ingest -> transcribe -> segment -> extract -> replay -> post-process -> w
 
 ## Setup
 
-Requirements: Node 20.12+, pnpm 9, macOS (for regenerating fixture audio with the built-in `say` voices; everything else is cross-platform).
+Requirements: Node 22+ (`.nvmrc`), pnpm 9, macOS (for regenerating fixture audio with the built-in `say` voices; everything else is cross-platform).
 
 ```bash
 pnpm install
 cp .env.example .env        # add DEEPGRAM_API_KEY and GEMINI_API_KEY
-pnpm test                   # 74 unit tests, no API calls
+pnpm test                   # 107 unit and route tests, no API calls
 ```
 
 Both providers have free tiers: Deepgram gives $200 of credit (console.deepgram.com) and Gemini has a free API tier (aistudio.google.com). Without keys, the pipeline still runs on fixture audio using the ground-truth transcriber and the keyword fallback extractor.
@@ -75,6 +75,27 @@ Useful flags: `--transcriber deepgram|script`, `--extractor gemini|fuzzy|oracle`
 | `/eval` | Latest `eval/report.json`: metrics, the edge-case checklist, per-fixture diffs |
 
 Runs execute server-side in an in-process queue; pages poll for status. The webhook retry worker runs inside the Next.js server (`instrumentation.ts`).
+
+## Code standards
+
+The repo follows the gone-standards engineering standards where they apply:
+
+```bash
+pnpm lint                   # ESLint (typescript-eslint; Next.js rules in apps/web)
+pnpm typecheck              # tsc --noEmit in every package
+pnpm test                   # Vitest, tests colocated with source as *.test.ts
+pnpm test:e2e               # Playwright golden path (free providers, no API keys)
+```
+
+`.github/workflows/ci.yml` runs all four on pull requests. The e2e test starts its own dev server on port 3100; Next.js allows one dev server per app, so if `pnpm dev` is already running, use `E2E_PORT=3000 pnpm test:e2e`.
+
+Patterns copied from gone-standards and adapted: `packages/pipeline/src/lib/retry.ts` (retry, plus a server-provided delay hint for Gemini's RetryInfo) and `apps/web/lib/error-handler.ts` (every API route returns `{ "error": { "code", "message" } }`). Gemini calls follow the LLM pattern: safety settings pinned on every call, safety blocks detected and logged, a 90 s per-request timeout, and one structured `llm_call` line per request on stderr.
+
+Deliberate deviations:
+
+- **Gemini auth uses an AI Studio API key, not Vertex with ADC.** Vertex has no free tier and needs billing, which this sandbox must never have. Revisit when moving to a paid, production setup.
+- **No Firebase Auth, Firestore, Shopify, Sentry or App Hosting.** This is a local Serv sandbox, not a Gone app; the missing authentication and monitoring are listed under Known gaps.
+- **No brand color tokens.** The UI uses its own Apple Music style palette.
 
 ## Repository layout
 
@@ -172,3 +193,14 @@ Every row of the edge-case checklist has a fixture (rows 27 and 28 are exercised
 - **Data handling:** sending audio to Deepgram and an LLM provider is assumed OK pending Serv's confirmation.
 - **Orders spanning files:** flagged as incomplete, not stitched together.
 - **Sandbox infrastructure:** SQLite and an in-process queue suit one machine; a deployment would move the outbox and worker to managed services.
+- **No held-out test set:** the same 24 fixtures guided the prompt and cue-list tuning and measured the result, and the real-provider eval was a single run. 24/24 shows the approach can work, not that it generalizes.
+- **Stereo path untested live:** every Deepgram call so far was mono with diarization. The multichannel path is unit-tested but has never been sent to Deepgram, and the stereo layout has not been evaluated (`pnpm eval --layout stereo`, about 16 Deepgram minutes).
+- **Tax:** `TAX_RATE=0`. Real spoken totals include tax, so `total_mismatch` will fire on most real orders until the rate is set per site.
+- **No authentication:** anyone who can reach the web app can start runs (spending Deepgram credit and Gemini quota), upload files, read every payload in the mock inbox and change its failure mode. Keep it on localhost.
+- **Runs lost on restart:** the run queue lives in memory. A server restart drops queued runs and leaves their rows `queued` or `running`. Webhook deliveries are safe; the outbox recovers.
+- **Serial queue:** one run at a time, and Gemini is paced at 10 requests per minute, so a recording with 60 cars needs at least 6 minutes of extraction.
+- **Retries need a running process:** slow-phase webhook retries only happen while `pnpm dev` or `pnpm pipeline worker` is running.
+- **No human-review loop:** the schema defines `order.updated` and `order_version`, but nothing produces a version 2 yet.
+- **Payload carries the transcript:** each webhook includes the conversation's transcript, which Serv may not want for size or privacy reasons.
+- **Greedy combo search:** combo opportunities are found meal by meal in menu order, so with many items the best combination can be missed.
+- **No error monitoring:** dead-lettered webhooks and failed runs show in the UI and logs only; nothing alerts.

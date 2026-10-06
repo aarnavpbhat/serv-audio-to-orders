@@ -15,8 +15,10 @@
   "scripts": {
     "cli": "tsx src/cli.ts",
     "fixtures:build": "tsx src/fixtures/build.ts",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json"
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",

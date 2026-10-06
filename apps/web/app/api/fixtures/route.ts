@@ -1,5 +1,4 @@
+import { wrapAsync } from "@/lib/error-handler";
 import { listFixtureAudio } from "@/lib/fixtures";
 
-export function GET() {
-  return Response.json(listFixtureAudio());
-}
+export const GET = wrapAsync(async () => Response.json(listFixtureAudio()));

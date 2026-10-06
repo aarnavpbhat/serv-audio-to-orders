@@ -1,10 +1,10 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { GoogleGenAI, type ThinkingLevel } from "@google/genai";
+import { GoogleGenAI, HarmBlockThreshold, HarmCategory, type GenerateContentResponse, type SafetySetting, type ThinkingLevel } from "@google/genai";
 import { z } from "zod";
 import type { FuzzyMatcher } from "../menu/fuzzy";
-import { errorStatus, isTransient, sleep, withRetry } from "../lib/retry";
+import { errorStatus, isRetryableError, sleep, withRetry } from "../lib/retry";
 import type { Utterance } from "../schemas";
 import type { BoundaryJudge } from "../segment/segment";
 import type { RoleJudge } from "../transcribe/types";
@@ -17,6 +17,53 @@ import { validateEvents } from "./validate";
 interface CallResult {
   text: string;
   usage: LlmUsage;
+}
+
+/** Per-request deadline; a hung call is retried as transient, then the caller falls back. */
+const CALL_TIMEOUT_MS = 90_000;
+
+/**
+ * Pinned on every call (gone-standards llm pattern) so a provider default change cannot
+ * silently shift what gets blocked. BLOCK_ONLY_HIGH: drive-thru orders are benign text.
+ */
+export const SAFETY_SETTINGS: SafetySetting[] = [
+  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+];
+
+/** Gemini refused on safety grounds. Not transient: never retried; callers degrade with a marker. */
+export class GeminiSafetyBlockedError extends Error {
+  constructor(
+    readonly correlationId: string,
+    readonly site: string,
+  ) {
+    super(`Gemini blocked the request on safety grounds at ${site} (correlation ${correlationId})`);
+    this.name = "GeminiSafetyBlockedError";
+  }
+}
+
+/** Every block-type finishReason, so a block is never mistaken for malformed output. */
+const BLOCK_FINISH_REASONS = new Set(["SAFETY", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "IMAGE_SAFETY"]);
+
+/** One structured line per event on stderr, so stdout stays clean for `--json` output. */
+export function logLine(severity: "INFO" | "WARNING" | "ERROR", message: string, fields: Record<string, unknown>): void {
+  process.stderr.write(`${JSON.stringify({ severity, message, ...fields })}\n`);
+}
+
+/** Throws (after one `gemini_safety_block` log line, never the prompt) when the response was blocked. */
+export function checkSafetyBlock(response: GenerateContentResponse, site: string): void {
+  const blockReason = response.promptFeedback?.blockReason;
+  const candidate = response.candidates?.[0];
+  const finishReason = candidate?.finishReason;
+  if (!blockReason && !BLOCK_FINISH_REASONS.has(finishReason ?? "")) return;
+  const categories = [...(response.promptFeedback?.safetyRatings ?? []), ...(candidate?.safetyRatings ?? [])]
+    .filter((r) => r.probability && r.probability !== "NEGLIGIBLE")
+    .map((r) => ({ category: r.category ?? "UNKNOWN", probability: r.probability }));
+  const correlationId = randomUUID();
+  logLine("WARNING", "gemini_safety_block", { event: "gemini_safety_block", correlationId, site, blockReason: blockReason ?? null, finishReason: finishReason ?? null, categories });
+  throw new GeminiSafetyBlockedError(correlationId, site);
 }
 
 /** Thrown instead of calling Gemini once the free-tier budget is spent. Callers fall back to non-LLM paths. */
@@ -125,7 +172,7 @@ export class GeminiClient {
     if (wait > 0) await sleep(wait);
   }
 
-  async json(opts: { system: string; user: string; schema?: Record<string, unknown>; history?: { role: "user" | "model"; text: string }[] }): Promise<CallResult> {
+  async json(opts: { site: string; system: string; user: string; schema?: Record<string, unknown>; history?: { role: "user" | "model"; text: string }[] }): Promise<CallResult> {
     const contents = [...(opts.history ?? []), { role: "user" as const, text: opts.user }].map((m) => ({ role: m.role, parts: [{ text: m.text }] }));
     const key = createHash("sha256")
       .update(JSON.stringify({ m: this.model, t: this.thinking, s: opts.system, c: contents, j: opts.schema ?? null }))
@@ -139,7 +186,11 @@ export class GeminiClient {
       return { text: hit.text, usage };
     }
 
-    const res = await withRetry(
+    const started = Date.now();
+    let outcome = "ok";
+    let res: GenerateContentResponse;
+    try {
+      res = await withRetry(
       async () => {
         await this.throttle();
         this.spend();
@@ -152,6 +203,8 @@ export class GeminiClient {
             thinkingConfig: { thinkingLevel: this.thinking.toUpperCase() as ThinkingLevel },
             responseMimeType: "application/json",
             ...(opts.schema ? { responseJsonSchema: opts.schema } : {}),
+            safetySettings: SAFETY_SETTINGS,
+            abortSignal: AbortSignal.timeout(CALL_TIMEOUT_MS),
           },
         }).catch((err: unknown) => {
           this.noteQuota(err);
@@ -160,14 +213,23 @@ export class GeminiClient {
       },
       {
         // Google counts failed attempts (503 included) against the daily request quota, so retry sparingly.
-        attempts: 3,
-        baseMs: 5000,
-        maxMs: 60_000,
-        retryable: (err) => !(err instanceof GeminiBudgetError) && isTransient(err),
+        maxRetries: 2,
+        initialDelay: 5000,
+        maxDelay: 60_000,
+        retryOn: (err) => !(err instanceof GeminiBudgetError) && isRetryableError(err),
         delayHint: (err) => retryDelayMs(err),
-        onRetry: (err, n, ms) => console.warn(`gemini retry ${n} in ${Math.round(ms / 1000)}s (${errorStatus(err) ?? "network"})`),
+        operationName: `gemini ${this.model} ${opts.site}`,
       },
     );
+      checkSafetyBlock(res, opts.site);
+      if (!res.text) outcome = "empty";
+    } catch (e) {
+      outcome = e instanceof GeminiSafetyBlockedError ? "safety_block" : e instanceof GeminiBudgetError ? "budget" : "error";
+      throw e;
+    } finally {
+      // ERROR only for a genuine outage; blocks and spent budget are expected and log WARNING.
+      logLine(outcome === "ok" ? "INFO" : outcome === "error" ? "ERROR" : "WARNING", "llm_call", { event: "llm_call", site: opts.site, model: this.model, latencyMs: Date.now() - started, outcome });
+    }
     const text = res.text ?? "";
     const model = res.modelVersion ?? this.model;
     this.resolvedModel = model;
@@ -222,11 +284,11 @@ export class GeminiExtractor implements Extractor {
       const history = attempt === 0 ? undefined : [{ role: "user" as const, text: user }, { role: "model" as const, text: lastText }];
       let call: CallResult;
       try {
-        call = await this.client.json({ system: SYSTEM_PROMPT, user: attempt === 0 ? user : repairPrompt(lastText, lastError), schema, ...(history ? { history } : {}) });
+        call = await this.client.json({ site: attempt === 0 ? "extract" : "extract_repair", system: SYSTEM_PROMPT, user: attempt === 0 ? user : repairPrompt(lastText, lastError), schema, ...(history ? { history } : {}) });
       } catch (e) {
         // Out of budget, or still overloaded after retries: degrade to the fuzzy extractor rather than fail the run.
-        if (!(e instanceof GeminiBudgetError) && !isTransient(e)) throw e;
-        const why = e instanceof GeminiBudgetError ? e.message : `Gemini unavailable after retries (${errorStatus(e) ?? "network"}).`;
+        if (!(e instanceof GeminiBudgetError) && !(e instanceof GeminiSafetyBlockedError) && !(e instanceof Error && isRetryableError(e))) throw e;
+        const why = e instanceof GeminiBudgetError || e instanceof GeminiSafetyBlockedError ? e.message : `Gemini unavailable after retries (${errorStatus(e) ?? "network"}).`;
         const fb = await this.fallback.extract(input);
         return { ...fb, usage, warnings: [`${why} Used fuzzy fallback; everything is in needs_review.`], raw: lastText, repaired, fallback: true };
       }
@@ -262,44 +324,48 @@ const RoleAnswer = z.object({ crew_speaker: z.string() });
 export class GeminiJudge implements BoundaryJudge, RoleJudge {
   constructor(private readonly client: GeminiClient) {}
 
-  /** Out of budget: answer null so callers keep the rule-based decision. */
+  /** Out of budget or blocked: answer null so callers keep the rule-based decision. */
   private async ask(opts: Parameters<GeminiClient["json"]>[0]): Promise<CallResult | null> {
     try {
       return await this.client.json(opts);
     } catch (e) {
-      if (e instanceof GeminiBudgetError) return null;
+      if (e instanceof GeminiBudgetError || e instanceof GeminiSafetyBlockedError) return null;
       throw e;
+    }
+  }
+
+  /** Parse a judge answer; an unusable one is logged (never silent) and the rule-based decision stands. */
+  private parse<T>(site: string, text: string, schema: z.ZodType<T>): T | null {
+    try {
+      return schema.parse(parseJson(text));
+    } catch (e) {
+      logLine("WARNING", "llm_output_unusable", { event: "llm_output_unusable", site, detail: (e as Error).message.slice(0, 200) });
+      return null;
     }
   }
 
   async isNewCustomer(before: Utterance[], after: Utterance[]): Promise<boolean> {
     const user = `${formatUtterances(before)}\n----- does a new customer start here? -----\n${formatUtterances(after)}`;
     const res = await this.ask({
+      site: "segment_boundary",
       system: BOUNDARY_PROMPT,
       user,
       schema: { type: "object", properties: { new_customer: { type: "boolean" } }, required: ["new_customer"] },
     });
     if (!res) return false;
-    try {
-      return BoundaryAnswer.parse(parseJson(res.text)).new_customer;
-    } catch {
-      return false;
-    }
+    return this.parse("segment_boundary", res.text, BoundaryAnswer)?.new_customer ?? false;
   }
 
   async pickCrew(samples: { speaker: string; lines: string[] }[]): Promise<string | null> {
     const user = samples.map((s) => `${s.speaker}:\n${s.lines.map((l) => `  - ${l}`).join("\n")}`).join("\n\n");
     const res = await this.ask({
+      site: "role_pick",
       system: ROLE_PROMPT,
       user,
       schema: { type: "object", properties: { crew_speaker: { type: "string" } }, required: ["crew_speaker"] },
     });
     if (!res) return null;
-    try {
-      const pick = RoleAnswer.parse(parseJson(res.text)).crew_speaker;
-      return samples.some((s) => s.speaker === pick) ? pick : null;
-    } catch {
-      return null;
-    }
+    const pick = this.parse("role_pick", res.text, RoleAnswer)?.crew_speaker ?? null;
+    return pick !== null && samples.some((s) => s.speaker === pick) ? pick : null;
   }
 }

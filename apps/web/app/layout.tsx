@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Sidebar } from "@/components/Sidebar";
+import { TooltipProvider } from "@/components/ui/Tooltip";
+import { settings } from "@/lib/data";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,32 +9,19 @@ export const metadata: Metadata = {
   description: "Drive-thru audio to structured orders, step by step",
 };
 
-const NAV = [
-  { href: "/", label: "Runs" },
-  { href: "/mock-webhook", label: "Mock webhook" },
-  { href: "/eval", label: "Eval" },
-];
+export const dynamic = "force-dynamic";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const s = settings();
   return (
     <html lang="en">
-      <body className="min-h-screen">
-        <header className="border-b border-line bg-white">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
-              <span className="grid h-7 w-7 place-items-center rounded-md bg-ink text-xs text-white">S</span>
-              Audio-to-Orders <span className="font-normal text-muted">sandbox</span>
-            </Link>
-            <nav className="flex gap-1 text-sm">
-              {NAV.map((n) => (
-                <Link key={n.href} href={n.href} className="rounded-md px-3 py-1.5 text-muted hover:bg-slate-100 hover:text-ink">
-                  {n.label}
-                </Link>
-              ))}
-            </nav>
+      <body className="overflow-hidden">
+        <TooltipProvider delayDuration={400}>
+          <div className="flex h-full">
+            <Sidebar keys={s.keys} geminiModel={s.geminiModel} />
+            <main className="relative min-w-0 flex-1 overflow-y-auto">{children}</main>
           </div>
-        </header>
-        <main className="mx-auto max-w-7xl px-6 py-6">{children}</main>
+        </TooltipProvider>
       </body>
     </html>
   );

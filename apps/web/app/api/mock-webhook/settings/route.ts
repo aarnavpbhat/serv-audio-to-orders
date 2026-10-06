@@ -1,11 +1,12 @@
 import { store } from "@serv/pipeline";
 import { db } from "@/lib/data";
+import { BadRequestError, wrapAsync } from "@/lib/error-handler";
 
 const MODES = new Set(["ok", "fail_500", "rate_limit_429", "timeout"]);
 
-export async function POST(req: Request) {
+export const POST = wrapAsync(async (req: Request) => {
   const body = (await req.json()) as { mode?: string; remaining?: number; retry_after_s?: number };
-  if (!body.mode || !MODES.has(body.mode)) return Response.json({ error: "mode must be ok, fail_500, rate_limit_429 or timeout" }, { status: 400 });
+  if (!body.mode || !MODES.has(body.mode)) throw new BadRequestError("mode must be ok, fail_500, rate_limit_429 or timeout");
   const settings: store.MockSettings = {
     mode: body.mode as store.MockMode,
     remaining: body.mode === "ok" ? 0 : Math.trunc(body.remaining ?? 1),
@@ -13,4 +14,4 @@ export async function POST(req: Request) {
   };
   store.setMockSettings(db(), settings);
   return Response.json(settings);
-}
+});

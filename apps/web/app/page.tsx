@@ -6,18 +6,17 @@ import { listFixtureAudio } from "@/lib/fixtures";
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q = "" } = await searchParams;
   const s = settings();
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-      <div className="space-y-6">
-        <section>
-          <h1 className="text-xl font-semibold">Runs</h1>
-          <p className="mt-1 text-sm text-muted">Upload an HME drive-thru recording or pick a generated fixture. Each conversation becomes an order and is POSTed to the webhook.</p>
-        </section>
-        <NewRunForm fixtures={listFixtureAudio()} keys={s.keys} />
-        <RunsTable />
-      </div>
+    <div className="mx-auto max-w-[1180px] space-y-10 px-8 pb-16 pt-8">
+      <header>
+        <h1 className="title-xl">{q ? `Results for "${q}"` : "Runs"}</h1>
+        <p className="mt-0.5 text-[13px] text-muted-foreground">Drive-thru audio in, structured orders out, every step visible.</p>
+      </header>
+      <NewRunForm fixtures={listFixtureAudio()} keys={s.keys} query={q} />
+      <RunsTable query={q} />
       <SettingsPanel settings={s} />
     </div>
   );
