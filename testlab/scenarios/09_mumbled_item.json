@@ -1,0 +1,62 @@
+{
+  "id": "mumbled_item",
+  "number": 9,
+  "title": "Mumbled item",
+  "checks": "An item the system cannot place is flagged for review with its closest candidates.",
+  "minutes": 1,
+  "lines": [
+    {
+      "role": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?"
+    },
+    {
+      "role": "customer",
+      "text": "Can I get a medium flurbleberry shake?"
+    },
+    {
+      "role": "crew",
+      "text": "Okay. Anything else?"
+    },
+    {
+      "role": "customer",
+      "text": "No, that's it."
+    },
+    {
+      "role": "crew",
+      "text": "Please pull forward to the window."
+    }
+  ],
+  "actions": [
+    {
+      "at": "start",
+      "do": "car_arrived"
+    },
+    {
+      "at": "end",
+      "do": "car_left"
+    }
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [],
+        "not_ordered": [],
+        "needs_review": [
+          {
+            "quantity": 1,
+            "candidates_include": [
+              "shake_straw",
+              "shake_choc",
+              "shake_van"
+            ]
+          }
+        ],
+        "flags": [],
+        "review": [
+          "unclear_items"
+        ]
+      }
+    ]
+  }
+}

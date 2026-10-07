@@ -1,0 +1,1 @@
+{ "description": "Stream paused 8 s in for 30 s, no vehicle events (row 30).", "pauses": [{ "at_s": 8, "for_s": 30 }] }

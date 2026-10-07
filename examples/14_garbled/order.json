@@ -1,0 +1,195 @@
+{
+  "segmentation": {
+    "segments": [
+      {
+        "segment_id": "seg_1",
+        "index": 0,
+        "start_s": 1.12,
+        "end_s": 19.205,
+        "utterance_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7"
+        ],
+        "non_customer_ids": [],
+        "has_greeting": true,
+        "has_closing": true,
+        "truncated_start": false,
+        "truncated_end": false,
+        "trailing_silence_s": 3,
+        "language": "en",
+        "non_english": false,
+        "mean_word_conf": 0.972,
+        "crosstalk_suspected": false
+      }
+    ],
+    "boundaries": [],
+    "llm_calls": 0
+  },
+  "orders": [
+    {
+      "order": {
+        "order_id": "ord_01M47MMSY576B8DPC59G3T3JJ3",
+        "group_id": null,
+        "segment_id": "seg_1",
+        "status": "completed",
+        "outcome_evidence": [
+          {
+            "type": "spoken_cue",
+            "kind": "closing",
+            "cue": "pull forward",
+            "utterance_id": "u7",
+            "at": "2026-10-03T18:40:18.005Z"
+          }
+        ],
+        "review": {
+          "required": true,
+          "reasons": [
+            "unclear_items"
+          ]
+        },
+        "started_s": 1.12,
+        "ended_s": 19.205,
+        "items": [
+          {
+            "line_id": "e1",
+            "catalog_id": "cheeseburger",
+            "name": "Cheeseburger",
+            "quantity": 1,
+            "size": null,
+            "modifiers": [],
+            "unit_price": 2.99,
+            "recognition_confidence": 0.91,
+            "commitment_confidence": 0.95,
+            "source_utterance_ids": [
+              "u2"
+            ]
+          }
+        ],
+        "needs_review": [
+          {
+            "line_id": "e2",
+            "catalog_id": "shake_straw",
+            "raw_text": "medium, uh, flourblberry shake",
+            "quantity": 1,
+            "size": "medium",
+            "candidates": [
+              {
+                "catalog_id": "shake_straw",
+                "score": 0.79
+              },
+              {
+                "catalog_id": "shake_choc",
+                "score": 0.79
+              },
+              {
+                "catalog_id": "shake_van",
+                "score": 0.79
+              }
+            ],
+            "recognition_confidence": 0.4,
+            "commitment_confidence": 0.9,
+            "source_utterance_ids": [
+              "u2",
+              "u3",
+              "u5"
+            ]
+          }
+        ],
+        "not_ordered": [],
+        "combo_opportunities": [],
+        "customer_declined_combo": false,
+        "flags": [
+          "placeholder_values"
+        ],
+        "totals": {
+          "computed": 2.99,
+          "spoken_by_crew": null,
+          "currency": "USD"
+        },
+        "overall_confidence": 0.66,
+        "readback_diffs": [],
+        "utterance_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6",
+          "u7"
+        ]
+      },
+      "events": [
+        {
+          "event_id": "e1",
+          "type": "ADD",
+          "target_line_ref": null,
+          "catalog_id": "cheeseburger",
+          "raw_text": "cheeseburger",
+          "quantity": 1,
+          "size": null,
+          "modifiers": [],
+          "slot": null,
+          "readback_items": null,
+          "amount": null,
+          "source_utterance_ids": [
+            "u2"
+          ],
+          "recognition_confidence": 0.91,
+          "commitment_confidence": 0.95,
+          "candidates": [],
+          "t_s": 5.52
+        },
+        {
+          "event_id": "e2",
+          "type": "ADD",
+          "target_line_ref": null,
+          "catalog_id": "shake_straw",
+          "raw_text": "medium, uh, flourblberry shake",
+          "quantity": 1,
+          "size": "medium",
+          "modifiers": [],
+          "slot": null,
+          "readback_items": null,
+          "amount": null,
+          "source_utterance_ids": [
+            "u2",
+            "u3",
+            "u5"
+          ],
+          "recognition_confidence": 0.4,
+          "commitment_confidence": 0.9,
+          "candidates": [],
+          "t_s": 13.845
+        }
+      ],
+      "build_log": [
+        {
+          "event_id": "e1",
+          "type": "ADD",
+          "t_s": 5.52,
+          "applied": true,
+          "note": "added Cheeseburger x1",
+          "line_ids": [
+            "e1"
+          ]
+        },
+        {
+          "event_id": "e2",
+          "type": "ADD",
+          "t_s": 13.845,
+          "applied": true,
+          "note": "added Strawberry Shake x1",
+          "line_ids": [
+            "e2"
+          ]
+        }
+      ],
+      "warnings": []
+    }
+  ]
+}

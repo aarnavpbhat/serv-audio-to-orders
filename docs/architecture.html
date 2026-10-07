@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Serv Audio-to-Orders: How It Works</title>
+<style>
+  @page { size: Letter; margin: 18mm 17mm 20mm 17mm;
+    @bottom-right { content: counter(page); font: 9pt -apple-system, "SF Pro Text", Helvetica, sans-serif; color: #8a8a8e; }
+    @bottom-left { content: "Serv Audio-to-Orders sandbox"; font: 9pt -apple-system, "SF Pro Text", Helvetica, sans-serif; color: #8a8a8e; }
+  }
+  @page :first { @bottom-right { content: none; } @bottom-left { content: none; } }
+  :root {
+    --ink: #1d1d1f; --muted: #5f5f66; --faint: #8a8a8e; --line: #e3e3e8; --fill: #f5f5f7;
+    --accent: #d61f35; --accent-soft: #fdecee; --blue: #0a66c2; --blue-soft: #eaf2fb;
+    --green: #1b7f3b; --green-soft: #e8f5ec; --amber: #9a6200; --amber-soft: #fff4dc;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; color: var(--ink); background: #fff;
+    font: 10.4pt/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  h1, h2, h3, h4 { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, sans-serif; line-height: 1.2; }
+  h1 { font-size: 30pt; letter-spacing: -0.02em; margin: 0 0 8px; }
+  h2 { font-size: 18pt; letter-spacing: -0.01em; margin: 0 0 10px; padding-top: 2px; }
+  h2 .num { color: var(--accent); margin-right: 8px; }
+  h3 { font-size: 12.5pt; margin: 20px 0 6px; }
+  h4 { font-size: 10.4pt; margin: 14px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-size: 8.6pt; }
+  p { margin: 0 0 8px; }
+  ul, ol { margin: 0 0 8px; padding-left: 20px; }
+  ol { padding-left: 26px; }
+  li { margin: 2px 0; }
+  code, .mono { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace; font-size: 8.9pt; }
+  code { background: var(--fill); border-radius: 4px; padding: 0 4px; }
+  pre { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 8.4pt; line-height: 1.45; background: var(--fill);
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 6px 0 10px; white-space: pre-wrap; break-inside: avoid; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 9.3pt; break-inside: auto; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 8.4pt; text-transform: uppercase; letter-spacing: 0.04em;
+    border-bottom: 1.5px solid var(--ink); padding: 5px 8px 4px 0; }
+  td { border-bottom: 1px solid var(--line); padding: 5px 8px 5px 0; vertical-align: top; }
+  tr { break-inside: avoid; }
+  .section { margin-top: 30px; }
+  .section.page { break-before: page; margin-top: 0; }
+  h2, h3, h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  .muted { color: var(--muted); }
+  .small { font-size: 9pt; }
+  .lead { font-size: 12pt; color: var(--muted); line-height: 1.5; }
+  .box { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 10px 0 12px; break-inside: avoid; background: #fff; }
+  .box.fill { background: var(--fill); border-color: var(--fill); }
+  .box.accent { background: var(--accent-soft); border-color: #f7ccd2; }
+  .box.blue { background: var(--blue-soft); border-color: #cfe0f3; }
+  .box.green { background: var(--green-soft); border-color: #cde8d5; }
+  .box.amber { background: var(--amber-soft); border-color: #f3dfb0; }
+  .box h4:first-child, .box h3:first-child { margin-top: 0; }
+  .why { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; margin: 8px 0 12px; break-inside: avoid; }
+  .why b.tag { color: var(--accent); text-transform: uppercase; font-size: 8pt; letter-spacing: 0.08em; display: block; margin-bottom: 2px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .stat { background: var(--fill); border-radius: 10px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 19pt; letter-spacing: -0.02em; font-family: -apple-system, "SF Pro Display", Helvetica, sans-serif; }
+  .stat span { font-size: 8.8pt; color: var(--muted); }
+  .pill { display: inline-block; border-radius: 99px; padding: 0 7px; font-size: 8pt; font-weight: 600; line-height: 16px; }
+  .p-high { background: var(--accent-soft); color: var(--accent); }
+  .p-med { background: var(--amber-soft); color: var(--amber); }
+  .p-low { background: var(--fill); color: var(--muted); }
+  .flow { display: flex; align-items: stretch; gap: 0; margin: 10px 0 6px; }
+  .flow .st { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 7px 6px; text-align: center; background: #fff; }
+  .flow .st b { display: block; font-size: 8.4pt; white-space: nowrap; }
+  .flow .st span { display: block; font-size: 7.6pt; color: var(--muted); line-height: 1.3; margin-top: 2px; }
+  .flow .st.llm { border-color: #cfe0f3; background: var(--blue-soft); }
+  .flow .st.code { border-color: #cde8d5; background: var(--green-soft); }
+  .flow .ar { width: 12px; display: flex; align-items: center; justify-content: center; color: var(--faint); font-size: 10pt; }
+  .legend { font-size: 8.4pt; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin: 0 4px 0 10px; }
+  .cover { height: 228mm; display: flex; flex-direction: column; }
+  .cover .kicker { color: var(--accent); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-size: 9pt; margin-top: 30mm; }
+  .cover .meta { margin-top: auto; color: var(--muted); font-size: 9.5pt; border-top: 1px solid var(--line); padding-top: 10px; }
+  .toc { columns: 2; column-gap: 24px; font-size: 10pt; margin-top: 18px; }
+  .toc div { break-inside: avoid; padding: 2px 0; }
+  .toc span { color: var(--accent); font-weight: 600; display: inline-block; width: 22px; }
+  .conv { font-size: 9.2pt; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 6px 0 10px; break-inside: avoid; }
+  .conv div { padding: 3px 10px; display: grid; grid-template-columns: 34px 74px 1fr; gap: 6px; }
+  .conv div:nth-child(even) { background: var(--fill); }
+  .conv .who-crew { color: var(--blue); font-weight: 600; }
+  .conv .who-cust { color: var(--accent); font-weight: 600; }
+  .kv { display: grid; grid-template-columns: 130px 1fr; gap: 3px 10px; font-size: 9.3pt; }
+  .kv b { color: var(--muted); font-weight: 600; }
+  .avoid { break-inside: avoid; }
+  svg text { font-family: -apple-system, "SF Pro Text", Helvetica, sans-serif; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ COVER -->
+<div class="cover">
+  <div class="kicker">Architecture and design rationale</div>
+  <h1>Serv Audio-to-Orders</h1>
+  <p class="lead">How a drive-thru recording becomes signed, structured orders: every part of the sandbox explained simply, why each decision was made, what has been proven, and what is still missing.</p>
+
+  <div class="grid3" style="margin-top:22px">
+    <div class="stat"><b>24 / 24</b><span>eval fixtures passed with real Deepgram + Gemini (34 of 34 conversations found)</span></div>
+    <div class="stat"><b>100%</b><span>item precision and recall, bucket accuracy, status and flags on that run</span></div>
+    <div class="stat"><b>$0</b><span>spent: Deepgram free credit, Gemini free tier with a hard daily cap</span></div>
+  </div>
+
+  <div class="toc">
+    <div><span>1</span>The problem in plain words</div>
+    <div><span>2</span>The core idea: the LLM proposes, code decides</div>
+    <div><span>3</span>The system at a glance</div>
+    <div><span>4</span>One order, start to finish</div>
+    <div><span>5</span>Stage by stage</div>
+    <div><span>6</span>Supporting pieces</div>
+    <div><span>7</span>The web app</div>
+    <div><span>8</span>Testing and evaluation</div>
+    <div><span>9</span>Cost and free-tier safety</div>
+    <div><span>10</span>Technology choices</div>
+    <div><span>11</span>Gaps</div>
+    <div><span>12</span>How to explain it</div>
+    <div><span>13</span>Open questions for Serv</div>
+    <div><span>A</span>Commands, glossary, payload fields</div>
+  </div>
+
+  <div class="meta">
+    Prepared October 4, 2026 from the code in <code>serv-audio-to-orders</code>. Numbers come from <code>eval/report.json</code> (generated 2026-10-04 18:45 UTC), the test suite (107 tests passing), and the run logs.
+  </div>
+</div>
+
+<!-- ============================================================ 1 -->
+<div class="section page">
+<h2><span class="num">1</span>The problem in plain words</h2>
+<p>Drive-thru restaurants record the headset audio between the crew and customers. HME is the company whose headset systems make these recordings. Serv wants to turn those recordings into <b>structured orders</b>: which car ordered what, in what size, with which changes, and whether anything was unclear.</p>
+<p>A recording is messy. One file can hold many cars back to back. Customers change their minds ("actually, make it a Sprite"), ask questions without ordering ("how big is the large?"), split the bill, or drive off. Crew members talk to each other on the same headset ("need fries on two"). There is engine noise, wind and radio.</p>
+
+<div class="box fill">
+<h4>Input and output</h4>
+<div class="kv">
+  <b>Input</b><span>One MP3 recording from a drive-thru lane (mono or stereo).</span>
+  <b>Output</b><span>One JSON order per car, sent to Serv's server as a signed HTTP request (a "webhook"), the moment that order is ready.</span>
+  <b>Also</b><span>A web app that shows every step, so a person can check the result against the audio.</span>
+</div>
+</div>
+
+<h3>What "done" meant (from the brief)</h3>
+<table>
+<tr><th style="width:62%">Requirement</th><th>Status</th></tr>
+<tr><td><code>pnpm pipeline run &lt;file.mp3&gt;</code> produces orders and delivers them to the mock webhook</td><td>Done</td></tr>
+<tr><td>At least 5 example orders saved in <code>examples/</code> (audio, transcript, order JSON, webhook payload)</td><td>Done (7 conversations, 8 orders)</td></tr>
+<tr><td><code>pnpm eval</code> reports accuracy against ground-truth orders</td><td>Done (24/24 with real providers)</td></tr>
+<tr><td>Next.js app shows a run end to end</td><td>Done (Apple Music style UI, PR #1)</td></tr>
+<tr><td>README covers setup, how to run, assumptions and known gaps</td><td>Done</td></tr>
+<tr><td>All 28 edge-case checklist rows have a fixture and pass</td><td>Done (28/28)</td></tr>
+</table>
+
+<h3>What this is, and what it is not</h3>
+<p>This is a <b>sandbox</b>: a working, testable prototype that runs on one laptop with free services. Its job is to prove the approach and to make every assumption visible. It has not yet seen a single real HME recording; all audio so far is synthetic (computer voices plus mixed-in noise). Section 11 lists exactly what would change before real use.</p>
+</div>
+
+<!-- ============================================================ 2 -->
+<div class="section">
+<h2><span class="num">2</span>The core idea: the LLM proposes, code decides</h2>
+<p class="lead">The language model never writes the final order. It only reports what happened in the conversation, as a list of small "events". Plain, deterministic code turns those events into the order.</p>
+
+<div class="grid2">
+<div class="box">
+<h4>What the model outputs</h4>
+<pre style="margin:0;background:#fff;border:0;padding:0">e1 ADD      spicy_chicken
+e2 ADD      coke, large
+e3 REPLACE  e2 -&gt; sprite
+e4 READBACK spicy_chicken, large sprite
+            total $7.88</pre>
+</div>
+<div class="box">
+<h4>What code builds from it</h4>
+<pre style="margin:0;background:#fff;border:0;padding:0">items:        Spicy Chicken Sandwich  $5.49
+              Sprite (large)          $2.39
+not_ordered:  Coke (replaced by Sprite)
+total:        $7.88 (matches the crew)
+status:       completed</pre>
+</div>
+</div>
+
+<p>There are 15 event types, each matching something people actually say at a drive-thru:</p>
+<table class="small">
+<tr><th>Event</th><th>Example phrase</th><th>Event</th><th>Example phrase</th></tr>
+<tr><td><code>ADD</code></td><td>"Can I get a #2"</td><td><code>DUPLICATE_LINE</code></td><td>"Same thing for her"</td></tr>
+<tr><td><code>REMOVE</code></td><td>"Scratch the fries"</td><td><code>DECLINE_UPSELL</code></td><td>"No, not the meal"</td></tr>
+<tr><td><code>CHANGE_QTY</code></td><td>"Make that two"</td><td><code>INQUIRE</code></td><td>"How big is the large?"</td></tr>
+<tr><td><code>CHANGE_SIZE</code></td><td>"Actually, large"</td><td><code>OUT_OF_STOCK</code></td><td>"We're out of shakes" (crew)</td></tr>
+<tr><td><code>ADD_MODIFIER</code> / <code>REMOVE_MODIFIER</code></td><td>"No pickles" / "Pickles are fine"</td><td><code>SPLIT_ORDER</code></td><td>"Can we pay separately?"</td></tr>
+<tr><td><code>REPLACE</code></td><td>"Sprite instead of Coke"</td><td><code>CANCEL_ORDER</code></td><td>"Never mind"</td></tr>
+<tr><td><code>SET_COMBO_SLOT</code></td><td>"#2 with a Sprite"</td><td><code>READBACK</code></td><td>"So that's a #2 with a Sprite" (crew)</td></tr>
+</table>
+
+<div class="why"><b class="tag">Why we built it this way</b>
+<ul>
+<li><b>Corrections become natural.</b> "Coke, actually Sprite" is just two events. The model does not have to do bookkeeping in its head, which is where language models make mistakes.</li>
+<li><b>The model cannot invent things.</b> Prices, item names and combo rules come from the menu file, not from the model. An item ID the menu does not know is caught and routed to human review.</li>
+<li><b>It is testable.</b> The function that builds orders, <code>replay(events)</code>, has no network, no clock and no randomness. Feed it the same events and you get the same order every time, so it is covered by unit tests that cost nothing to run.</li>
+<li><b>It is auditable.</b> Every order keeps its event list and a log of how each event was applied, so anyone can see why an item is or is not on the order.</li>
+<li><b>It is swappable.</b> If a better model appears, only the event extractor changes. Everything downstream stays the same.</li>
+</ul>
+</div>
+
+<h3>Two confidence scores, three buckets</h3>
+<p>Every event carries two separate scores, because there are two separate ways to be unsure:</p>
+<ul>
+<li><b>Recognition confidence:</b> are we sure <i>which</i> item was said? (Low when the audio was garbled or the word was misheard.) It can never be higher than the speech-to-text system's own confidence in those words.</li>
+<li><b>Commitment confidence:</b> are we sure the customer actually <i>ordered</i> it? (Low for "maybe a cookie... nah".)</li>
+</ul>
+<p>Those two scores sort every mention into exactly one of three buckets, so nothing the customer said is lost:</p>
+<table>
+<tr><th style="width:18%">Bucket</th><th>Rule (both thresholds 0.75 by default)</th><th style="width:34%">Meaning for Serv</th></tr>
+<tr><td><b>items</b></td><td>Recognition and commitment both high</td><td>Ordered. Make it.</td></tr>
+<tr><td><b>needs_review</b></td><td>Committed, but unsure what (includes the top 3 menu candidates)</td><td>They ordered something; a person should check.</td></tr>
+<tr><td><b>not_ordered</b></td><td>Cancelled, replaced, declined upsell, out of stock, only asked about, or hesitated</td><td>Not made, but useful signal (upsell and demand data).</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ 3 -->
+<div class="section">
+<h2><span class="num">3</span>The system at a glance</h2>
+
+<div class="flow">
+  <div class="st"><b>1 Ingest</b><span>check file, hash, measure noise</span></div><div class="ar">&#9656;</div>
+  <div class="st llm"><b>2 Transcribe</b><span>Deepgram Nova-3: words, times, speakers</span></div><div class="ar">&#9656;</div>
+  <div class="st code"><b>3 Segment</b><span>split into one conversation per car</span></div><div class="ar">&#9656;</div>
+  <div class="st llm"><b>4 Extract</b><span>Gemini lists the events</span></div><div class="ar">&#9656;</div>
+  <div class="st code"><b>5 Build</b><span>replay events into lines</span></div><div class="ar">&#9656;</div>
+  <div class="st code"><b>6 Post-process</b><span>buckets, combos, flags, status</span></div><div class="ar">&#9656;</div>
+  <div class="st code"><b>7 Deliver</b><span>signed webhook with retries</span></div>
+</div>
+<div class="legend"><i style="background:var(--blue-soft);border:1px solid #cfe0f3"></i>uses an outside AI service <i style="background:var(--green-soft);border:1px solid #cde8d5"></i>plain code, fully unit-tested <i style="background:#fff;border:1px solid var(--line)"></i>local tools (ffmpeg)</div>
+<p class="small muted" style="margin-top:6px">Stage 3 can also ask Gemini a yes/no question for gaps the rules cannot decide, and stage 2 can ask it which voice is the crew. Both are optional tie-breakers, and both fall back to rules when Gemini is unavailable.</p>
+
+<h3>How the pieces fit together</h3>
+<svg viewBox="0 0 700 270" width="100%" style="margin:4px 0 8px">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a8a8e"/></marker></defs>
+  <!-- users -->
+  <rect x="10" y="20" width="130" height="46" rx="8" fill="#f5f5f7" stroke="#e3e3e8"/>
+  <text x="75" y="40" text-anchor="middle" font-size="12" font-weight="600">Terminal (CLI)</text>
+  <text x="75" y="56" text-anchor="middle" font-size="10" fill="#5f5f66">pnpm pipeline run / eval</text>
+  <rect x="10" y="100" width="130" height="46" rx="8" fill="#f5f5f7" stroke="#e3e3e8"/>
+  <text x="75" y="120" text-anchor="middle" font-size="12" font-weight="600">Browser</text>
+  <text x="75" y="136" text-anchor="middle" font-size="10" fill="#5f5f66">localhost:3000</text>
+  <!-- web app -->
+  <rect x="180" y="92" width="150" height="62" rx="8" fill="#fff" stroke="#c9c9cf"/>
+  <text x="255" y="114" text-anchor="middle" font-size="12" font-weight="600">Next.js app</text>
+  <text x="255" y="130" text-anchor="middle" font-size="10" fill="#5f5f66">pages, API routes, run queue,</text>
+  <text x="255" y="143" text-anchor="middle" font-size="10" fill="#5f5f66">retry worker, mock webhook</text>
+  <!-- engine -->
+  <rect x="370" y="12" width="170" height="142" rx="10" fill="#e8f5ec" stroke="#cde8d5"/>
+  <text x="455" y="34" text-anchor="middle" font-size="12" font-weight="700">@serv/pipeline</text>
+  <text x="455" y="52" text-anchor="middle" font-size="10" fill="#1b7f3b">createEngine() + runPipeline()</text>
+  <text x="455" y="74" text-anchor="middle" font-size="10" fill="#5f5f66">Transcriber interface</text>
+  <text x="455" y="89" text-anchor="middle" font-size="10" fill="#5f5f66">Extractor interface</text>
+  <text x="455" y="104" text-anchor="middle" font-size="10" fill="#5f5f66">replay() and postprocess()</text>
+  <text x="455" y="119" text-anchor="middle" font-size="10" fill="#5f5f66">Deliverer (outbox + retries)</text>
+  <text x="455" y="134" text-anchor="middle" font-size="10" fill="#5f5f66">eval, fixtures</text>
+  <!-- config/menu -->
+  <rect x="370" y="180" width="80" height="44" rx="8" fill="#fff4dc" stroke="#f3dfb0"/>
+  <text x="410" y="199" text-anchor="middle" font-size="11" font-weight="600">config</text>
+  <text x="410" y="213" text-anchor="middle" font-size="9.5" fill="#5f5f66">sandbox.ts, .env</text>
+  <rect x="460" y="180" width="80" height="44" rx="8" fill="#fff4dc" stroke="#f3dfb0"/>
+  <text x="500" y="199" text-anchor="middle" font-size="11" font-weight="600">menu.json</text>
+  <text x="500" y="213" text-anchor="middle" font-size="9.5" fill="#5f5f66">27 items, 6 combos</text>
+  <!-- external -->
+  <rect x="580" y="12" width="110" height="40" rx="8" fill="#eaf2fb" stroke="#cfe0f3"/>
+  <text x="635" y="36" text-anchor="middle" font-size="11" font-weight="600">Deepgram</text>
+  <rect x="580" y="62" width="110" height="40" rx="8" fill="#eaf2fb" stroke="#cfe0f3"/>
+  <text x="635" y="86" text-anchor="middle" font-size="11" font-weight="600">Gemini</text>
+  <rect x="580" y="112" width="110" height="42" rx="8" fill="#fdecee" stroke="#f7ccd2"/>
+  <text x="635" y="130" text-anchor="middle" font-size="11" font-weight="600">Webhook URL</text>
+  <text x="635" y="144" text-anchor="middle" font-size="9.5" fill="#5f5f66">mock now, Serv later</text>
+  <rect x="580" y="180" width="110" height="44" rx="8" fill="#f5f5f7" stroke="#e3e3e8"/>
+  <text x="635" y="199" text-anchor="middle" font-size="11" font-weight="600">.data / .cache</text>
+  <text x="635" y="213" text-anchor="middle" font-size="9.5" fill="#5f5f66">SQLite, API caches</text>
+  <!-- arrows -->
+  <line x1="140" y1="43" x2="368" y2="60" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="140" y1="123" x2="178" y2="123" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="330" y1="115" x2="368" y2="105" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="540" y1="32" x2="578" y2="32" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="540" y1="82" x2="578" y2="82" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="540" y1="133" x2="578" y2="133" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="540" y1="150" x2="590" y2="178" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="420" y1="178" x2="420" y2="156" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="490" y1="178" x2="490" y2="156" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <path d="M 580 146 L 560 146 L 560 240 L 255 240 L 255 158" fill="none" stroke="#d61f35" stroke-dasharray="4 3" marker-end="url(#a)"/>
+  <text x="430" y="258" text-anchor="middle" font-size="9.5" fill="#d61f35">in the sandbox, the webhook URL points back at the app's own mock receiver</text>
+</svg>
+
+<p>The project is one repository holding two programs that share the same engine:</p>
+<ul>
+<li><b>The pipeline package</b> (<code>packages/pipeline</code>) holds all the logic. It is used directly from the terminal (<code>pnpm pipeline run</code>, <code>pnpm eval</code>).</li>
+<li><b>The web app</b> (<code>apps/web</code>) imports that same package. Its run queue calls the exact same <code>runPipeline()</code> the terminal uses, so the UI can never drift from the real behavior. The browser even runs the same <code>replay()</code> function to rebuild an order live as the audio plays.</li>
+</ul>
+
+<h3>Repository layout</h3>
+<pre>packages/pipeline/src/
+  ingest/        file checks, SHA-256 hash, noise levels, recording start time
+  transcribe/    Transcriber interface; Deepgram adapter; speaker roles; ground-truth transcriber
+  segment/       phrase cues, gap scoring, LLM tie-breaker
+  extract/       Extractor interface; Gemini adapter, prompt, schema, validation; fuzzy and oracle
+  build/         replay(events) -&gt; order state  (pure)
+  postprocess/   buckets, combo detection, flags, status  (pure)
+  webhook/       payload, Standard Webhooks signing, outbox + retries, mock receiver logic
+  store/         SQLite tables (runs, orders, outbox, attempts, mock inbox)
+  eval/          scoring, edge-case checklist, webhook self-check
+  fixtures/      synthetic audio generator
+  cli.ts         run | eval | resend | worker | examples | settings
+apps/web/        Next.js pages, API routes, /api/mock-webhook
+config/          sandbox.ts: every Serv-dependent value, with placeholder tracking
+menu/menu.json   "Sandbox Burger" catalog
+fixtures/        22 scripted conversations + 2 multi-car compilations, audio, timelines
+examples/        deliverable example orders
+eval/report.json latest eval result</pre>
+
+<div class="why"><b class="tag">Why one TypeScript monorepo</b>
+One language end to end means the order schema, the validation rules and the builder are written once and used by the CLI, the server and the browser. A pnpm workspace keeps the packages separate (logic, config, UI) while letting them import each other directly.</div>
+</div>
+
+<!-- ============================================================ 4 -->
+<div class="section">
+<h2><span class="num">4</span>One order, start to finish</h2>
+<p>This is a real run from <code>examples/04_correction</code>: the mono headset fixture, processed by real Deepgram and Gemini. It is the clearest way to explain the system to someone new.</p>
+
+<h3>Step 1 and 2: the audio becomes a transcript</h3>
+<p>Ingest checks the 25-second MP3 and hashes it. Deepgram returns words with timestamps and confidence. On this mono file, Deepgram's speaker separation heard only one voice, so the pipeline decided who was speaking from the wording itself (Section 5.2 explains why). That is why every role below is marked as a guess.</p>
+<div class="conv">
+  <div><span class="mono">u1</span><span class="who-crew">crew?</span><span>Hi. Welcome to Sandbox Burger. Go ahead whenever you're ready.</span></div>
+  <div><span class="mono">u2</span><span class="who-cust">customer?</span><span>Can I get a spicy chicken sandwich and a large Coke?</span></div>
+  <div><span class="mono">u3</span><span class="who-cust">customer?</span><span>Actually,</span></div>
+  <div><span class="mono">u4</span><span class="who-cust">customer?</span><span>make that a Sprite instead of the Coke.</span></div>
+  <div><span class="mono">u5</span><span class="who-crew">crew?</span><span>Spicy Chicken Sandwich and a large Sprite.</span></div>
+  <div><span class="mono">u6</span><span class="who-crew">crew?</span><span>Anything else?</span></div>
+  <div><span class="mono">u7</span><span class="who-cust">customer?</span><span>Nope.</span></div>
+  <div><span class="mono">u8</span><span class="who-crew">crew?</span><span>Your total is $7.88.</span></div>
+  <div><span class="mono">u9</span><span class="who-crew">crew?</span><span>See you at the window.</span></div>
+</div>
+
+<h3>Step 3: segmentation</h3>
+<p>"Welcome to" is a start cue, and "your total is" and "see you at the window" are end cues. No gap inside scores as a new car, so this is one conversation, <code>seg_1</code>, from 0.88s to 24.6s. It has a greeting and a closing, so it is neither truncated nor abandoned.</p>
+
+<h3>Step 4: Gemini proposes events</h3>
+<pre>e1  ADD       spicy_chicken             from u2   recognition 0.99  commitment 1.0
+e2  ADD       coke, size large          from u2   recognition 0.99  commitment 1.0
+e3  REPLACE   target e2 -&gt; sprite       from u4   recognition 0.90  commitment 1.0
+e4  READBACK  spicy_chicken; sprite large; amount $7.88   from u5, u8</pre>
+<p>Validation checks every ID against the menu, drops any utterance ID that does not exist, and caps recognition at Deepgram's word confidence (u4 was heard at 0.896, so e3 is capped at 0.90).</p>
+
+<h3>Step 5: replay builds the lines</h3>
+<pre>e1 ADD       applied   added Spicy Chicken Sandwich x1
+e2 ADD       applied   added Coke x1
+e3 REPLACE   applied   e2 replaced by e3          (Coke line kept, marked "replaced")
+e4 READBACK  applied   readback matches           (no readback_mismatch flag)</pre>
+<p>Note that the large size moved from the Coke to the Sprite automatically. That is a rule in code, not something the model had to remember.</p>
+
+<h3>Step 6: post-processing</h3>
+<p>Both remaining lines are above 0.75 on both scores, so they land in <code>items</code>. The Coke lands in <code>not_ordered</code> with reason <code>replaced</code> and <code>replaced_by: sprite</code>. Prices come from the menu: $5.49 + $2.39 = $7.88, which matches what the crew said, so there is no <code>total_mismatch</code>. Status is <code>completed</code>. The only flag is <code>placeholder_values</code>, which every sandbox order carries until Serv supplies real IDs and secrets.</p>
+
+<h3>Step 7: delivery</h3>
+<p>The order is written to the outbox and POSTed immediately with these headers:</p>
+<pre>webhook-id:          ord_01M443TADNRGY39TYRPRVV8ZH9_v1      (same on every retry)
+webhook-timestamp:   1791139588
+webhook-signature:   v1,9E1uULRRDQGP1S9pDFA91w3qT31G79YOHfbIr8fB4FM=
+x-delivery-attempt:  1
+user-agent:          serv-audio-orders/0.1</pre>
+<p>The mock receiver checks the signature, checks that the timestamp is less than 5 minutes old, stores the payload, and returns 200. If it had returned 500, the sender would retry with the identical body and ID, and the receiver would drop any duplicate.</p>
+</div>
+
+<!-- ============================================================ 5 -->
+<div class="section">
+<h2><span class="num">5</span>Stage by stage</h2>
+<p class="muted">Each stage below has three parts: what it does in one sentence, how it works, and why it was built that way.</p>
+
+<h3>5.1 Ingest</h3>
+<p><b>In one sentence:</b> make sure the file is real audio worth processing, and gather facts about it.</p>
+<ul>
+<li><b>Probe</b> with ffprobe: codec, sample rate, channels, duration.</li>
+<li><b>Reject</b> files that are missing, empty, corrupt, shorter than 0.5 seconds, or silent (loudest point below -60 dBFS). A rejected file still gets a failed run record with a clear reason.</li>
+<li><b>Hash</b> the file with SHA-256. The hash is the cache key for transcription, so the same file is never paid for twice.</li>
+<li><b>Measure loudness</b> every 100 ms. Later, each conversation's signal-to-noise ratio is estimated as the gap between its loud moments (speech, 90th percentile) and its quiet moments (noise floor, 10th percentile).</li>
+<li><b>Find the wall-clock start</b> of the recording: <code>AUDIO_START_UTC</code> if set, else a timestamp in the filename (<code>20261003T184000Z</code> or <code>2026-10-03_18-40-00</code>), else the file's modified time. Which one was used is recorded as <code>timestamp_source</code>.</li>
+</ul>
+<div class="why"><b class="tag">Why</b>
+Failing fast on bad input avoids wasting paid transcription minutes. Hashing makes reruns free. The loudness measurement exists because of a finding during tuning: speech-to-text confidence stays high on loud, steady noise (engine idle), so confidence alone could not flag the heavy-noise fixture. Measured SNR was about 11 dB on heavy noise, 21 to 22 dB on moderate, and 29 dB or more on clean, so the flag threshold sits at 15 dB. Wall-clock time matters because Serv will match orders to cars and payments by time.</div>
+
+<h3>5.2 Transcribe</h3>
+<p><b>In one sentence:</b> turn speech into time-stamped words, and label each line as crew or customer.</p>
+<p>The pipeline calls <b>Deepgram Nova-3</b> with punctuation, smart formatting, utterance splitting at 0.8 seconds of pause, filler words kept ("uh", "um"), and every menu item name sent as a "keyterm" so the model leans toward menu vocabulary. Words below 0.6 confidence are marked <code>low_conf</code> and carried forward. The raw response is saved under <code>.cache/&lt;hash&gt;/</code>.</p>
+<p>Deepgram returns speaker numbers, not roles. Deciding who is crew uses one of three methods, in order of preference:</p>
+<table>
+<tr><th style="width:20%">Method</th><th>When</th><th>How</th></tr>
+<tr><td><b>Channel</b></td><td>Stereo audio and <code>CHANNEL_MAP</code> is set (e.g. <code>0=customer,1=crew</code>)</td><td>Each channel is transcribed separately; the role comes from the channel. Most reliable.</td></tr>
+<tr><td><b>Diarization</b></td><td>Mono, and Deepgram hears distinct voices</td><td>The voice that greets, asks "anything else" or reads a total is crew. A voice that only says kitchen chatter is crew too. Ties go to a one-line Gemini question, then to "the first voice is the crew greeting".</td></tr>
+<tr><td><b>Wording</b></td><td>Diarization put 90% or more of the lines under one voice</td><td>Each line is scored with crew phrases ("anything else", totals, "okay, large Sprite") and customer phrases ("can I get", "that's it", "never mind"). Undecided lines follow turn-taking: a line that continues an unfinished one keeps the speaker; otherwise the speaker alternates. These lines are marked as guesses.</td></tr>
+</table>
+<div class="why"><b class="tag">Why Deepgram Nova-3</b>
+It returns word-level timestamps and confidence (needed to sync the UI and to cap recognition), supports diarization and multichannel, supports keyterm prompting for menu words, and comes with $200 of free credit. It sits behind a <code>Transcriber</code> interface, so a different provider would be one new file.</div>
+<div class="why"><b class="tag">Why role inference from wording</b>
+This was the single biggest accuracy fix. The first real-provider eval scored 12 of 24. The cause: on mono headset audio, Deepgram's diarization heard everyone as one speaker, so every line was labeled crew, and the model was told to ignore crew lines when adding items. Wording-based roles were right on 229 of 234 fixture lines (98%), against 174 of 234 (74%) from diarization. Marking these lines as guesses (<code>[customer?]</code> in the prompt) lets the model overrule a wrong label from context. Caveat: the phrase lists were tuned on these same fixtures.</div>
+<div class="why"><b class="tag">Why language "multi" (a deliberate change from the brief)</b>
+The brief said <code>language=en</code>. Nova-3's multilingual mode handles English/Spanish code-switching, still supports keyterms, and tags each word with its language, which gives the <code>non_english</code> flag without a second pass. <code>STT_LANGUAGE=en</code> switches back.</div>
+</div>
+
+<div class="section">
+<h3>5.3 Segment</h3>
+<p><b>In one sentence:</b> cut one long recording into one conversation per car.</p>
+<p>Every gap between two lines gets a score from 0 (same car) to 1 (new car):</p>
+<table>
+<tr><th style="width:44%">Signal</th><th>Effect on score</th></tr>
+<tr><td>Crew end cue before the gap ("your total is", "pull forward", "see you at the window")</td><td>+0.40 (+0.30 if a short customer "thanks" follows it)</td></tr>
+<tr><td>Crew start cue after the gap ("welcome to", "order when you're ready")</td><td>+0.45</td></tr>
+<tr><td>Silence of 8s or more (<code>SEGMENT_GAP_S</code>); 16s or more</td><td>+0.35; +0.45. Shorter pauses add a little; under 1.5s subtracts 0.15</td></tr>
+<tr><td>Restart cue ("start over", "say that again")</td><td>-0.50 (keeps the order together)</td></tr>
+</table>
+<p>A score of 0.7 or more is a boundary. Below 0.35 is the same order. In between, Gemini is asked "does a new customer start here?" with three lines on either side. No conversation may exceed 6 minutes; an overlong one is split at its best-scoring gap. Each conversation then gets its facts: greeting and closing found or not, truncated at the start or end of the file, mean word confidence, the share of non-English customer lines, possible crosstalk (overlapping speakers), and which lines are crew-to-crew chatter (excluded from extraction).</p>
+<div class="why"><b class="tag">Why rules first, LLM only for ties</b>
+Most boundaries are obvious ("see you at the window", silence, "welcome to"), and rules are free, instant and predictable. The LLM is only consulted in the gray zone, which keeps cost near zero and keeps segmentation explainable: every boundary in the UI shows its score, its signals, and whether rules, the LLM or the 6-minute cap decided it. On ground truth and on the real-provider run, segmentation found 34 of 34 conversations with no extras; mean boundary error on the real run was 0.13s at the start and 0.38s at the end.</div>
+
+<h3>5.4 Extract</h3>
+<p><b>In one sentence:</b> ask Gemini to list the events in one conversation, then check its answer.</p>
+<ul>
+<li><b>One call per conversation</b>, temperature 0, with a compact menu, the conversation's lines (IDs, roles, guessed roles marked with "?", unclear words listed), and 11 rules. Examples of rules: only the customer adds items; a crew suggestion counts only if accepted; questions are <code>INQUIRE</code>; use menu IDs only, or <code>null</code> plus the customer's words if unsure.</li>
+<li><b>Structured output:</b> Gemini must return JSON matching a schema generated from the same zod types the code uses.</li>
+<li><b>Validation in code:</b> unknown item IDs are fuzzy-matched to the menu (accepted at 0.75 similarity or above); still-unknown IDs trigger one repair request; anything left becomes a <code>needs_review</code> line with candidates. Unknown modifiers are dropped with a warning. Recognition is capped at the ASR's mean word confidence.</li>
+<li><b>Fallback:</b> if Gemini is out of budget or keeps failing, a keyword matcher runs instead and puts everything in <code>needs_review</code>. The run still completes; nothing is silently guessed.</li>
+<li><b>Safety and logging:</b> safety settings are pinned on every request, a blocked response raises a typed error (and the run degrades to the keyword fallback with a warning), each request has a 90-second deadline, and each request writes one structured <code>llm_call</code> log line.</li>
+<li><b>Cache:</b> every response is stored in <code>.cache/llm/</code>, keyed by model, prompt and input, so reruns of the same audio cost nothing.</li>
+</ul>
+<p>Three extractors exist behind the <code>Extractor</code> interface: <b>gemini</b> (the real one), <b>fuzzy</b> (keyword fallback), and <b>oracle</b> (replays the hand-written events from the fixture script; used to measure the pipeline's ceiling, see Section 8).</p>
+<div class="why"><b class="tag">Why Gemini 3.5 Flash-Lite</b>
+The brief required a free tier. Gemini's free API tier supports structured JSON output. The newer "Flash latest" model was tried first, but Google's free tier allows it only 20 requests per day, and one full eval needs about 34. Flash-Lite fits a full eval inside the free tier and reached 24/24. <code>GEMINI_MODEL</code> switches models without code changes.</div>
+<div class="why"><b class="tag">Why one call per conversation (not per line, not per file)</b>
+A per-line call cannot see that "make that two" refers to an earlier line. A whole-file call mixes cars together and grows with file length. One conversation is the natural unit: it holds all the context an order needs and nothing from other cars. It averaged about 3,000 tokens per conversation (102k tokens for 34 conversations).</div>
+<div class="why"><b class="tag">How the prompt got to 24/24</b>
+Four prompt versions, each tested on the full eval: v1 scored 12/24; v2 with wording-based roles scored 19/24; v3 scored 22/24; v4 scored 24/24. Changes included treating "?" labels as guesses, making item questions <code>INQUIRE</code> with an ID, separating "unsure what" from "unsure whether", and pointing "same thing for her" at the most recent line. Code changes in the builder and post-processing fixed the rest (split payments by spoken totals, hesitation routing, unidentified items always going to review).</div>
+</div>
+
+<div class="section">
+<h3>5.5 Build: <code>replay()</code></h3>
+<p><b>In one sentence:</b> apply the events in time order to a list of order lines, like a bank applying transactions to a balance.</p>
+<ul>
+<li>Each line is named after the event that created it, so "the line from e2" is unambiguous. If a line was replaced, references to it follow the replacement chain.</li>
+<li>Removed, replaced, cancelled and out-of-stock lines are never deleted; they are kept with a reason, so they can appear in <code>not_ordered</code>.</li>
+<li>"Two burgers, one with no pickles" splits into two lines of one, one with <code>no_pickles</code>.</li>
+<li>Combo modifiers go on the component they apply to (no pickles goes on the burger inside the meal, not on the drink).</li>
+<li>Each crew readback is compared to the order at that moment; differences raise <code>readback_mismatch</code>.</li>
+<li>"Can we pay separately?" creates a second order in the same car, sharing a <code>group_id</code>. If it is asked before anything is ordered, each spoken total closes one order.</li>
+<li>Removing something the customer only hesitated about counts as "uncommitted", not "cancelled".</li>
+</ul>
+<p>Every event produces a log entry (applied or not, and why), which the UI shows next to the order.</p>
+
+<h3>5.6 Post-process</h3>
+<p><b>In one sentence:</b> sort lines into buckets, price them, look for missed meal deals, and set flags and status.</p>
+<ul>
+<li><b>Buckets</b> as in Section 2. An item nobody could identify always goes to <code>needs_review</code>, even if the model marked low commitment, because models tend to confuse "unsure what" with "unsure whether", and a person should look either way.</li>
+<li><b>Combo opportunities:</b> if separate lines would fill every slot of a meal for less money (burger + fries + drink), the order gets a <code>combo_opportunity</code> with the savings. It is never auto-converted. If the customer explicitly declined the meal, <code>customer_declined_combo</code> is set too.</li>
+<li><b>Totals:</b> computed from menu prices (with <code>TAX_RATE</code>, currently 0) and compared to the total the crew spoke, within 5 cents.</li>
+<li><b>Status</b>, first match wins: cancelled, then incomplete (truncated audio), then abandoned (no closing), then needs_review (anything to review, or readback mismatch), then completed.</li>
+</ul>
+<table class="small">
+<tr><th>Flag</th><th>Raised when</th><th>Flag</th><th>Raised when</th></tr>
+<tr><td><code>needs_review_present</code></td><td>any needs_review line</td><td><code>truncated_start</code> / <code>_end</code></td><td>file starts or ends mid-order</td></tr>
+<tr><td><code>readback_mismatch</code></td><td>crew read back something different</td><td><code>split_order</code></td><td>separate payments in one car</td></tr>
+<tr><td><code>total_mismatch</code></td><td>spoken total differs by more than $0.05</td><td><code>non_english</code></td><td>30%+ of customer lines non-English, or the model says so</td></tr>
+<tr><td><code>missing_required_slot</code></td><td>a meal has no drink chosen</td><td><code>low_audio_quality</code></td><td>mean word confidence &lt; 0.8 or SNR &lt; 15 dB</td></tr>
+<tr><td><code>combo_opportunity</code></td><td>separate items would be cheaper as a meal</td><td><code>crosstalk_suspected</code></td><td>speakers overlap by more than 0.5s</td></tr>
+<tr><td colspan="2"></td><td><code>placeholder_values</code></td><td>any Serv setting is still a sandbox default</td></tr>
+</table>
+<div class="why"><b class="tag">Why never auto-convert to a combo</b>
+Changing what a customer ordered is a business decision, not a parsing decision. The pipeline reports the opportunity and the savings; Serv decides what to do with it.</div>
+
+<h3>5.7 Deliver</h3>
+<p><b>In one sentence:</b> send each order to Serv's server reliably, securely, and exactly once from the receiver's point of view.</p>
+<ol>
+<li><b>Outbox first.</b> The order is written to an SQLite "outbox" table before anything is sent, then sent immediately.</li>
+<li><b>Signed.</b> Headers follow the Standard Webhooks spec (the scheme used by Svix and others): an HMAC-SHA256 signature over <code>id.timestamp.body</code> with a <code>whsec_</code> secret. The implementation is verified against the spec's reference test vector.</li>
+<li><b>Success</b> is any 2xx within 10 seconds.</li>
+<li><b>Retry</b> on network errors, timeouts, 408, 429 and 5xx, honoring <code>Retry-After</code>. Other 4xx responses mean "your request is wrong", so they are marked failed with the response body.</li>
+<li><b>Fast phase</b> retries at about 1, 2, 4, 8, 16, 32 seconds (randomized "full jitter"). <b>Slow phase</b> at 5 min, 30 min, 2 h, 5 h, 10 h, 10 h. After 13 attempts over about 28 hours: dead letter, with a Resend button in the UI and <code>pnpm pipeline resend &lt;order_id&gt;</code>.</li>
+</ol>
+<div class="why"><b class="tag">Why each piece</b>
+<ul>
+<li><b>Outbox:</b> if the process crashes mid-send, the order is still on disk and the worker picks it up. Rows stuck "delivering" after a crash are reset on startup.</li>
+<li><b>Constant webhook-id:</b> retries carry the same ID and the same body, so the receiver can drop duplicates. That makes "at least once" delivery behave like "exactly once".</li>
+<li><b>Timestamp in the signature:</b> the receiver rejects anything older than 5 minutes, so a captured request cannot be replayed later.</li>
+<li><b>Standard Webhooks:</b> Serv does not need custom code to verify; any Standard Webhooks library works. For their likely AWS setup (API Gateway in front of a Lambda), only <code>WEBHOOK_URL</code> and <code>WEBHOOK_SECRET</code> change.</li>
+<li><b>Two retry phases:</b> cars move in minutes, so early retries must be fast. Real outages last hours, so later retries must be patient. Jitter stops many retries from hitting a recovering server at the same instant.</li>
+</ul></div>
+</div>
+
+<!-- ============================================================ 6 -->
+<div class="section">
+<h2><span class="num">6</span>Supporting pieces</h2>
+
+<h3>The menu catalog (<code>menu/menu.json</code>)</h3>
+<p>The single source of truth for what can be ordered: a generic chain called "Sandbox Burger" with 27 items, 6 numbered meals and 29 modifiers. Each item has an ID, name, aliases (common mishearings and nicknames), category, sizes and prices. Each meal has slots: a fixed entree, a default side that can be swapped, and a required drink. It deliberately includes an item that can run out (shakes), a free item (water), and a confusingly named item ("Sandy Fluffle") to exercise fuzzy matching.</p>
+<div class="why"><b class="tag">Why a catalog at all</b>
+Constraining the model to catalog IDs is what makes outputs checkable. Prices let the pipeline compare its total with the crew's spoken total, a cheap and strong accuracy check that needs no ground truth.</div>
+
+<h3>Configuration and placeholders (<code>config/sandbox.ts</code>)</h3>
+<p>Every value that depends on Serv lives in one file. Any value still at its sandbox default is a <b>placeholder</b>: it shows a yellow badge in the UI, is listed by <code>pnpm pipeline settings</code>, and adds the <code>placeholder_values</code> flag to every order.</p>
+<table class="small">
+<tr><th>Setting</th><th>Sandbox value</th><th>Replace when</th></tr>
+<tr><td><code>LOCATION_ID</code>, <code>LANE_ID</code></td><td><code>store_demo_001</code>, <code>lane_1</code></td><td>Serv shares site and lane IDs</td></tr>
+<tr><td><code>WEBHOOK_URL</code></td><td>the app's own <code>/api/mock-webhook</code></td><td>Serv shares an endpoint</td></tr>
+<tr><td><code>WEBHOOK_SECRET</code></td><td>generated dev secret in <code>.data/</code></td><td>Serv issues one</td></tr>
+<tr><td><code>CHANNEL_MAP</code></td><td>unset (diarization or wording)</td><td>an HME sample confirms channels</td></tr>
+<tr><td><code>AUDIO_START_UTC</code></td><td>unset (filename, then file time)</td><td>HME metadata format is known</td></tr>
+<tr><td>Menu</td><td><code>sandbox-1</code></td><td>Serv names a brand</td></tr>
+<tr><td><code>TAX_RATE</code></td><td>0</td><td>the site is known</td></tr>
+<tr><td>Bucket thresholds</td><td>0.75 / 0.75</td><td>real audio with actual orders exists</td></tr>
+</table>
+<div class="why"><b class="tag">Why</b>
+Assumptions hide in code. Putting them in one place, and making them visible on every screen and every order, means nobody can mistake a sandbox result for a production one, and the list of "things Serv must tell us" is always current.</div>
+
+<h3>Secrets</h3>
+<p>API keys and the webhook secret live only in environment variables (<code>.env</code>, which git ignores). The repo ships <code>.env.example</code> with placeholders only. The UI shows only the first 10 characters of the webhook secret.</p>
+
+<h3>Storage (<code>.data/sandbox.db</code>, SQLite)</h3>
+<table class="small">
+<tr><th style="width:18%">Table</th><th>Holds</th></tr>
+<tr><td><code>runs</code></td><td>one row per processed file: status, stage, audio info, transcript, segmentation, usage, timings, errors</td></tr>
+<tr><td><code>orders</code></td><td>each order version: payload, events, raw model output, build log</td></tr>
+<tr><td><code>outbox</code></td><td>one row per webhook to send: body, status (pending, delivering, delivered, failed, dead), next attempt time</td></tr>
+<tr><td><code>attempts</code></td><td>every HTTP attempt: time, phase, status code, latency, response body, Retry-After</td></tr>
+<tr><td><code>mock_inbox</code>, <code>mock_settings</code></td><td>what the mock receiver got, its signature check, and its failure mode</td></tr>
+</table>
+<div class="why"><b class="tag">Why SQLite</b>
+Zero setup, one file, real transactions, and fast enough for one machine. The outbox pattern needs a durable store, and SQLite gives that without running a database server. It is the first thing to replace for a deployment (Section 11).</div>
+
+<h3>Caches (<code>.cache/</code>)</h3>
+<p>Raw Deepgram responses (keyed by file hash, mode and language) and Gemini responses (keyed by model, thinking level, prompt and input). They make reruns free and reproducible, which is why the prompt could be tuned four times on a free budget. Changing the prompt changes the key, so a new prompt costs one fresh request per conversation.</p>
+</div>
+
+<!-- ============================================================ 7 -->
+<div class="section">
+<h2><span class="num">7</span>The web app</h2>
+<p>A Next.js app at <code>localhost:3000</code> that makes every step visible. Started with <code>pnpm dev</code>.</p>
+<table>
+<tr><th style="width:18%">Page</th><th>What it shows</th></tr>
+<tr><td><b>Runs</b> <code>/</code></td><td>A shelf of fixture "albums" to pick from (or upload an MP3), options (transcriber, extractor, speaker roles, send webhook), past runs, and the settings panel with placeholder badges.</td></tr>
+<tr><td><b>Run</b> <code>/runs/[id]</code></td><td>A player bar; the waveform with each conversation shaded; a speaker lane; the transcript as "lyrics" (customer left, crew right, guessed roles marked, low-confidence words underlined, chatter struck through; click a line to seek); each order's three buckets, flags, combo opportunities, event log and raw model output; and every webhook attempt with a payload viewer and Resend. With "Live replay" on, the order rebuilds itself as the audio plays, using the same <code>replay()</code> in the browser.</td></tr>
+<tr><td><b>Mock Webhook</b></td><td>Received payloads, signature result, duplicates, and switches to make it return 500, 429 with Retry-After, or hang, to demonstrate retries.</td></tr>
+<tr><td><b>Eval</b></td><td>The latest <code>eval/report.json</code>: headline metrics, the 28-row checklist, and per-fixture differences.</td></tr>
+</table>
+
+<h3>How a run executes in the app</h3>
+<ol>
+<li>The form POSTs to <code>/api/runs</code>. Uploads (up to 100 MB) are saved under <code>.data/uploads/</code>.</li>
+<li>A run row is created as "queued" and the job goes into an in-memory queue that processes one run at a time.</li>
+<li>The page polls the run's status and redraws as stages complete.</li>
+<li>The slow-phase webhook worker runs inside the Next.js server (started from <code>instrumentation.ts</code>) and checks for due retries every 5 seconds.</li>
+</ol>
+
+<h3>Design and UI library</h3>
+<p>The visual design follows the Apple Music desktop app: sidebar navigation, "album" artwork generated from each fixture's name, a track-list for orders, a lyrics-style transcript, and a player bar. The system font (<code>-apple-system</code>, SF Pro) is used throughout, and light and dark mode follow the operating system.</p>
+<p>Components come from <b>shadcn/ui</b> (buttons, selects, switches, tables, tooltips, sliders, collapsibles) built on Radix primitives and Tailwind CSS. <i>Note: this UI library migration is finished and checked visually, but not yet committed; see Section 11.</i></p>
+<div class="why"><b class="tag">Why these choices</b>
+<ul>
+<li><b>Next.js</b>: server routes and pages in one app, and it can import the pipeline package directly, so the UI runs the real code rather than a copy.</li>
+<li><b>wavesurfer.js</b>: a mature waveform player with region shading, which is what syncing audio to transcript and orders needs.</li>
+<li><b>shadcn/ui</b>: the components are copied into the repo as source, so there is no runtime library to lock in, every component can be restyled, and Radix provides keyboard and screen-reader behavior for free.</li>
+<li><b>In-process queue</b>: a sandbox on one machine does not need Redis or a job service. The trade-off is listed in Section 11.</li>
+<li><b>Apple Music style</b>: the run page is literally "play a recording and watch what it produced", so a media-player layout makes the demo self-explanatory for Serv.</li>
+</ul></div>
+</div>
+
+<!-- ============================================================ 8 -->
+<div class="section">
+<h2><span class="num">8</span>Testing and evaluation</h2>
+
+<h3>Synthetic test data</h3>
+<p>No real HME audio was available, so the sandbox generates its own with known correct answers:</p>
+<ul>
+<li><b>22 scripted conversations</b> in <code>fixtures/scripts/</code>. Each has turns (speaker, text, pause), hand-written events, and an expected result (items, needs review, not ordered, flags, status, group).</li>
+<li><b>Audio rendering</b> with macOS's built-in voices (free and local): distinct voices for crew and customers, plus a Spanish voice.</li>
+<li><b>Two layouts</b>: stereo (customer left, crew right, 16 kHz) and a mono headset mix (band-limited to 8 kHz).</li>
+<li><b>Noise</b>: synthetic engine idle, wind and car radio at clean, moderate or heavy levels.</li>
+<li><b>2 compilations</b> stitch several scripts into one long multi-car file to test segmentation.</li>
+<li>Each audio file gets a <code>.timeline.json</code> with exact line and order times, which also powers the free "ground truth" transcriber.</li>
+</ul>
+<p>Every one of the 28 rows in the brief's edge-case checklist has a fixture (rows 27 and 28, webhook failure and rate limiting, are tested by a self-check against a throwaway local receiver).</p>
+
+<h3>What the eval measures</h3>
+<table class="small">
+<tr><th style="width:25%">Metric</th><th>Definition</th></tr>
+<tr><td>Segmentation</td><td>Missed and extra conversations; start and end error in seconds</td></tr>
+<tr><td>Item precision / recall</td><td>Exact match on menu ID, quantity, size, modifiers and meal components</td></tr>
+<tr><td>Bucket accuracy</td><td>Each mention in the right bucket with the right reason</td></tr>
+<tr><td>Status and flags</td><td>Exact match (ignoring <code>placeholder_values</code>)</td></tr>
+<tr><td>Checklist</td><td>Pass or fail for each of the 28 edge cases</td></tr>
+</table>
+
+<h3>Results</h3>
+<table>
+<tr><th>Configuration</th><th>Passed</th><th>Item P / R</th><th>Buckets</th><th>Segments</th></tr>
+<tr><td>Ground-truth transcript + oracle events (the ceiling)</td><td>24/24</td><td>100% / 100%</td><td>100%</td><td>34/34</td></tr>
+<tr><td>Ground-truth transcript + keyword fallback</td><td>0/24</td><td>100% / 0%</td><td>1%</td><td>34/34</td></tr>
+<tr><td><b>Deepgram Nova-3 + Gemini 3.5 Flash-Lite</b> (mono, prompt v4)</td><td><b>24/24</b></td><td><b>100% / 100%</b></td><td><b>100%</b></td><td><b>34/34</b></td></tr>
+</table>
+<div class="why"><b class="tag">Why three configurations</b>
+<ul>
+<li><b>The ceiling</b> feeds the pipeline perfect transcripts and perfect events. If it fails, the bug is in our code (segmentation, builder, scoring), not in a model. It costs nothing to run.</li>
+<li><b>The keyword fallback</b> shows the safety net works as designed: it finds nothing confidently, so it sends everything to review rather than guessing.</li>
+<li><b>The real providers</b> measure the system as it would actually run. The gap between this row and the ceiling is the cost of imperfect speech recognition and an imperfect model.</li>
+</ul></div>
+
+<h3>Accuracy progression with real providers</h3>
+<table class="small">
+<tr><th>Run</th><th>Passed</th><th>Item P / R</th><th>Main change</th></tr>
+<tr><td>Prompt v1</td><td>12/24</td><td>93.5% / 80.6%</td><td>Baseline. Diarization heard one voice; every line was "crew".</td></tr>
+<tr><td>Prompt v2 + wording roles</td><td>19/24</td><td>100% / 97.2%</td><td>Per-line role inference; guessed labels marked</td></tr>
+<tr><td>Prompt v3</td><td>22/24</td><td>98.6% / 98.6%</td><td>Inquiry and commitment rules; builder fixes for splits and hesitation</td></tr>
+<tr><td>Prompt v4</td><td>24/24</td><td>100% / 100%</td><td>"Same thing for her" targets the latest line; SNR-based noise flag; language from the model</td></tr>
+</table>
+
+<div class="box amber">
+<h4>Read these numbers honestly</h4>
+<ul style="margin:0">
+<li>The fixtures that measured accuracy are the same fixtures that guided the fixes. There is no held-out test set, so 24/24 shows the approach can work, not that it generalizes.</li>
+<li>It was one run at temperature 0. Some run-to-run variation is expected.</li>
+<li>Only the mono layout was evaluated with real providers. The stereo channel path has never been sent to Deepgram.</li>
+<li>The audio is computer voices with synthetic noise. Real drive-thru audio is harder.</li>
+</ul>
+</div>
+
+<h3>Unit tests</h3>
+<p>107 tests, all passing, with no network calls, colocated next to the code they test. 97 cover the pipeline: the builder on every checklist scenario, replay edge cases, segmentation, role inference and noise estimates, webhook signing (including the Standard Webhooks reference vector), delivery and retries with a fake clock, the retry helper, Gemini safety-block detection, and the Gemini budget guard. 10 cover the web API routes' success and error responses. A Playwright test drives the golden path in a real browser: pick a fixture, run it with the free providers, see the order and the delivered webhook.</p>
+<h3>Code standards</h3>
+<p>ESLint, <code>tsc --noEmit</code>, Vitest and Playwright are the gates, and a GitHub Actions workflow runs them on pull requests. The runtime is Node 22. External calls use a shared retry helper with exponential backoff, and every API route returns the same error shape. Every Gemini call pins its safety settings, detects safety blocks, has a per-request timeout and writes one <code>llm_call</code> log line. Gemini uses an AI Studio key rather than Vertex AI, because Vertex has no free tier.</p>
+</div>
+
+<!-- ============================================================ 9 -->
+<div class="section">
+<h2><span class="num">9</span>Cost and free-tier safety</h2>
+<p>The brief said "free tiers only". Both providers are used only within free allowances, and usage is logged on every run.</p>
+
+<h3>Gemini: how billing is prevented</h3>
+<ol>
+<li><b>The real guarantee is on Google's side.</b> Google bills only if the Cloud project behind the API key has a billing account. The key was created in AI Studio on a project with no billing account; Google's own 429 response confirmed it as <code>FreeTier</code>. Without billing, exceeding a limit returns an error, never a charge.</li>
+<li><b>A hard daily cap</b> (<code>GEMINI_DAILY_CAP</code>, default 200 requests per Pacific-time day, matching Google's quota day), counted in a ledger file before every request, retries included. One ledger per model, because Google's quotas are per model.</li>
+<li><b>Daily-quota errors stop immediately</b> instead of retrying, and mark the day as used up.</li>
+<li><b>Graceful fallback:</b> out of budget means the keyword extractor and rule-based segmentation take over; the run still completes.</li>
+<li><b>Small outputs:</b> "thinking" set to low cut output tokens about five-fold on a test conversation (3,373 to 646) with the same result.</li>
+<li><b>Pacing:</b> 10 requests per minute by default (<code>GEMINI_RPM</code>).</li>
+<li><b>Caching:</b> identical requests are never sent twice.</li>
+</ol>
+
+<h3>Deepgram</h3>
+<p>Deepgram's $200 sign-up credit covers the sandbox. The first full eval used about 15.8 audio minutes; every later run used 0 new minutes because responses are cached by file hash. Minutes billed are logged per run.</p>
+
+<h3>What a run costs in practice</h3>
+<table class="small">
+<tr><th>Item</th><th>Measured</th></tr>
+<tr><td>Gemini tokens per conversation</td><td>about 3,000 (79,870 in + 22,329 out for 34 conversations)</td></tr>
+<tr><td>Gemini requests per full eval</td><td>34 (about one per conversation, plus occasional tie-break questions)</td></tr>
+<tr><td>Deepgram minutes per full eval (first time)</td><td>about 15.8</td></tr>
+<tr><td>Cost of the ceiling eval, unit tests, examples from cache</td><td>$0, 0 requests</td></tr>
+</table>
+<div class="box amber"><b>Data-use note.</b> On Gemini's free tier, Google may use prompts and responses to improve its products. That is fine for synthetic fixtures. Real customer transcripts should not be sent until Serv approves the data handling, which may mean a paid tier or another provider with a no-training guarantee.</div>
+</div>
+
+<!-- ============================================================ 10 -->
+<div class="section">
+<h2><span class="num">10</span>Technology choices</h2>
+<table class="small">
+<tr><th style="width:17%">Concern</th><th style="width:25%">Choice</th><th>Why</th></tr>
+<tr><td>Language</td><td>TypeScript (strict), Node 20+</td><td>One language for pipeline, server and browser; strict types catch schema drift between stages.</td></tr>
+<tr><td>Repo</td><td>pnpm workspace monorepo</td><td>Separate packages that import each other directly; fast, disk-efficient installs.</td></tr>
+<tr><td>Speech to text</td><td>Deepgram Nova-3</td><td>Word timestamps and confidence, diarization, multichannel, keyterms, multilingual; $200 free credit.</td></tr>
+<tr><td>LLM</td><td>Gemini 3.5 Flash-Lite via <code>@google/genai</code></td><td>Free tier large enough for a full eval; structured JSON output; behind an interface.</td></tr>
+<tr><td>Schemas</td><td>zod</td><td>One definition gives TypeScript types, runtime validation, and the JSON Schema sent to the LLM.</td></tr>
+<tr><td>Fuzzy matching</td><td>fuse.js</td><td>Maps misheard names and aliases to menu IDs; small and dependency-free.</td></tr>
+<tr><td>Audio tools</td><td>ffmpeg-static, ffprobe-static</td><td>Probing, loudness, channel handling and fixture generation, bundled so nobody installs ffmpeg by hand.</td></tr>
+<tr><td>Storage</td><td>SQLite via better-sqlite3</td><td>Durable outbox and run history with zero setup.</td></tr>
+<tr><td>Webhook signing</td><td>Standard Webhooks (HMAC-SHA256)</td><td>An open spec with libraries in every language; replay protection and dedupe built in.</td></tr>
+<tr><td>Tests and lint</td><td>Vitest, Playwright, ESLint</td><td>Fast, TypeScript-native; the core logic is pure functions that need no mocks.</td></tr>
+<tr><td>UI</td><td>Next.js 16, React 19, Tailwind v4, shadcn/ui, wavesurfer.js</td><td>Server routes plus pages in one app; owned, accessible components; waveform with regions.</td></tr>
+<tr><td>Test audio</td><td>macOS <code>say</code> voices</td><td>Free and local; reproducible fixtures without spending TTS credit.</td></tr>
+</table>
+<p class="small muted">Every provider call sits behind an interface (<code>Transcriber</code>, <code>Extractor</code>, plus judge interfaces for the tie-breakers), per the brief, so swapping Deepgram or Gemini is one new adapter file and a config value.</p>
+</div>
+
+<!-- ============================================================ 11 -->
+<div class="section">
+<h2><span class="num">11</span>Gaps</h2>
+<p>Ranked by how much they matter before real use. <span class="pill p-high">High</span> blocks a pilot on real data. <span class="pill p-med">Medium</span> needed before production. <span class="pill p-low">Low</span> housekeeping or polish.</p>
+
+<h3>Accuracy and data</h3>
+<table class="small">
+<tr><th style="width:9%"></th><th style="width:30%">Gap</th><th>Detail and suggested next step</th></tr>
+<tr><td><span class="pill p-high">High</span></td><td>No real HME audio tested</td><td>All results are on computer voices with synthetic noise. Next: get 20 to 50 real recordings with the orders the POS actually rang up, add them as fixtures, and re-run the eval.</td></tr>
+<tr><td><span class="pill p-high">High</span></td><td>No held-out test set</td><td>The same 24 fixtures guided the prompt and phrase-list tuning and measured the result. Next: freeze a held-out set (real audio preferably) that is never used for tuning.</td></tr>
+<tr><td><span class="pill p-high">High</span></td><td>Stereo channel path never run live</td><td>Every Deepgram call so far was mono with diarization. The multichannel path is unit-tested but has never hit the real API, and the stereo layout was not evaluated. Next: one eval run with <code>--layout stereo</code> (about 16 Deepgram minutes) and confirm what channels HME actually records.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Thresholds are guesses</td><td>Bucket thresholds (0.75), low-confidence word (0.6), low audio quality (0.8 confidence, 15 dB SNR) were set on synthetic audio. Next: calibrate on real labeled audio.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Role phrases are English-centric and fixture-tuned</td><td>The wording-based role inference uses about 30 phrase patterns (a few Spanish). Real crews use their own scripts. Next: measure role accuracy on real audio; consider using the LLM for roles when diarization collapses.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Single eval run</td><td>Run-to-run variance at temperature 0 is unmeasured. Next: run the eval three times when budget allows and report the spread.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Tax not modeled</td><td><code>TAX_RATE=0</code>. Real spoken totals include tax, so <code>total_mismatch</code> would fire on most real orders until the rate is set per site.</td></tr>
+<tr><td><span class="pill p-low">Low</span></td><td>Generic menu</td><td>Real menus have more items, regional names, promos and limited-time offers. The keyterm list is capped by Deepgram at 500 tokens, so only item names (not aliases) are sent.</td></tr>
+<tr><td><span class="pill p-low">Low</span></td><td>Combo search is greedy</td><td>Combo opportunities are found meal by meal in menu order; with many items it may not find the best combination. Fine for typical orders.</td></tr>
+</table>
+
+<h3>Product and integration</h3>
+<table class="small">
+<tr><th style="width:9%"></th><th style="width:30%">Gap</th><th>Detail and suggested next step</th></tr>
+<tr><td><span class="pill p-high">High</span></td><td>Data handling not approved</td><td>Audio goes to Deepgram and transcripts to Gemini's free tier, where Google may use them for training. Next: Serv confirms data rules before any real customer audio is sent.</td></tr>
+<tr><td><span class="pill p-high">High</span></td><td>Recording start time is a guess</td><td>Without <code>AUDIO_START_UTC</code> or a filename timestamp, time comes from the file's modified time, which is unreliable. Matching orders to cars and payments depends on it. Next: confirm HME's metadata.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Batch, not streaming</td><td>The whole file is transcribed before the first order is extracted, so the first order waits for the entire file. Real-time would need streaming transcription and incremental segmentation.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>No human-review loop</td><td>The schema defines <code>order.updated</code> and <code>order_version</code>, but nothing produces a version 2 yet. Next: a review screen that edits a <code>needs_review</code> order and re-sends it as <code>order.updated</code>.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Webhook schema not reviewed by Serv</td><td>Schema v1.0 adds <code>customer_declined_combo</code>, <code>unit_price</code> and <code>non_customer</code> to the draft. The payload also carries the full transcript, which Serv may or may not want (size and privacy).</td></tr>
+<tr><td><span class="pill p-low">Low</span></td><td>Single lane, single file</td><td>Dual-lane sites, lane bleed, and orders that span two files (flagged incomplete, not stitched) are out of scope.</td></tr>
+</table>
+
+<h3>Engineering and operations</h3>
+<table class="small">
+<tr><th style="width:9%"></th><th style="width:30%">Gap</th><th>Detail and suggested next step</th></tr>
+<tr><td><span class="pill p-high">High</span></td><td>No authentication on the web app</td><td>Anyone who can reach the server can start runs (spending Deepgram credit and Gemini quota), upload files, read every payload in the mock inbox, and change its failure mode. Fine on localhost; must be fixed before it is reachable by anyone else.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Runs are lost on restart</td><td>The run queue lives in memory. If the server restarts, queued runs disappear and their rows stay "queued" or "running" forever. (Webhook deliveries are safe: the outbox recovers.) Next: on startup, re-queue or fail stale runs.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>One run at a time; slow on long files</td><td>The queue is serial, and Gemini is paced at 10 requests per minute, so a recording with 60 cars needs at least 6 minutes of extraction. Next: a real job queue and a paid tier or higher limits.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Retries depend on a running process</td><td>Slow-phase retries only happen while <code>pnpm dev</code> or <code>pnpm pipeline worker</code> is running.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Single-machine infrastructure</td><td>SQLite, local files and an in-process worker suit a laptop. A deployment would use a managed database, object storage for audio, and a separate worker.</td></tr>
+<tr><td><span class="pill p-low">Low</span></td><td>No error monitoring</td><td>Failures are visible in the UI and logs only; there is no alerting (for example Sentry) for dead-lettered webhooks or failed runs.</td></tr>
+<tr><td><span class="pill p-low">Low</span></td><td>Gemini 503s use quota</td><td>"High demand" errors on the free tier count against the daily limit, and retries add to it. The cap protects billing, but a bad day can exhaust the budget early.</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ 12 -->
+<div class="section">
+<h2><span class="num">12</span>How to explain it</h2>
+
+<div class="box accent">
+<h4>In 30 seconds</h4>
+<p style="margin:0">We take a drive-thru recording and produce one structured order per car, sent to Serv's server as a signed message. Speech-to-text writes down what was said. An AI model reads each conversation and lists what happened: "added a burger", "swapped Coke for Sprite", "asked about shakes". Then ordinary code, not the AI, turns that list into the order using the real menu and prices. Anything uncertain goes to a "needs review" list instead of being guessed. On 24 test recordings, it got every order right, using only free services.</p>
+</div>
+
+<div class="box fill">
+<h4>In 2 minutes (an analogy)</h4>
+<p>Think of three people working a drive-thru recording:</p>
+<ul>
+<li>A <b>stenographer</b> (Deepgram) writes down every word with a timestamp, and notes which words were hard to hear.</li>
+<li>A <b>note-taker</b> (Gemini) reads one conversation at a time and writes short notes: "customer added a large Coke", "customer changed the Coke to a Sprite", "crew said the total is $7.88". The note-taker is not allowed to write the receipt.</li>
+<li>An <b>accountant</b> (our code) takes those notes, looks up the real menu and prices, applies them in order, and writes the receipt. The accountant checks the receipt against the total the crew said out loud, puts anything unclear in a "please check" pile, and keeps a record of everything that was cancelled or declined.</li>
+</ul>
+<p style="margin:0">Then a <b>courier</b> (the webhook) delivers each receipt to Serv with a tamper-proof seal, and keeps trying until Serv confirms it arrived, without ever delivering the same receipt twice.</p>
+</div>
+
+<h3>Questions people will ask</h3>
+<table class="small">
+<tr><th style="width:32%">Question</th><th>Answer</th></tr>
+<tr><td>Why not have the AI write the order directly?</td><td>Because corrections, cancellations and prices are bookkeeping, and models are unreliable bookkeepers. Events keep the model's job small (what happened), and code does the part that must be exact. It also makes every result testable and explainable.</td></tr>
+<tr><td>What happens when the AI is wrong or unsure?</td><td>Unknown items are caught by code and sent to <code>needs_review</code> with the top 3 likely menu items. Readback and total mismatches are flagged. Low audio quality is flagged. The system prefers "please check" over a confident wrong answer.</td></tr>
+<tr><td>What if Gemini or Deepgram is down?</td><td>Calls retry with backoff. If Gemini still fails, a keyword matcher runs and everything goes to review, so the order still reaches Serv. Webhooks retry for about 28 hours before dead-lettering.</td></tr>
+<tr><td>How do you know it is accurate?</td><td>A 24-fixture eval with known answers, covering all 28 edge cases from the brief, scored 100% with the real providers. The honest caveat is that the audio is synthetic and the same fixtures guided the tuning.</td></tr>
+<tr><td>What does it cost?</td><td>Nothing so far. About 3,000 Gemini tokens per conversation and Deepgram per audio minute. Production would need a paid tier for volume and data privacy.</td></tr>
+<tr><td>Can we switch providers?</td><td>Yes. Both sit behind interfaces; a new provider is one adapter file and a config value. The eval would show whether it is better.</td></tr>
+<tr><td>How does Serv receive orders?</td><td>A signed HTTP POST to a URL they provide. They verify it with any Standard Webhooks library. For AWS (API Gateway plus Lambda), we change two settings.</td></tr>
+<tr><td>Is it real-time?</td><td>Not yet. Each order is sent as soon as it is built, but only after the whole file is transcribed. Streaming is a known gap.</td></tr>
+<tr><td>What is the biggest risk?</td><td>Real audio. Everything is proven on synthetic recordings. The first real HME files will show how far accuracy drops and which thresholds need calibration.</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ 13 -->
+<div class="section">
+<h2><span class="num">13</span>Open questions for Serv</h2>
+<p>Each answer replaces a placeholder in <code>config/sandbox.ts</code> or closes a gap in Section 11.</p>
+<ol>
+<li><b>Audio:</b> Do HME recordings have separate crew and customer channels? Which is which? What sample rate and format?</li>
+<li><b>Time:</b> How do we get the recording's real start time (metadata, filename, sidecar file)?</li>
+<li><b>Ground truth:</b> Can you share real recordings together with the orders the POS rang up, so we can measure accuracy and calibrate thresholds?</li>
+<li><b>Data rules:</b> May audio and transcripts go to third-party APIs? Is a no-training guarantee required (which rules out Gemini's free tier)?</li>
+<li><b>Menu:</b> Which brand and menu? Do you have a machine-readable menu with prices, combos and modifiers?</li>
+<li><b>Tax:</b> What tax rate applies per site, and do crews speak totals with tax?</li>
+<li><b>Webhook:</b> What URL and signing secret? Does the v1.0 schema work for you? Do you want the full transcript in each payload?</li>
+<li><b>Outcomes:</b> Do you want all statuses (completed, cancelled, abandoned, needs_review, incomplete), or only some?</li>
+<li><b>Latency:</b> Is "after the file is processed" acceptable, or do you need orders while the car is still at the speaker?</li>
+<li><b>Review:</b> Who resolves <code>needs_review</code> orders, and should corrected versions be re-sent as <code>order.updated</code>?</li>
+<li><b>Sites:</b> Site and lane IDs; any dual-lane locations?</li>
+</ol>
+</div>
+
+<!-- ============================================================ A -->
+<div class="section">
+<h2><span class="num">A</span>Commands, glossary, payload fields</h2>
+<h3>Commands</h3>
+<pre>pnpm install
+pnpm test                         107 unit and route tests, no API calls
+pnpm lint                         ESLint
+pnpm typecheck                    tsc --noEmit in every package
+pnpm test:e2e                     Playwright golden path (free providers)
+pnpm dev                          web app + mock webhook at http://localhost:3000
+pnpm pipeline run &lt;file.mp3&gt;      process a file and deliver its orders
+pnpm eval                         accuracy on every fixture, writes eval/report.json
+pnpm eval --transcriber script --extractor oracle --no-judge     the free ceiling
+pnpm pipeline resend &lt;order_id&gt;   resend a failed or dead-lettered delivery
+pnpm pipeline worker              slow-phase retries (the web app runs this for you)
+pnpm pipeline examples            regenerate examples/
+pnpm pipeline settings            list which Serv values are still placeholders
+pnpm fixtures:build               regenerate fixture audio (macOS)</pre>
+<p class="small">Useful flags: <code>--transcriber deepgram|script</code>, <code>--extractor gemini|fuzzy|oracle</code>, <code>--channel-map 0=customer,1=crew</code>, <code>--start-utc &lt;iso&gt;</code>, <code>--no-deliver</code>, <code>--no-judge</code>, <code>--layout mono|stereo</code>, <code>--only 01_simple,04_correction</code>.</p>
+
+<h3>Glossary</h3>
+<table class="small">
+<tr><td style="width:22%"><b>HME</b></td><td>Maker of drive-thru headset systems; the source of the recordings.</td></tr>
+<tr><td><b>ASR / STT</b></td><td>Automatic speech recognition / speech to text: audio in, words out.</td></tr>
+<tr><td><b>Diarization</b></td><td>Telling speakers apart in one audio channel ("speaker 0, speaker 1"), without knowing who they are.</td></tr>
+<tr><td><b>Utterance</b></td><td>One line of speech by one speaker, split at pauses.</td></tr>
+<tr><td><b>Segment</b></td><td>One conversation, meaning one car's order.</td></tr>
+<tr><td><b>Event</b></td><td>One thing that happened in a conversation (ADD, REPLACE, READBACK and so on).</td></tr>
+<tr><td><b>Replay</b></td><td>Applying events in order to build the order, like applying transactions to a balance.</td></tr>
+<tr><td><b>Keyterm</b></td><td>A word sent to Deepgram to make it more likely to recognize that word.</td></tr>
+<tr><td><b>Webhook</b></td><td>An HTTP POST our system sends to Serv's server when something happens.</td></tr>
+<tr><td><b>HMAC signature</b></td><td>A code computed from the message and a shared secret; proves the message came from us and was not changed.</td></tr>
+<tr><td><b>Outbox</b></td><td>A table of messages waiting to be sent, written before sending so nothing is lost in a crash.</td></tr>
+<tr><td><b>Dead letter</b></td><td>A message that failed every retry and now waits for a person.</td></tr>
+<tr><td><b>Jitter</b></td><td>Random variation in retry timing so many senders do not retry at the same instant.</td></tr>
+<tr><td><b>Fixture</b></td><td>A test recording with a known correct answer.</td></tr>
+<tr><td><b>Oracle</b></td><td>An extractor that returns the known correct events; measures the ceiling of the rest of the pipeline.</td></tr>
+<tr><td><b>SNR</b></td><td>Signal-to-noise ratio: how much louder speech is than the background, in decibels.</td></tr>
+</table>
+
+<h3>Webhook payload fields (schema v1.0)</h3>
+<table class="small">
+<tr><td style="width:28%"><code>schema_version</code>, <code>event_type</code></td><td>"1.0"; <code>order.completed</code>, <code>.cancelled</code>, <code>.abandoned</code>, <code>.needs_review</code>, <code>.incomplete</code> (and <code>.updated</code>, reserved)</td></tr>
+<tr><td><code>order_id</code>, <code>order_version</code>, <code>group_id</code></td><td>Unique order ID; version (always 1 today); shared ID for split payments in one car</td></tr>
+<tr><td><code>location_id</code>, <code>lane_id</code></td><td>Where it happened (placeholders today)</td></tr>
+<tr><td><code>status</code>, <code>started_at</code>, <code>ended_at</code>, <code>timestamp_source</code></td><td>Outcome and wall-clock times, with how the start time was determined</td></tr>
+<tr><td><code>audio</code></td><td>Source file and the order's start and end offsets in seconds</td></tr>
+<tr><td><code>items</code>, <code>needs_review</code>, <code>not_ordered</code></td><td>The three buckets, each line with source utterance IDs and both confidences</td></tr>
+<tr><td><code>combo_opportunities</code>, <code>customer_declined_combo</code></td><td>Missed meal deals with savings; whether the customer refused the meal</td></tr>
+<tr><td><code>flags</code>, <code>totals</code>, <code>overall_confidence</code></td><td>Flags from Section 5.6; computed and spoken totals; average confidence</td></tr>
+<tr><td><code>transcript</code></td><td>The conversation's lines, with speaker, times and confidence; crew chatter marked <code>non_customer</code></td></tr>
+<tr><td><code>processing</code></td><td>Speech and extraction providers, menu and pipeline versions, latency</td></tr>
+</table>
+</div>
+
+</body>
+</html>

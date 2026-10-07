@@ -1,0 +1,124 @@
+[
+  {
+    "id": "compilation_a",
+    "title": "Five cars in a row: simple, combo, removal, abandoned, separate items",
+    "scripts": [
+      "01_simple",
+      "02_combo_slot",
+      "05_removed_and_upsell",
+      "07_abandoned",
+      "12_combo_separately"
+    ],
+    "gap_s": 10,
+    "noise": "moderate"
+  },
+  {
+    "id": "compilation_b",
+    "title": "Corrections, per-unit modifiers, out of stock, crew chatter, back-to-back",
+    "scripts": [
+      "04_correction",
+      "08_per_unit_and_hesitation",
+      "11_declined_upsell_out_of_stock",
+      "16_crew_crosstalk",
+      "18_back_to_back"
+    ],
+    "gap_s": 11,
+    "noise": "moderate"
+  },
+  {
+    "id": "lane_stream_a",
+    "title": "Lane stream A: 19 cars over about 20 minutes with 25 to 75 s gaps",
+    "scripts": [
+      "01_simple",
+      "02_combo_slot",
+      "03_combo_missing_drink",
+      "04_correction",
+      "05_removed_and_upsell",
+      "06_cancelled",
+      "07_abandoned",
+      "08_per_unit_and_hesitation",
+      "09_reference_back",
+      "10_number_ambiguity",
+      "11_declined_upsell_out_of_stock",
+      "12_combo_separately",
+      "13_inquiry_and_misheard",
+      "14_garbled",
+      "15_split_payment",
+      "16_crew_crosstalk",
+      "17_readback_and_total_mismatch",
+      "18_back_to_back"
+    ],
+    "gap_s": 40,
+    "gaps_s": [
+      33,
+      61,
+      73,
+      29,
+      41,
+      32,
+      56,
+      73,
+      53,
+      55,
+      66,
+      49,
+      75,
+      38,
+      31,
+      56,
+      26
+    ],
+    "noise": "moderate",
+    "layouts": [
+      "mono"
+    ]
+  },
+  {
+    "id": "lane_stream_b",
+    "title": "Lane stream B: 19 cars including a late addition, a long silence and Spanish (clean audio, so no heavy-noise car)",
+    "scripts": [
+      "12_combo_separately",
+      "05_removed_and_upsell",
+      "23_late_addition",
+      "01_simple",
+      "14_garbled",
+      "07_abandoned",
+      "16_crew_crosstalk",
+      "09_reference_back",
+      "10_number_ambiguity",
+      "24_long_silence",
+      "02_combo_slot",
+      "11_declined_upsell_out_of_stock",
+      "06_cancelled",
+      "18_back_to_back",
+      "13_inquiry_and_misheard",
+      "21_spanish",
+      "04_correction",
+      "15_split_payment"
+    ],
+    "gap_s": 40,
+    "gaps_s": [
+      28,
+      30,
+      30,
+      48,
+      35,
+      72,
+      67,
+      44,
+      41,
+      63,
+      38,
+      63,
+      27,
+      62,
+      68,
+      35,
+      52
+    ],
+    "noise": "clean",
+    "layouts": [
+      "mono"
+    ]
+  }
+]

@@ -1,0 +1,86 @@
+{
+  "fixture_ids": [
+    "15_split_payment"
+  ],
+  "file": "15_split_payment",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 34.345,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "15_split_payment",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "15_split_payment",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Hi, can we pay separately? First order is a number five with a Coke.",
+      "start_s": 5.502,
+      "end_s": 10.573
+    },
+    {
+      "id": "u3",
+      "fixture_id": "15_split_payment",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Okay, number five with a Coke, that's $8.99. And the second order?",
+      "start_s": 11.173,
+      "end_s": 17.795
+    },
+    {
+      "id": "u4",
+      "fixture_id": "15_split_payment",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Second order is a six piece nuggets with barbecue sauce and a small fries.",
+      "start_s": 18.395,
+      "end_s": 23.226
+    },
+    {
+      "id": "u5",
+      "fixture_id": "15_split_payment",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Six piece nuggets with barbecue and a small fry, that's $6.58. Pull forward please.",
+      "start_s": 23.826,
+      "end_s": 31.345
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "15_split_payment",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 31.345
+    },
+    {
+      "fixture_id": "15_split_payment",
+      "order_index": 1,
+      "start_s": 1,
+      "end_s": 31.345
+    }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 33.345
+    }
+  ]
+}

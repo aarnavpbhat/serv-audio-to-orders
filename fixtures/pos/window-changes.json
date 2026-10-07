@@ -1,0 +1,8 @@
+[
+  {
+    "fixture": "01_simple",
+    "order": 0,
+    "replace": [{ "from": "fries", "to": "onion_rings" }],
+    "note": "At the window the customer switched the fries to onion rings; the conversation at the speaker post never mentions it (row 41)"
+  }
+]

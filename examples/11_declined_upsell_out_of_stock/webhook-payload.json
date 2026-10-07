@@ -1,0 +1,216 @@
+{
+  "schema_version": "2.0",
+  "event_type": "order.finalized",
+  "order_id": "ord_01M47MMSQR9PH3KANR53TAFS1X",
+  "order_version": 1,
+  "supersedes_version": null,
+  "correction_reason": null,
+  "group_id": null,
+  "store_id": "store_demo_001",
+  "lane_id": "lane_1",
+  "session_id": "ses_01M47MMSMJPTS16VTV43W1135T",
+  "status": "completed",
+  "outcome_evidence": [
+    {
+      "type": "spoken_cue",
+      "kind": "closing",
+      "cue": "your total is",
+      "utterance_id": "u7",
+      "at": "2026-10-03T18:40:23.215Z"
+    }
+  ],
+  "review": {
+    "required": false,
+    "reasons": []
+  },
+  "times": {
+    "started_at": "2026-10-03T18:40:01.120Z",
+    "ended_at": "2026-10-03T18:40:30.175Z",
+    "time_basis": "recording_metadata",
+    "received_at": "2026-10-06T03:38:16.595Z",
+    "finalized_at": "2026-10-06T03:38:16.698Z"
+  },
+  "audio_ref": {
+    "session_id": "ses_01M47MMSMJPTS16VTV43W1135T",
+    "sample_start": 17920,
+    "sample_end": 482800,
+    "archive_uri": null
+  },
+  "source": {
+    "type": "file_replay",
+    "codec_in": "pcm_s16le",
+    "channels": 1,
+    "channel_roles": [
+      "mixed"
+    ]
+  },
+  "items": [
+    {
+      "line_id": "e1",
+      "catalog_id": "big_sandbox",
+      "name": "Big Sandbox",
+      "quantity": 1,
+      "size": null,
+      "modifiers": [],
+      "unit_price": 5.99,
+      "recognition_confidence": 0.95,
+      "commitment_confidence": 1,
+      "source_utterance_ids": [
+        "u2"
+      ]
+    },
+    {
+      "line_id": "e2",
+      "catalog_id": "fries",
+      "name": "Fries",
+      "quantity": 1,
+      "size": "large",
+      "modifiers": [],
+      "unit_price": 3.29,
+      "recognition_confidence": 1,
+      "commitment_confidence": 1,
+      "source_utterance_ids": [
+        "u3"
+      ]
+    },
+    {
+      "line_id": "e7",
+      "catalog_id": "sweet_tea",
+      "name": "Sweet Tea",
+      "quantity": 1,
+      "size": "medium",
+      "modifiers": [],
+      "unit_price": 1.99,
+      "recognition_confidence": 0.97,
+      "commitment_confidence": 1,
+      "source_utterance_ids": [
+        "u5"
+      ]
+    }
+  ],
+  "needs_review": [],
+  "not_ordered": [
+    {
+      "catalog_id": "shake_choc",
+      "raw_text": "a chocolate shake",
+      "ordered": false,
+      "reason": "out_of_stock",
+      "quantity": 1,
+      "size": "medium",
+      "line_id": "e3",
+      "source_utterance_ids": [
+        "u3",
+        "u4"
+      ]
+    },
+    {
+      "catalog_id": "combo_1",
+      "raw_text": "meal",
+      "ordered": false,
+      "reason": "declined_upsell",
+      "source_utterance_ids": [
+        "u4",
+        "u5"
+      ]
+    }
+  ],
+  "combo_opportunities": [
+    {
+      "combo_id": "combo_1",
+      "combo_name": "#1 Big Sandbox Meal",
+      "line_ids": [
+        "e1",
+        "e2",
+        "e7"
+      ],
+      "separate_total": 11.27,
+      "combo_price": 8.99,
+      "savings": 2.28,
+      "customer_declined_combo": true
+    }
+  ],
+  "customer_declined_combo": true,
+  "flags": [
+    "combo_opportunity",
+    "placeholder_values"
+  ],
+  "totals": {
+    "computed": 11.27,
+    "spoken_by_crew": 11.27,
+    "currency": "USD"
+  },
+  "overall_confidence": 0.97,
+  "transcript": [
+    {
+      "id": "u1",
+      "speaker": "crew",
+      "start_utc": "2026-10-03T18:40:01.120Z",
+      "end_utc": "2026-10-03T18:40:04.880Z",
+      "text": "Welcome to Sandbox Burger. What can I get for you today?",
+      "confidence": 0.997
+    },
+    {
+      "id": "u2",
+      "speaker": "customer",
+      "start_utc": "2026-10-03T18:40:05.520Z",
+      "end_utc": "2026-10-03T18:40:07.440Z",
+      "text": "Can I get a Big Sandbox,",
+      "confidence": 0.951
+    },
+    {
+      "id": "u3",
+      "speaker": "customer",
+      "start_utc": "2026-10-03T18:40:07.520Z",
+      "end_utc": "2026-10-03T18:40:10.160Z",
+      "text": "a large fries, and a chocolate shake?",
+      "confidence": 0.997
+    },
+    {
+      "id": "u4",
+      "speaker": "crew",
+      "start_utc": "2026-10-03T18:40:10.320Z",
+      "end_utc": "2026-10-03T18:40:15.680Z",
+      "text": "Sorry. We're out of shakes right now. Would you like to make the Big Sandbox a meal?",
+      "confidence": 0.959
+    },
+    {
+      "id": "u5",
+      "speaker": "customer",
+      "start_utc": "2026-10-03T18:40:16.495Z",
+      "end_utc": "2026-10-03T18:40:21.455Z",
+      "text": "No. Not the meal. Just the burger and fries and a medium sweet tea.",
+      "confidence": 0.973
+    },
+    {
+      "id": "u6",
+      "speaker": "crew",
+      "start_utc": "2026-10-03T18:40:21.775Z",
+      "end_utc": "2026-10-03T18:40:23.135Z",
+      "text": "Big Sandbox,",
+      "confidence": 0.942
+    },
+    {
+      "id": "u7",
+      "speaker": "crew",
+      "start_utc": "2026-10-03T18:40:23.215Z",
+      "end_utc": "2026-10-03T18:40:28.975Z",
+      "text": "large fries, and a medium sweet tea. Your total is $11.27.",
+      "confidence": 0.992
+    },
+    {
+      "id": "u8",
+      "speaker": "crew",
+      "start_utc": "2026-10-03T18:40:29.135Z",
+      "end_utc": "2026-10-03T18:40:30.175Z",
+      "text": "Please pull around.",
+      "confidence": 0.985
+    }
+  ],
+  "processing": {
+    "stt": "deepgram/nova-3",
+    "extractor": "gemini/gemini-3.5-flash-lite",
+    "menu_version": "sandbox-1",
+    "pipeline_version": "0.1.0",
+    "latency_ms": 2
+  }
+}

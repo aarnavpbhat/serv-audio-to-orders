@@ -1,0 +1,114 @@
+{
+  "fixture_ids": [
+    "18_back_to_back"
+  ],
+  "file": "18_back_to_back",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 39.476,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "A cheeseburger and a small Coke please.",
+      "start_s": 5.502,
+      "end_s": 8.285
+    },
+    {
+      "id": "u3",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $4.58. Pull forward.",
+      "start_s": 8.885,
+      "end_s": 13.315
+    },
+    {
+      "id": "u4",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Hi, um, can I get a ten piece nuggets?",
+      "start_s": 22.815,
+      "end_s": 26.094
+    },
+    {
+      "id": "u5",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Ten piece nuggets. Anything else?",
+      "start_s": 26.694,
+      "end_s": 29.535
+    },
+    {
+      "id": "u6",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 5,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "No.",
+      "start_s": 30.135,
+      "end_s": 30.917
+    },
+    {
+      "id": "u7",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 6,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "That's $5.99 at the window. Have a good one.",
+      "start_s": 31.517,
+      "end_s": 36.476
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "18_back_to_back",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 13.315
+    },
+    {
+      "fixture_id": "18_back_to_back",
+      "order_index": 1,
+      "start_s": 22.815,
+      "end_s": 36.476
+    }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 15.315
+    },
+    {
+      "type": "vehicle_arrived",
+      "at_s": 21.315
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 38.476
+    }
+  ]
+}

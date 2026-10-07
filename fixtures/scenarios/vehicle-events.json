@@ -1,0 +1,1 @@
+{ "description": "Continuous audio plus arrive and depart events from the fixture timeline (rows 33, 38).", "audio_mode": "continuous", "vehicle_events": "on" }

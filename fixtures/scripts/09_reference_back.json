@@ -1,0 +1,174 @@
+{
+  "id": "09_reference_back",
+  "title": "Make that two, same thing for her",
+  "covers": [
+    9,
+    19
+  ],
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Let me get two number threes with Cokes.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Two number threes with Coke. What else?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "And a crispy chicken sandwich with no mayo. Actually, make that two.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "And a small vanilla shake. Same thing for my daughter.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Got it. Your total is $37.14. Pull around please.",
+      "pause_after_s": 0.6
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "combo_3",
+        "quantity": 2
+      },
+      {
+        "event_id": "e2",
+        "type": "SET_COMBO_SLOT",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "target_line_ref": "e1",
+        "slot": "drink",
+        "catalog_id": "coke"
+      },
+      {
+        "event_id": "e3",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u3"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "combo_3",
+            "quantity": 2
+          },
+          {
+            "catalog_id": "coke"
+          }
+        ]
+      },
+      {
+        "event_id": "e4",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u4"
+        ],
+        "catalog_id": "crispy_chicken",
+        "modifiers": [
+          "no_mayo"
+        ]
+      },
+      {
+        "event_id": "e5",
+        "type": "CHANGE_QTY",
+        "source_utterance_ids": [
+          "u4"
+        ],
+        "target_line_ref": "e4",
+        "quantity": 2
+      },
+      {
+        "event_id": "e6",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u5"
+        ],
+        "catalog_id": "shake_van",
+        "size": "small"
+      },
+      {
+        "event_id": "e7",
+        "type": "DUPLICATE_LINE",
+        "source_utterance_ids": [
+          "u5"
+        ],
+        "target_line_ref": "e6"
+      },
+      {
+        "event_id": "e8",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u6"
+        ],
+        "amount": 37.14
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "combo_3",
+            "quantity": 2,
+            "size": "medium",
+            "components": [
+              {
+                "slot": "entree",
+                "catalog_id": "bacon_smash"
+              },
+              {
+                "slot": "side",
+                "catalog_id": "fries"
+              },
+              {
+                "slot": "drink",
+                "catalog_id": "coke"
+              }
+            ]
+          },
+          {
+            "catalog_id": "crispy_chicken",
+            "quantity": 2,
+            "modifiers": [
+              "no_mayo"
+            ]
+          },
+          {
+            "catalog_id": "shake_van",
+            "quantity": 1,
+            "size": "small"
+          },
+          {
+            "catalog_id": "shake_van",
+            "quantity": 1,
+            "size": "small"
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [],
+        "group": null,
+        "review": []
+      }
+    ]
+  }
+}

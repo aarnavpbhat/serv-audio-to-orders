@@ -1,0 +1,384 @@
+{
+  "fixture_ids": [
+    "04_correction",
+    "08_per_unit_and_hesitation",
+    "11_declined_upsell_out_of_stock",
+    "16_crew_crosstalk",
+    "18_back_to_back"
+  ],
+  "file": "compilation_b",
+  "layout": "stereo",
+  "noise": "moderate",
+  "duration_s": 201.588,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "04_correction",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Hi, welcome to Sandbox Burger, go ahead whenever you're ready.",
+      "start_s": 1,
+      "end_s": 5.479
+    },
+    {
+      "id": "u2",
+      "fixture_id": "04_correction",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a spicy chicken sandwich and a large Coke. Actually, make that a Sprite instead of the Coke.",
+      "start_s": 6.079,
+      "end_s": 13.191
+    },
+    {
+      "id": "u3",
+      "fixture_id": "04_correction",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Spicy chicken sandwich and a large Sprite. Anything else?",
+      "start_s": 13.791,
+      "end_s": 18.254
+    },
+    {
+      "id": "u4",
+      "fixture_id": "04_correction",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Nope.",
+      "start_s": 18.854,
+      "end_s": 19.684
+    },
+    {
+      "id": "u5",
+      "fixture_id": "04_correction",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $7.88. See you at the window.",
+      "start_s": 20.284,
+      "end_s": 24.971
+    },
+    {
+      "id": "u6",
+      "fixture_id": "08_per_unit_and_hesitation",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 39.971,
+      "end_s": 43.873
+    },
+    {
+      "id": "u7",
+      "fixture_id": "08_per_unit_and_hesitation",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get two hamburgers, one with no pickles?",
+      "start_s": 44.473,
+      "end_s": 47.938
+    },
+    {
+      "id": "u8",
+      "fixture_id": "08_per_unit_and_hesitation",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Two hamburgers, one no pickles. Anything else?",
+      "start_s": 48.538,
+      "end_s": 52.483
+    },
+    {
+      "id": "u9",
+      "fixture_id": "08_per_unit_and_hesitation",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Maybe a cookie... nah, I'm good. Just a medium Coke.",
+      "start_s": 53.083,
+      "end_s": 57.609
+    },
+    {
+      "id": "u10",
+      "fixture_id": "08_per_unit_and_hesitation",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Okay, your total is $6.97. Pull forward please.",
+      "start_s": 58.209,
+      "end_s": 63.904
+    },
+    {
+      "id": "u11",
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 78.904,
+      "end_s": 82.806
+    },
+    {
+      "id": "u12",
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a Big Sandbox, a large fries, and a chocolate shake?",
+      "start_s": 83.406,
+      "end_s": 87.597
+    },
+    {
+      "id": "u13",
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Sorry, we're out of shakes right now. Would you like to make the Big Sandbox a meal?",
+      "start_s": 88.197,
+      "end_s": 93.812
+    },
+    {
+      "id": "u14",
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "No, not the meal. Just the burger and fries. And a medium sweet tea.",
+      "start_s": 94.412,
+      "end_s": 98.947
+    },
+    {
+      "id": "u15",
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Big Sandbox, large fries and a medium sweet tea. Your total is $11.27. Please pull around.",
+      "start_s": 99.547,
+      "end_s": 108.584
+    },
+    {
+      "id": "u16",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 123.584,
+      "end_s": 127.486
+    },
+    {
+      "id": "u17",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a crispy chicken sandwich and a medium onion rings?",
+      "start_s": 128.086,
+      "end_s": 131.476
+    },
+    {
+      "id": "u18",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": true,
+      "text": "Hey, need fries on two, drop another basket.",
+      "start_s": 132.076,
+      "end_s": 135.809
+    },
+    {
+      "id": "u19",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 3,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Sorry about that. Crispy chicken and a medium onion rings, anything else?",
+      "start_s": 136.409,
+      "end_s": 141.784
+    },
+    {
+      "id": "u20",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 4,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "That's it.",
+      "start_s": 142.384,
+      "end_s": 142.874
+    },
+    {
+      "id": "u21",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 5,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $8.58. See you at the window.",
+      "start_s": 143.474,
+      "end_s": 148.112
+    },
+    {
+      "id": "u22",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 163.112,
+      "end_s": 167.014
+    },
+    {
+      "id": "u23",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "A cheeseburger and a small Coke please.",
+      "start_s": 167.614,
+      "end_s": 170.397
+    },
+    {
+      "id": "u24",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $4.58. Pull forward.",
+      "start_s": 170.997,
+      "end_s": 175.427
+    },
+    {
+      "id": "u25",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Hi, um, can I get a ten piece nuggets?",
+      "start_s": 184.927,
+      "end_s": 188.206
+    },
+    {
+      "id": "u26",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Ten piece nuggets. Anything else?",
+      "start_s": 188.806,
+      "end_s": 191.647
+    },
+    {
+      "id": "u27",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 5,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "No.",
+      "start_s": 192.247,
+      "end_s": 193.029
+    },
+    {
+      "id": "u28",
+      "fixture_id": "18_back_to_back",
+      "turn_index": 6,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "That's $5.99 at the window. Have a good one.",
+      "start_s": 193.629,
+      "end_s": 198.588
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "04_correction",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 24.971
+    },
+    {
+      "fixture_id": "08_per_unit_and_hesitation",
+      "order_index": 0,
+      "start_s": 39.971,
+      "end_s": 63.904
+    },
+    {
+      "fixture_id": "11_declined_upsell_out_of_stock",
+      "order_index": 0,
+      "start_s": 78.904,
+      "end_s": 108.584
+    },
+    {
+      "fixture_id": "16_crew_crosstalk",
+      "order_index": 0,
+      "start_s": 123.584,
+      "end_s": 148.112
+    },
+    {
+      "fixture_id": "18_back_to_back",
+      "order_index": 0,
+      "start_s": 163.112,
+      "end_s": 175.427
+    },
+    {
+      "fixture_id": "18_back_to_back",
+      "order_index": 1,
+      "start_s": 184.927,
+      "end_s": 198.588
+    }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 26.971
+    },
+    {
+      "type": "vehicle_arrived",
+      "at_s": 38.471
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 65.904
+    },
+    {
+      "type": "vehicle_arrived",
+      "at_s": 77.404
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 110.584
+    },
+    {
+      "type": "vehicle_arrived",
+      "at_s": 122.084
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 150.112
+    },
+    {
+      "type": "vehicle_arrived",
+      "at_s": 161.612
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 177.427
+    },
+    {
+      "type": "vehicle_arrived",
+      "at_s": 183.427
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 200.588
+    }
+  ]
+}

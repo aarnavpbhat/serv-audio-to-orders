@@ -1,0 +1,183 @@
+{
+  "id": "15_split_payment",
+  "title": "Two orders paid separately",
+  "covers": [
+    17
+  ],
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Hi, can we pay separately? First order is a number five with a Coke.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Okay, number five with a Coke, that's $8.99. And the second order?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Second order is a six piece nuggets with barbecue sauce and a small fries.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Six piece nuggets with barbecue and a small fry, that's $6.58. Pull forward please.",
+      "pause_after_s": 0.6
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "SPLIT_ORDER",
+        "source_utterance_ids": [
+          "u2"
+        ]
+      },
+      {
+        "event_id": "e2",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "combo_5"
+      },
+      {
+        "event_id": "e3",
+        "type": "SET_COMBO_SLOT",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "target_line_ref": "e2",
+        "slot": "drink",
+        "catalog_id": "coke"
+      },
+      {
+        "event_id": "e4",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u3"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "combo_5"
+          },
+          {
+            "catalog_id": "coke"
+          }
+        ],
+        "amount": 8.99
+      },
+      {
+        "event_id": "e5",
+        "type": "SPLIT_ORDER",
+        "source_utterance_ids": [
+          "u3",
+          "u4"
+        ]
+      },
+      {
+        "event_id": "e6",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u4"
+        ],
+        "catalog_id": "nuggets_6",
+        "modifiers": [
+          "bbq_sauce"
+        ]
+      },
+      {
+        "event_id": "e7",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u4"
+        ],
+        "catalog_id": "fries",
+        "size": "small"
+      },
+      {
+        "event_id": "e8",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u5"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "nuggets_6"
+          },
+          {
+            "catalog_id": "fries",
+            "size": "small"
+          }
+        ],
+        "amount": 6.58
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "combo_5",
+            "quantity": 1,
+            "size": "medium",
+            "components": [
+              {
+                "slot": "entree",
+                "catalog_id": "spicy_chicken"
+              },
+              {
+                "slot": "side",
+                "catalog_id": "fries"
+              },
+              {
+                "slot": "drink",
+                "catalog_id": "coke"
+              }
+            ]
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [
+          "split_order"
+        ],
+        "group": "A",
+        "review": []
+      },
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "nuggets_6",
+            "quantity": 1,
+            "modifiers": [
+              "bbq_sauce"
+            ]
+          },
+          {
+            "catalog_id": "fries",
+            "quantity": 1,
+            "size": "small"
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [
+          "split_order"
+        ],
+        "group": "A",
+        "review": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "id": "23_late_addition",
+  "title": "Late addition after the close: \"oh wait, add a small fries\"",
+  "covers": [
+    35
+  ],
+  "live_only": true,
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Can I get a cheeseburger and a large lemonade?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "A cheeseburger and a large lemonade. Anything else?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "No, that's it.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Your total is $5.78. Please pull forward.",
+      "pause_after_s": 4.5
+    },
+    {
+      "speaker": "customer",
+      "text": "Oh wait, sorry, can I also add a small fries?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Sure, a small fries. Your new total is $8.07. Please pull forward.",
+      "pause_after_s": 0.6
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "cheeseburger"
+      },
+      {
+        "event_id": "e2",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "lemonade",
+        "size": "large"
+      },
+      {
+        "event_id": "e3",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u3"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "cheeseburger"
+          },
+          {
+            "catalog_id": "lemonade",
+            "size": "large"
+          }
+        ]
+      },
+      {
+        "event_id": "e4",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u5"
+        ],
+        "amount": 5.78
+      },
+      {
+        "event_id": "e5",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u6"
+        ],
+        "catalog_id": "fries",
+        "size": "small"
+      },
+      {
+        "event_id": "e6",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u7"
+        ],
+        "amount": 8.07
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "lane_version": 2,
+        "items": [
+          {
+            "catalog_id": "cheeseburger",
+            "quantity": 1
+          },
+          {
+            "catalog_id": "lemonade",
+            "quantity": 1,
+            "size": "large"
+          },
+          {
+            "catalog_id": "fries",
+            "quantity": 1,
+            "size": "small"
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [],
+        "group": null,
+        "review": []
+      }
+    ]
+  }
+}

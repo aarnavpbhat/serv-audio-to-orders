@@ -1,0 +1,102 @@
+{
+  "id": "01_simple",
+  "title": "Simple order",
+  "covers": [
+    1
+  ],
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Hi, can I get a double cheeseburger and a medium fries?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Sure, a double cheeseburger and a medium fry. Anything else?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "No, that's it.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Your total is $8.28. Please pull forward.",
+      "pause_after_s": 0.6
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "dbl_cheese"
+      },
+      {
+        "event_id": "e2",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "fries",
+        "size": "medium"
+      },
+      {
+        "event_id": "e3",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u3"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "dbl_cheese"
+          },
+          {
+            "catalog_id": "fries",
+            "size": "medium"
+          }
+        ]
+      },
+      {
+        "event_id": "e4",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u5"
+        ],
+        "amount": 8.28
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "dbl_cheese",
+            "quantity": 1
+          },
+          {
+            "catalog_id": "fries",
+            "quantity": 1,
+            "size": "medium"
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [],
+        "group": null,
+        "review": []
+      }
+    ]
+  }
+}

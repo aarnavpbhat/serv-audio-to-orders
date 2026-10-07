@@ -1,0 +1,90 @@
+{
+  "fixture_ids": [
+    "09_reference_back"
+  ],
+  "file": "09_reference_back",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 32.12,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "09_reference_back",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "09_reference_back",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Let me get two number threes with Cokes.",
+      "start_s": 5.502,
+      "end_s": 8.285
+    },
+    {
+      "id": "u3",
+      "fixture_id": "09_reference_back",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Two number threes with Coke. What else?",
+      "start_s": 8.885,
+      "end_s": 11.902
+    },
+    {
+      "id": "u4",
+      "fixture_id": "09_reference_back",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "And a crispy chicken sandwich with no mayo. Actually, make that two.",
+      "start_s": 12.502,
+      "end_s": 17.876
+    },
+    {
+      "id": "u5",
+      "fixture_id": "09_reference_back",
+      "turn_index": 4,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "And a small vanilla shake. Same thing for my daughter.",
+      "start_s": 18.476,
+      "end_s": 22.427
+    },
+    {
+      "id": "u6",
+      "fixture_id": "09_reference_back",
+      "turn_index": 5,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Got it. Your total is $37.14. Pull around please.",
+      "start_s": 23.027,
+      "end_s": 29.12
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "09_reference_back",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 29.12
+    }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 31.12
+    }
+  ]
+}

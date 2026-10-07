@@ -1,0 +1,90 @@
+{
+  "fixture_ids": [
+    "16_crew_crosstalk"
+  ],
+  "file": "16_crew_crosstalk",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 28.528,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a crispy chicken sandwich and a medium onion rings?",
+      "start_s": 5.502,
+      "end_s": 8.892
+    },
+    {
+      "id": "u3",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": true,
+      "text": "Hey, need fries on two, drop another basket.",
+      "start_s": 9.492,
+      "end_s": 13.225
+    },
+    {
+      "id": "u4",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 3,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Sorry about that. Crispy chicken and a medium onion rings, anything else?",
+      "start_s": 13.825,
+      "end_s": 19.2
+    },
+    {
+      "id": "u5",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 4,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "That's it.",
+      "start_s": 19.8,
+      "end_s": 20.29
+    },
+    {
+      "id": "u6",
+      "fixture_id": "16_crew_crosstalk",
+      "turn_index": 5,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $8.58. See you at the window.",
+      "start_s": 20.89,
+      "end_s": 25.528
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "16_crew_crosstalk",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 25.528
+    }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 27.528
+    }
+  ]
+}

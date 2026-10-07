@@ -1,0 +1,344 @@
+{
+  "transcript_id": "tr_run_01M47MMSSJZCE81WHFZ5JJBP8S",
+  "source_file": "14_garbled.mono.clean.mp3",
+  "audio": {
+    "codec": "pcm_s16le",
+    "sample_rate": 16000,
+    "channels": 1,
+    "duration_s": 22.483
+  },
+  "audio_start_utc": "2026-10-03T18:40:00.000Z",
+  "timestamp_source": "recording_metadata",
+  "role_source": "diarization",
+  "stt": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+  "language": null,
+  "utterances": [
+    {
+      "id": "u1",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 1.12,
+      "end_s": 4.88,
+      "start_utc": "2026-10-03T18:40:01.120Z",
+      "end_utc": "2026-10-03T18:40:04.880Z",
+      "text": "Welcome to Sandbox Burger. What can I get for you today?",
+      "confidence": 0.998,
+      "words": [
+        {
+          "w": "Welcome",
+          "start_s": 1.12,
+          "end_s": 1.52,
+          "conf": 0.999
+        },
+        {
+          "w": "to",
+          "start_s": 1.52,
+          "end_s": 1.76,
+          "conf": 0.99
+        },
+        {
+          "w": "Sandbox",
+          "start_s": 1.76,
+          "end_s": 2.48,
+          "conf": 1
+        },
+        {
+          "w": "Burger.",
+          "start_s": 2.48,
+          "end_s": 3.04,
+          "conf": 0.992
+        },
+        {
+          "w": "What",
+          "start_s": 3.04,
+          "end_s": 3.36,
+          "conf": 1
+        },
+        {
+          "w": "can",
+          "start_s": 3.36,
+          "end_s": 3.52,
+          "conf": 1
+        },
+        {
+          "w": "I",
+          "start_s": 3.52,
+          "end_s": 3.68,
+          "conf": 1
+        },
+        {
+          "w": "get",
+          "start_s": 3.68,
+          "end_s": 3.84,
+          "conf": 1
+        },
+        {
+          "w": "for",
+          "start_s": 3.84,
+          "end_s": 4.08,
+          "conf": 1
+        },
+        {
+          "w": "you",
+          "start_s": 4.08,
+          "end_s": 4.24,
+          "conf": 1
+        },
+        {
+          "w": "today?",
+          "start_s": 4.24,
+          "end_s": 4.88,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u2",
+      "speaker": "customer",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 5.52,
+      "end_s": 9.12,
+      "start_utc": "2026-10-03T18:40:05.520Z",
+      "end_utc": "2026-10-03T18:40:09.120Z",
+      "text": "Can I get a cheeseburger and a medium, uh, flourblberry",
+      "confidence": 0.914,
+      "words": [
+        {
+          "w": "Can",
+          "start_s": 5.52,
+          "end_s": 5.84,
+          "conf": 1
+        },
+        {
+          "w": "I",
+          "start_s": 5.84,
+          "end_s": 6,
+          "conf": 1
+        },
+        {
+          "w": "get",
+          "start_s": 6,
+          "end_s": 6.16,
+          "conf": 1
+        },
+        {
+          "w": "a",
+          "start_s": 6.16,
+          "end_s": 6.32,
+          "conf": 0.997
+        },
+        {
+          "w": "cheeseburger",
+          "start_s": 6.32,
+          "end_s": 6.96,
+          "conf": 0.999
+        },
+        {
+          "w": "and",
+          "start_s": 6.96,
+          "end_s": 7.2,
+          "conf": 0.997
+        },
+        {
+          "w": "a",
+          "start_s": 7.2,
+          "end_s": 7.36,
+          "conf": 0.99
+        },
+        {
+          "w": "medium,",
+          "start_s": 7.36,
+          "end_s": 7.92,
+          "conf": 0.763
+        },
+        {
+          "w": "uh,",
+          "start_s": 7.92,
+          "end_s": 8.32,
+          "conf": 0.991
+        },
+        {
+          "w": "flourblberry",
+          "start_s": 8.32,
+          "end_s": 9.12,
+          "conf": 0.405
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u3",
+      "speaker": "customer",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 9.12,
+      "end_s": 9.92,
+      "start_utc": "2026-10-03T18:40:09.120Z",
+      "end_utc": "2026-10-03T18:40:09.920Z",
+      "text": "shake?",
+      "confidence": 0.996,
+      "words": [
+        {
+          "w": "shake?",
+          "start_s": 9.12,
+          "end_s": 9.92,
+          "conf": 0.996
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u4",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 10.48,
+      "end_s": 12.88,
+      "start_utc": "2026-10-03T18:40:10.480Z",
+      "end_utc": "2026-10-03T18:40:12.880Z",
+      "text": "Sorry. What kind of shake was that?",
+      "confidence": 0.999,
+      "words": [
+        {
+          "w": "Sorry.",
+          "start_s": 10.48,
+          "end_s": 11.2,
+          "conf": 0.999
+        },
+        {
+          "w": "What",
+          "start_s": 11.2,
+          "end_s": 11.52,
+          "conf": 1
+        },
+        {
+          "w": "kind",
+          "start_s": 11.52,
+          "end_s": 11.84,
+          "conf": 1
+        },
+        {
+          "w": "of",
+          "start_s": 11.84,
+          "end_s": 12,
+          "conf": 1
+        },
+        {
+          "w": "shake",
+          "start_s": 12,
+          "end_s": 12.32,
+          "conf": 0.998
+        },
+        {
+          "w": "was",
+          "start_s": 12.32,
+          "end_s": 12.56,
+          "conf": 0.996
+        },
+        {
+          "w": "that?",
+          "start_s": 12.56,
+          "end_s": 12.88,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u5",
+      "speaker": "customer",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 13.845,
+      "end_s": 16.245,
+      "start_utc": "2026-10-03T18:40:13.845Z",
+      "end_utc": "2026-10-03T18:40:16.245Z",
+      "text": "Yeah. That one. Thanks.",
+      "confidence": 0.961,
+      "words": [
+        {
+          "w": "Yeah.",
+          "start_s": 13.845,
+          "end_s": 14.405,
+          "conf": 0.966
+        },
+        {
+          "w": "That",
+          "start_s": 14.405,
+          "end_s": 14.645,
+          "conf": 1
+        },
+        {
+          "w": "one.",
+          "start_s": 14.645,
+          "end_s": 15.285,
+          "conf": 0.999
+        },
+        {
+          "w": "Thanks.",
+          "start_s": 15.445,
+          "end_s": 16.245,
+          "conf": 0.881
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u6",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 16.805,
+      "end_s": 17.765,
+      "start_utc": "2026-10-03T18:40:16.805Z",
+      "end_utc": "2026-10-03T18:40:17.765Z",
+      "text": "Okay.",
+      "confidence": 1,
+      "words": [
+        {
+          "w": "Okay.",
+          "start_s": 16.805,
+          "end_s": 17.765,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    },
+    {
+      "id": "u7",
+      "speaker": "crew",
+      "speaker_label": "spk0",
+      "speaker_guessed": true,
+      "start_s": 18.005,
+      "end_s": 19.205,
+      "start_utc": "2026-10-03T18:40:18.005Z",
+      "end_utc": "2026-10-03T18:40:19.205Z",
+      "text": "Pull forward, please.",
+      "confidence": 0.999,
+      "words": [
+        {
+          "w": "Pull",
+          "start_s": 18.005,
+          "end_s": 18.245,
+          "conf": 1
+        },
+        {
+          "w": "forward,",
+          "start_s": 18.245,
+          "end_s": 18.885,
+          "conf": 0.999
+        },
+        {
+          "w": "please.",
+          "start_s": 18.885,
+          "end_s": 19.205,
+          "conf": 1
+        }
+      ],
+      "language": "en"
+    }
+  ]
+}

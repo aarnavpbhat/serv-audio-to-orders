@@ -1,0 +1,4355 @@
+{
+  "generated_at": "2026-10-06T16:33:54.539Z",
+  "config": {
+    "layout": "mono",
+    "scenario": null,
+    "transcriber": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+    "extractor": "gemini/gemini-3.5-flash-lite",
+    "model": "gemini-3.5-flash-lite",
+    "menu_version": "sandbox-1"
+  },
+  "summary": {
+    "fixtures": 28,
+    "fixtures_passed": 27,
+    "item_precision": 1,
+    "item_recall": 1,
+    "bucket_accuracy": 0.995,
+    "status_accuracy": 1,
+    "review_accuracy": 1,
+    "flags_accuracy": 1,
+    "segmentation": {
+      "expected": 74,
+      "found": 74,
+      "missed": 0,
+      "extra": 0,
+      "mean_start_err_s": 0.14,
+      "mean_end_err_s": 0.79
+    }
+  },
+  "layer_b": {
+    "tickets": 67,
+    "matched": 67,
+    "exact": 66,
+    "exact_rate": 0.985,
+    "extraction_error": 0,
+    "window_change": 2,
+    "unmatched": 0,
+    "window_s": 90,
+    "source": "synthetic"
+  },
+  "live": {
+    "close_latency_p50_ms": 3000,
+    "close_latency_p95_ms": 45000,
+    "close_latency_by_trigger": {
+      "settled": {
+        "orders": 63,
+        "p50_ms": 3000,
+        "p95_ms": 3001
+      },
+      "end_of_input": {
+        "orders": 2,
+        "p50_ms": 5655,
+        "p95_ms": 19303
+      },
+      "idle_timeout": {
+        "orders": 7,
+        "p50_ms": 45000,
+        "p95_ms": 45002
+      },
+      "next_car": {
+        "orders": 5,
+        "p50_ms": 33505,
+        "p95_ms": 42517
+      }
+    },
+    "orders": 77,
+    "reopen_rate": 0,
+    "premature_reopens": 0,
+    "duplicate_versions": 0
+  },
+  "rows": [
+    {
+      "row": 1,
+      "title": "Simple order",
+      "fixtures": [
+        "01_simple"
+      ],
+      "pass": true
+    },
+    {
+      "row": 2,
+      "title": "Combo with slot fill",
+      "fixtures": [
+        "02_combo_slot"
+      ],
+      "pass": true
+    },
+    {
+      "row": 3,
+      "title": "Combo missing drink",
+      "fixtures": [
+        "03_combo_missing_drink"
+      ],
+      "pass": true
+    },
+    {
+      "row": 4,
+      "title": "Correction",
+      "fixtures": [
+        "04_correction"
+      ],
+      "pass": true
+    },
+    {
+      "row": 5,
+      "title": "Item removed",
+      "fixtures": [
+        "05_removed_and_upsell"
+      ],
+      "pass": true
+    },
+    {
+      "row": 6,
+      "title": "Whole order cancelled",
+      "fixtures": [
+        "06_cancelled"
+      ],
+      "pass": true
+    },
+    {
+      "row": 7,
+      "title": "Abandoned",
+      "fixtures": [
+        "07_abandoned"
+      ],
+      "pass": true
+    },
+    {
+      "row": 8,
+      "title": "Per-unit modifiers",
+      "fixtures": [
+        "08_per_unit_and_hesitation"
+      ],
+      "pass": true
+    },
+    {
+      "row": 9,
+      "title": "Reference back",
+      "fixtures": [
+        "09_reference_back"
+      ],
+      "pass": true
+    },
+    {
+      "row": 10,
+      "title": "Declined upsell",
+      "fixtures": [
+        "11_declined_upsell_out_of_stock"
+      ],
+      "pass": true
+    },
+    {
+      "row": 11,
+      "title": "Accepted upsell",
+      "fixtures": [
+        "05_removed_and_upsell"
+      ],
+      "pass": true
+    },
+    {
+      "row": 12,
+      "title": "Combo items ordered separately",
+      "fixtures": [
+        "12_combo_separately"
+      ],
+      "pass": true
+    },
+    {
+      "row": 13,
+      "title": "Out of stock",
+      "fixtures": [
+        "11_declined_upsell_out_of_stock"
+      ],
+      "pass": true
+    },
+    {
+      "row": 14,
+      "title": "Question only",
+      "fixtures": [
+        "13_inquiry_and_misheard"
+      ],
+      "pass": true
+    },
+    {
+      "row": 15,
+      "title": "Garbled item",
+      "fixtures": [
+        "14_garbled"
+      ],
+      "pass": true
+    },
+    {
+      "row": 16,
+      "title": "Hesitation",
+      "fixtures": [
+        "08_per_unit_and_hesitation"
+      ],
+      "pass": true
+    },
+    {
+      "row": 17,
+      "title": "Split payment",
+      "fixtures": [
+        "15_split_payment"
+      ],
+      "pass": true
+    },
+    {
+      "row": 18,
+      "title": "Crew crosstalk",
+      "fixtures": [
+        "16_crew_crosstalk"
+      ],
+      "pass": true
+    },
+    {
+      "row": 19,
+      "title": "Number ambiguity",
+      "fixtures": [
+        "09_reference_back",
+        "10_number_ambiguity"
+      ],
+      "pass": true
+    },
+    {
+      "row": 20,
+      "title": "Misheard menu word",
+      "fixtures": [
+        "13_inquiry_and_misheard"
+      ],
+      "pass": true
+    },
+    {
+      "row": 21,
+      "title": "Readback differs",
+      "fixtures": [
+        "17_readback_and_total_mismatch"
+      ],
+      "pass": true
+    },
+    {
+      "row": 22,
+      "title": "Spoken total differs",
+      "fixtures": [
+        "17_readback_and_total_mismatch"
+      ],
+      "pass": true
+    },
+    {
+      "row": 23,
+      "title": "Back-to-back orders",
+      "fixtures": [
+        "18_back_to_back",
+        "compilation_a",
+        "compilation_b",
+        "lane_stream_a",
+        "lane_stream_b"
+      ],
+      "pass": false
+    },
+    {
+      "row": 24,
+      "title": "Truncated audio",
+      "fixtures": [
+        "19_truncated_start",
+        "20_truncated_end"
+      ],
+      "pass": true
+    },
+    {
+      "row": 25,
+      "title": "Non-English or mixed",
+      "fixtures": [
+        "21_spanish"
+      ],
+      "pass": true
+    },
+    {
+      "row": 26,
+      "title": "Heavy noise",
+      "fixtures": [
+        "22_heavy_noise"
+      ],
+      "pass": true
+    },
+    {
+      "row": 27,
+      "title": "Webhook failure (500 then 200)",
+      "fixtures": [
+        "webhook self-check"
+      ],
+      "pass": true,
+      "detail": "attempts 500 -> 200, 1 recorded"
+    },
+    {
+      "row": 28,
+      "title": "Webhook rate limit (429 + Retry-After)",
+      "fixtures": [
+        "webhook self-check"
+      ],
+      "pass": true,
+      "detail": "429 then 200; waited 2.0s for Retry-After 2"
+    },
+    {
+      "row": 29,
+      "title": "Stream pauses after a closing cue",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "completed; evidence closing, stream_paused"
+    },
+    {
+      "row": 30,
+      "title": "Stream pauses mid-order, no cue",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "undetermined; review "
+    },
+    {
+      "row": 31,
+      "title": "Disconnect 10 s, reconnect",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "1 order(s); flags placeholder_values, stream_gap"
+    },
+    {
+      "row": 32,
+      "title": "Disconnect longer than grace",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "undetermined; flags placeholder_values, stream_interrupted"
+    },
+    {
+      "row": 33,
+      "title": "Vehicle departs before closing",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "abandoned; evidence vehicle_departed"
+    },
+    {
+      "row": 34,
+      "title": "60 s silence mid-order, no events",
+      "fixtures": [
+        "24_long_silence"
+      ],
+      "pass": true
+    },
+    {
+      "row": 35,
+      "title": "Late addition after close",
+      "fixtures": [
+        "23_late_addition"
+      ],
+      "pass": true
+    },
+    {
+      "row": 36,
+      "title": "Each wire codec",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "9 codecs, same 5 utterances, audio within 3%"
+    },
+    {
+      "row": 37,
+      "title": "Replay of an old recording",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "started_at 2025-01-15T09:30:01.000Z, finalized_at 2026-10-06"
+    },
+    {
+      "row": 38,
+      "title": "Vehicle events present",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "5 conversations, 5 opened by vehicle_arrived, 5 cars"
+    },
+    {
+      "row": 39,
+      "title": "Unclear item in a finished order",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "completed; review unclear_items"
+    },
+    {
+      "row": 40,
+      "title": "Two lanes at once",
+      "fixtures": [
+        "live check"
+      ],
+      "pass": true,
+      "detail": "store_a: dbl_cheese,fries; store_b: spicy_chicken,sprite"
+    },
+    {
+      "row": 41,
+      "title": "Window change in POS ticket",
+      "fixtures": [
+        "01_simple"
+      ],
+      "pass": true
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "01_simple",
+      "title": "Simple order",
+      "file": "fixtures/audio/01_simple.mono.clean.mp3",
+      "covers": [
+        1
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.427
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910KP4AZ2X865YQZBPED7T",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910KV70QTJZ4NTA6Z9DJR0",
+          "ticket_id": "pos_01_simple_0",
+          "exact": false,
+          "diffs": [
+            {
+              "item": "fries|medium|x1",
+              "category": "window_change"
+            },
+            {
+              "item": "onion_rings|medium|x1",
+              "category": "window_change"
+            }
+          ]
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3005
+        ],
+        "close_by": {
+          "settled": [
+            3005
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "02_combo_slot",
+      "title": "Combo with slot fill and size",
+      "file": "fixtures/audio/02_combo_slot.mono.clean.mp3",
+      "covers": [
+        2
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.467
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910KVX2ESV2HKBK5KTF10X",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910M0JJ03WE1DXY2X45NW7",
+          "ticket_id": "pos_02_combo_slot_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "03_combo_missing_drink",
+      "title": "Combo with no drink chosen",
+      "file": "fixtures/audio/03_combo_missing_drink.mono.clean.mp3",
+      "covers": [
+        3
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.315
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910M0PHPBFA2PR9VGDKNAY",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910M58GYFGXAZ5FWF99AM4",
+          "ticket_id": "pos_03_combo_missing_drink_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "04_correction",
+      "title": "Correction: Coke to Sprite",
+      "file": "fixtures/audio/04_correction.mono.clean.mp3",
+      "covers": [
+        4
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.376
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910M5BCCME5DFETKRY0KVA",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910MA4GQ5S74TSMX1A445Y",
+          "ticket_id": "pos_04_correction_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "05_removed_and_upsell",
+      "title": "Item removed, upsell accepted",
+      "file": "fixtures/audio/05_removed_and_upsell.mono.clean.mp3",
+      "covers": [
+        5,
+        11
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.363
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910MA74T1YFNJWQ6W72FCR",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910MFBR99RMHY18DA0Z2A5",
+          "ticket_id": "pos_05_removed_and_upsell_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "06_cancelled",
+      "title": "Whole order cancelled",
+      "file": "fixtures/audio/06_cancelled.mono.clean.mp3",
+      "covers": [
+        6
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.379
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 0,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910MFFGCFPCDEVDQPY8QN9",
+      "layer_b": [],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "07_abandoned",
+      "title": "Abandoned: no closing, car leaves",
+      "file": "fixtures/audio/07_abandoned.mono.clean.mp3",
+      "covers": [
+        7
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.302
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910MM5C2KW6PZQ33P88K8M",
+      "layer_b": [],
+      "live": {
+        "close_ms": [
+          19303
+        ],
+        "close_by": {
+          "end_of_input": [
+            19303
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "08_per_unit_and_hesitation",
+      "title": "Per-unit modifiers and a hesitation",
+      "file": "fixtures/audio/08_per_unit_and_hesitation.mono.clean.mp3",
+      "covers": [
+        8,
+        16
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.308
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910MS4PSTXRETZ9PQSTEGD",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910MXXHCWJ1RA5EC2DD5QD",
+          "ticket_id": "pos_08_per_unit_and_hesitation_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "09_reference_back",
+      "title": "Make that two, same thing for her",
+      "file": "fixtures/audio/09_reference_back.mono.clean.mp3",
+      "covers": [
+        9,
+        19
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.2
+        ],
+        "end_err_s": [
+          0.377
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 4,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910MY06315TZYQW69TGNG6",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910N2Z9ZJN07FBZ9DEK20C",
+          "ticket_id": "pos_09_reference_back_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "10_number_ambiguity",
+      "title": "Number two, three of them",
+      "file": "fixtures/audio/10_number_ambiguity.mono.clean.mp3",
+      "covers": [
+        19
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.457
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910N33J3TCJZAXSYW8RQJF",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910N7Y3VQVZ1T5CMJ4ZVMY",
+          "ticket_id": "pos_10_number_ambiguity_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "11_declined_upsell_out_of_stock",
+      "title": "Out of stock and declined meal",
+      "file": "fixtures/audio/11_declined_upsell_out_of_stock.mono.clean.mp3",
+      "covers": [
+        10,
+        13
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.505
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 5,
+            "bucket_total": 5,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910N81BRK4S7JBPMW6Y1NQ",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910ND2696DWKD0X45ZACHJ",
+          "ticket_id": "pos_11_declined_upsell_out_of_stock_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "12_combo_separately",
+      "title": "Combo items ordered separately",
+      "file": "fixtures/audio/12_combo_separately.mono.clean.mp3",
+      "covers": [
+        12
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.346
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910ND5MWMFTWJJSPM6C1SE",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910NHYN6ZERDHKYA0VC94J",
+          "ticket_id": "pos_12_combo_separately_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "13_inquiry_and_misheard",
+      "title": "Question only, plus a hard menu name",
+      "file": "fixtures/audio/13_inquiry_and_misheard.mono.clean.mp3",
+      "covers": [
+        14,
+        20
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.389
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910NJ0ETXHTNKCV1BB0M8H",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910NPRJ1XP7BZXP3K1ZXER",
+          "ticket_id": "pos_13_inquiry_and_misheard_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "14_garbled",
+      "title": "Garbled item needs review",
+      "file": "fixtures/audio/14_garbled.mono.clean.mp3",
+      "covers": [
+        15
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.278
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910NPTBRCDZKBP0XM42QR9",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910NVDK3WD18RWQGW0A926",
+          "ticket_id": "pos_14_garbled_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3008
+        ],
+        "close_by": {
+          "settled": [
+            3008
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "15_split_payment",
+      "title": "Two orders paid separately",
+      "file": "fixtures/audio/15_split_payment.mono.clean.mp3",
+      "covers": [
+        17
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.36
+        ]
+      },
+      "orders": {
+        "expected": 2,
+        "produced": 2,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910NVQJTHPF37B3PY601RH",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910P0TR811SD75RE0AFVB2",
+          "ticket_id": "pos_15_split_payment_1",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910P0ST1KA8YTQWZN27ZXV",
+          "ticket_id": "pos_15_split_payment_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001,
+          3001
+        ],
+        "close_by": {
+          "settled": [
+            3001,
+            3001
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "16_crew_crosstalk",
+      "title": "Crew chatter mid-order",
+      "file": "fixtures/audio/16_crew_crosstalk.mono.clean.mp3",
+      "covers": [
+        18
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.353
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910P0WZ39G2S974NTAP6TG",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910P5KFENGK1P05NWN037A",
+          "ticket_id": "pos_16_crew_crosstalk_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "17_readback_and_total_mismatch",
+      "title": "Crew reads back the wrong size and total",
+      "file": "fixtures/audio/17_readback_and_total_mismatch.mono.clean.mp3",
+      "covers": [
+        21,
+        22
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.443
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910P5NBWMZPB85N8VQ2AQS",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910PA7MK94BB0FD1ETHNY5",
+          "ticket_id": "pos_17_readback_and_total_mismatch_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "18_back_to_back",
+      "title": "Back-to-back orders, no greeting for the second car",
+      "file": "fixtures/audio/18_back_to_back.mono.clean.mp3",
+      "covers": [
+        23
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 2,
+        "found": 2,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12,
+          0.1
+        ],
+        "end_err_s": [
+          0.435,
+          0.306
+        ]
+      },
+      "orders": {
+        "expected": 2,
+        "produced": 2,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910PA9Z1GRT2HY250KB91T",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910PFK9BKHE0K7M3F51XD4",
+          "ticket_id": "pos_18_back_to_back_0",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910PFK745KP9F4DQN7Q9GS",
+          "ticket_id": "pos_18_back_to_back_1",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3000,
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3000,
+            3000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 2,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "19_truncated_start",
+      "title": "Audio starts mid-order",
+      "file": "fixtures/audio/19_truncated_start.mono.clean.mp3",
+      "covers": [
+        24
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.08
+        ],
+        "end_err_s": [
+          0.461
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910PFPSMZP8F8EZ64QGBHG",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910PKS52QJAEC81N6NT2BF",
+          "ticket_id": "pos_19_truncated_start_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "20_truncated_end",
+      "title": "Audio ends mid-order",
+      "file": "fixtures/audio/20_truncated_end.mono.clean.mp3",
+      "covers": [
+        24
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.455
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910PKVJ3ACSRZBMD94JYZA",
+      "layer_b": [],
+      "live": {
+        "close_ms": [
+          5655
+        ],
+        "close_by": {
+          "end_of_input": [
+            5655
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "21_spanish",
+      "title": "Spanish-speaking customer",
+      "file": "fixtures/audio/21_spanish.mono.clean.mp3",
+      "covers": [
+        25
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.318
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910PQW51ES28CH4XDJEWWM",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910PWMDQ18QMYBKSCC5M27",
+          "ticket_id": "pos_21_spanish_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "22_heavy_noise",
+      "title": "Heavy engine and wind noise",
+      "file": "fixtures/audio/22_heavy_noise.mono.heavy.mp3",
+      "covers": [
+        26
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.2
+        ],
+        "end_err_s": [
+          0.368
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910PWP74BAF7W70QVYX5XB",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910Q1DS0P7BN3KNMM94SP9",
+          "ticket_id": "pos_22_heavy_noise_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "23_late_addition",
+      "title": "Late addition after the close: \"oh wait, add a small fries\"",
+      "file": "fixtures/audio/23_late_addition.mono.clean.mp3",
+      "covers": [
+        35
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          15.863
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910Q1FDYTK7Z32FCG1BBQB",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910Q6PKM80N021WXPKHX7S",
+          "ticket_id": "pos_23_late_addition_0",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 1,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 2,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "24_long_silence",
+      "title": "60 seconds of silence mid-order, no closing and no vehicle events",
+      "file": "fixtures/audio/24_long_silence.mono.clean.mp3",
+      "covers": [
+        34
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 1,
+        "found": 1,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12
+        ],
+        "end_err_s": [
+          0.34
+        ]
+      },
+      "orders": {
+        "expected": 1,
+        "produced": 1,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910Q6SGX21EXWXVSY40T4A",
+      "layer_b": [],
+      "live": {
+        "close_ms": [
+          45000
+        ],
+        "close_by": {
+          "idle_timeout": [
+            45000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 1,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "compilation_a",
+      "title": "Five cars in a row: simple, combo, removal, abandoned, separate items",
+      "file": "fixtures/audio/compilation_a.mono.moderate.mp3",
+      "covers": [
+        23
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 5,
+        "found": 5,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.2,
+          0.178,
+          0.163,
+          0.117,
+          0.136
+        ],
+        "end_err_s": [
+          0.437,
+          0.471,
+          0.343,
+          0.305,
+          0.314
+        ]
+      },
+      "orders": {
+        "expected": 5,
+        "produced": 5,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910QDFR94VDDGV26YTPV2J",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910QS2AX189PD6PKH1PSDT",
+          "ticket_id": "pos_compilation_a_2",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910QS4C1AT0VN3KX57NH9N",
+          "ticket_id": "pos_compilation_a_4",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910QS03QV6E0KVQH82SV6Z",
+          "ticket_id": "pos_compilation_a_0",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910QS04A6F1GZD34Y7C3ZM",
+          "ticket_id": "pos_compilation_a_1",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001,
+          3000,
+          3000,
+          25440,
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3001,
+            3000,
+            3000,
+            3000
+          ],
+          "next_car": [
+            25440
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 5,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "compilation_b",
+      "title": "Corrections, per-unit modifiers, out of stock, crew chatter, back-to-back",
+      "file": "fixtures/audio/compilation_b.mono.moderate.mp3",
+      "covers": [
+        23
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 6,
+        "found": 6,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.04,
+          0.194,
+          0.126,
+          0.191,
+          0.148,
+          0.152
+        ],
+        "end_err_s": [
+          0.426,
+          0.314,
+          0.539,
+          0.342,
+          0.407,
+          0.338
+        ]
+      },
+      "orders": {
+        "expected": 6,
+        "produced": 6,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 5,
+            "bucket_total": 5,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910QS7W26D1GS41JPQT79W",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910R5MQED3Y2ADY8577WBZ",
+          "ticket_id": "pos_compilation_b_1",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910R5PT2MGEMXXT8PK4JQV",
+          "ticket_id": "pos_compilation_b_2",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910R5QJQHR67TB8KMF8ESS",
+          "ticket_id": "pos_compilation_b_3",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910R5S1T23NW32A8STV7ZR",
+          "ticket_id": "pos_compilation_b_4",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910R5M2MP28S0KE8T8S39N",
+          "ticket_id": "pos_compilation_b_0",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910R5SHCSFRYPS421RW4MK",
+          "ticket_id": "pos_compilation_b_5",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          15620,
+          3000,
+          3000,
+          3000,
+          3000,
+          3000
+        ],
+        "close_by": {
+          "next_car": [
+            15620
+          ],
+          "settled": [
+            3000,
+            3000,
+            3000,
+            3000,
+            3000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 6,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "lane_stream_a",
+      "title": "Lane stream A: 19 cars over about 20 minutes with 25 to 75 s gaps",
+      "file": "fixtures/audio/lane_stream_a.mono.moderate.mp3",
+      "covers": [
+        23
+      ],
+      "pass": false,
+      "segmentation": {
+        "expected": 19,
+        "found": 19,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12,
+          0.188,
+          0.163,
+          0.103,
+          0.172,
+          0.186,
+          0.196,
+          0.165,
+          0.177,
+          0.157,
+          0.182,
+          0.112,
+          0.136,
+          0.177,
+          0.159,
+          0.164,
+          0.176,
+          0.124,
+          0.144
+        ],
+        "end_err_s": [
+          0.387,
+          0.521,
+          0.362,
+          0.333,
+          0.294,
+          0.329,
+          0.261,
+          0.353,
+          0.293,
+          0.427,
+          0.538,
+          0.344,
+          0.363,
+          0.351,
+          0.371,
+          0.334,
+          0.441,
+          0.431,
+          0.342
+        ]
+      },
+      "orders": {
+        "expected": 20,
+        "produced": 20,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 0,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": false,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 4,
+            "diffs": [
+              "missing not_ordered cookie:uncommitted"
+            ],
+            "pass": false
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 4,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 5,
+            "bucket_total": 5,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910R5X5KH8EPKH57Q7X280",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910T727TTQRPG14KH9GVCW",
+          "ticket_id": "pos_lane_stream_a_8",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T76NXEDHS5T5N255A2K",
+          "ticket_id": "pos_lane_stream_a_10",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T6Q9HAK6WG432RWM4YX",
+          "ticket_id": "pos_lane_stream_a_4",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T70PNSJSB4FNQV7ZXBS",
+          "ticket_id": "pos_lane_stream_a_7",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T79KSR8N0X17H6TAGRS",
+          "ticket_id": "pos_lane_stream_a_11",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T7VGRY24DEB3ZF0E5KH",
+          "ticket_id": "pos_lane_stream_a_17",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T7SGP49BXY5MN4YMMS9",
+          "ticket_id": "pos_lane_stream_a_16",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T6MZNRKBV04HJT6YVPF",
+          "ticket_id": "pos_lane_stream_a_2",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T7TX34JD8QRKVY8Z4Y2",
+          "ticket_id": "pos_lane_stream_a_15",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T74JNEM3K6T5FCZ0A83",
+          "ticket_id": "pos_lane_stream_a_9",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T7B9TM588T3QJYCHP9W",
+          "ticket_id": "pos_lane_stream_a_12",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T7XTSCW6S0S1SQ729HP",
+          "ticket_id": "pos_lane_stream_a_18",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T6H6RB8PWQCPYBCHR5F",
+          "ticket_id": "pos_lane_stream_a_0",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T6PDB76WTGPKFS92DQ1",
+          "ticket_id": "pos_lane_stream_a_3",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T6HZDSB3BNB6AMC7M8E",
+          "ticket_id": "pos_lane_stream_a_1",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T7DA947RQ7V4435EG0G",
+          "ticket_id": "pos_lane_stream_a_13",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T7FYFJ945RXVCWREQFV",
+          "ticket_id": "pos_lane_stream_a_14",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910T7ZRV1SWMYT1CB7QACN",
+          "ticket_id": "pos_lane_stream_a_19",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001,
+          3000,
+          3000,
+          33505,
+          3000,
+          3000,
+          45000,
+          3000,
+          45000,
+          3000,
+          3000,
+          3000,
+          3000,
+          42517,
+          3001,
+          3001,
+          3001,
+          3000,
+          3000,
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3001,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3001,
+            3001,
+            3001,
+            3000,
+            3000,
+            3000
+          ],
+          "next_car": [
+            33505,
+            42517
+          ],
+          "idle_timeout": [
+            45000,
+            45000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 0,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 19,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    },
+    {
+      "id": "lane_stream_b",
+      "title": "Lane stream B: 19 cars including a late addition, a long silence and Spanish (clean audio, so no heavy-noise car)",
+      "file": "fixtures/audio/lane_stream_b.mono.clean.mp3",
+      "covers": [
+        23
+      ],
+      "pass": true,
+      "segmentation": {
+        "expected": 19,
+        "found": 19,
+        "missed": 0,
+        "extra": 0,
+        "start_err_s": [
+          0.12,
+          0.179,
+          0.138,
+          0.125,
+          0.193,
+          0.155,
+          0.153,
+          0.18,
+          0.16,
+          0.196,
+          0.161,
+          0.151,
+          0.119,
+          0.112,
+          0.118,
+          0.186,
+          0.108,
+          0.066,
+          0.143
+        ],
+        "end_err_s": [
+          0.346,
+          0.307,
+          15.845,
+          0.427,
+          0.345,
+          0.267,
+          0.35,
+          0.38,
+          0.384,
+          0.389,
+          0.508,
+          0.489,
+          0.374,
+          0.363,
+          0.304,
+          0.358,
+          0.326,
+          0.412,
+          0.316
+        ]
+      },
+      "orders": {
+        "expected": 20,
+        "produced": 20,
+        "comparisons": [
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 4,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 4,
+            "bucket_total": 4,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 5,
+            "bucket_total": 5,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 0,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 3,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 3,
+            "bucket_total": 3,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 1,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 1,
+            "bucket_total": 1,
+            "diffs": [],
+            "pass": true
+          },
+          {
+            "checks": {
+              "items": true,
+              "needs_review": true,
+              "not_ordered": true,
+              "flags": true,
+              "status": true,
+              "review": true,
+              "group": true,
+              "declined_combo": true
+            },
+            "item_tp": 2,
+            "item_fp": 0,
+            "item_fn": 0,
+            "bucket_correct": 2,
+            "bucket_total": 2,
+            "diffs": [],
+            "pass": true
+          }
+        ]
+      },
+      "run_id": "run_01M4910T852P4T233VVQDRZV9Q",
+      "layer_b": [
+        {
+          "order_id": "ord_01M4910W7KX7VS4GNFJ494N3GT",
+          "ticket_id": "pos_lane_stream_b_7",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W75WG3HR511S8ECPM09",
+          "ticket_id": "pos_lane_stream_b_1",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W7SRG3AMNADYPAADQBR",
+          "ticket_id": "pos_lane_stream_b_11",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W78Z5RWFNXVNCPMGC1Z",
+          "ticket_id": "pos_lane_stream_b_2",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W75FMQFA0R0F8Z7ABVV",
+          "ticket_id": "pos_lane_stream_b_0",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W82VAQ32PWE9R89W4EG",
+          "ticket_id": "pos_lane_stream_b_16",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W80152P8BTGC8DFGE91",
+          "ticket_id": "pos_lane_stream_b_15",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W7NHP386RQX6CEGPBHZ",
+          "ticket_id": "pos_lane_stream_b_8",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W7EEMDJ12KVY9TY8MWR",
+          "ticket_id": "pos_lane_stream_b_6",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W87REMK9EV7TZGM5VV0",
+          "ticket_id": "pos_lane_stream_b_19",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W7A2Q7Y5V46NTAK0YJ4",
+          "ticket_id": "pos_lane_stream_b_3",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W7X3E5JB9ECSG4V53B2",
+          "ticket_id": "pos_lane_stream_b_13",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W83N81M94ZW9B38XTVD",
+          "ticket_id": "pos_lane_stream_b_17",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W7BFTRFHWWK8E1B3TGM",
+          "ticket_id": "pos_lane_stream_b_4",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W7R2AM2TMYVDTRF50JQ",
+          "ticket_id": "pos_lane_stream_b_10",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W85HSTQ5CNTA88P7P8G",
+          "ticket_id": "pos_lane_stream_b_18",
+          "exact": true,
+          "diffs": []
+        },
+        {
+          "order_id": "ord_01M4910W7ZBKH3QRFT0QRKKQY0",
+          "ticket_id": "pos_lane_stream_b_14",
+          "exact": true,
+          "diffs": []
+        }
+      ],
+      "live": {
+        "close_ms": [
+          3001,
+          3000,
+          3001,
+          3001,
+          39504,
+          45002,
+          3000,
+          45000,
+          3000,
+          45000,
+          3000,
+          3000,
+          3000,
+          3000,
+          3000,
+          3000,
+          3000,
+          45000,
+          3000,
+          3000
+        ],
+        "close_by": {
+          "settled": [
+            3001,
+            3000,
+            3001,
+            3001,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000,
+            3000
+          ],
+          "next_car": [
+            39504
+          ],
+          "idle_timeout": [
+            45002,
+            45000,
+            45000,
+            45000
+          ]
+        },
+        "reopens": 0,
+        "expected_reopens": 1,
+        "duplicate_versions": 0
+      },
+      "usage": {
+        "stt": {
+          "provider": "deepgram/nova-3 (files) / deepgram/nova-3-live (live)",
+          "audio_minutes": 0,
+          "cached": true,
+          "role_llm_calls": 0
+        },
+        "llm": {
+          "calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_calls": 20,
+          "model": "gemini-3.5-flash-lite"
+        },
+        "segmentation_llm_calls": 0,
+        "gemini_today": {
+          "day": "2026-10-06",
+          "requests": 2,
+          "cap": 200,
+          "tier": "unknown",
+          "exhausted": false
+        }
+      }
+    }
+  ],
+  "usage": {
+    "deepgram_minutes": 0,
+    "llm_calls": 0,
+    "llm_cached_calls": 76,
+    "input_tokens": 0,
+    "output_tokens": 0
+  }
+}

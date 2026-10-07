@@ -1,0 +1,92 @@
+{
+  "id": "19_truncated_start",
+  "title": "Audio starts mid-order",
+  "covers": [
+    24
+  ],
+  "turns": [
+    {
+      "speaker": "customer",
+      "text": "and a large Sprite too.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Okay, large Sprite. Anything else?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Add a cheeseburger.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Please pull forward.",
+      "pause_after_s": 0.6
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u1"
+        ],
+        "catalog_id": "sprite",
+        "size": "large"
+      },
+      {
+        "event_id": "e2",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u3"
+        ],
+        "catalog_id": "cheeseburger"
+      },
+      {
+        "event_id": "e3",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "sprite",
+            "size": "large"
+          }
+        ]
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "sprite",
+            "quantity": 1,
+            "size": "large"
+          },
+          {
+            "catalog_id": "cheeseburger",
+            "quantity": 1
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [
+          "truncated_start"
+        ],
+        "group": null,
+        "review": []
+      }
+    ]
+  },
+  "render": {
+    "lead_silence_s": 0,
+    "tail_silence_s": 3
+  }
+}

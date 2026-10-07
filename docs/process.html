@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Serv Audio-to-Orders: The Whole Process</title>
+<style>
+  @page { size: Letter; margin: 18mm 17mm 20mm 17mm;
+    @bottom-right { content: counter(page); font: 9pt -apple-system, "SF Pro Text", Helvetica, sans-serif; color: #8a8a8e; }
+    @bottom-left { content: "Serv Audio-to-Orders v2.1: the whole process"; font: 9pt -apple-system, "SF Pro Text", Helvetica, sans-serif; color: #8a8a8e; }
+  }
+  @page :first { @bottom-right { content: none; } @bottom-left { content: none; } }
+  :root {
+    --ink: #1d1d1f; --muted: #5f5f66; --faint: #8a8a8e; --line: #e3e3e8; --fill: #f5f5f7;
+    --accent: #d61f35; --accent-soft: #fdecee; --blue: #0a66c2; --blue-soft: #eaf2fb;
+    --green: #1b7f3b; --green-soft: #e8f5ec; --amber: #9a6200; --amber-soft: #fff4dc;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; color: var(--ink); background: #fff;
+    font: 10.4pt/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  h1, h2, h3, h4 { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, sans-serif; line-height: 1.2; }
+  h1 { font-size: 30pt; letter-spacing: -0.02em; margin: 0 0 8px; }
+  h2 { font-size: 18pt; letter-spacing: -0.01em; margin: 0 0 10px; padding-top: 2px; }
+  h2 .num { color: var(--accent); margin-right: 8px; }
+  h3 { font-size: 12.5pt; margin: 20px 0 6px; }
+  h4 { font-size: 10.4pt; margin: 14px 0 4px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-size: 8.6pt; }
+  p { margin: 0 0 8px; }
+  ul, ol { margin: 0 0 8px; padding-left: 20px; }
+  ol { padding-left: 26px; }
+  li { margin: 2px 0; }
+  code, .mono { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace; font-size: 8.9pt; }
+  code { background: var(--fill); border-radius: 4px; padding: 0 4px; }
+  pre { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 8.4pt; line-height: 1.45; background: var(--fill);
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 6px 0 10px; white-space: pre-wrap; break-inside: avoid; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 9.3pt; break-inside: auto; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 8.4pt; text-transform: uppercase; letter-spacing: 0.04em;
+    border-bottom: 1.5px solid var(--ink); padding: 5px 8px 4px 0; }
+  td { border-bottom: 1px solid var(--line); padding: 5px 8px 5px 0; vertical-align: top; }
+  tr { break-inside: avoid; }
+  .section { margin-top: 30px; }
+  .section.page { break-before: page; margin-top: 0; }
+  h2, h3, h4 { break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  .muted { color: var(--muted); }
+  .small { font-size: 9pt; }
+  .lead { font-size: 12pt; color: var(--muted); line-height: 1.5; }
+  .box { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 10px 0 12px; break-inside: avoid; background: #fff; }
+  .box.fill { background: var(--fill); border-color: var(--fill); }
+  .box.accent { background: var(--accent-soft); border-color: #f7ccd2; }
+  .box.blue { background: var(--blue-soft); border-color: #cfe0f3; }
+  .box.green { background: var(--green-soft); border-color: #cde8d5; }
+  .box.amber { background: var(--amber-soft); border-color: #f3dfb0; }
+  .box h4:first-child, .box h3:first-child { margin-top: 0; }
+  .why { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; margin: 8px 0 12px; break-inside: avoid; }
+  .why b.tag { color: var(--accent); text-transform: uppercase; font-size: 8pt; letter-spacing: 0.08em; display: block; margin-bottom: 2px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .stat { background: var(--fill); border-radius: 10px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 19pt; letter-spacing: -0.02em; font-family: -apple-system, "SF Pro Display", Helvetica, sans-serif; }
+  .stat span { font-size: 8.8pt; color: var(--muted); }
+  .pill { display: inline-block; border-radius: 99px; padding: 0 7px; font-size: 8pt; font-weight: 600; line-height: 16px; }
+  .p-high { background: var(--accent-soft); color: var(--accent); }
+  .p-med { background: var(--amber-soft); color: var(--amber); }
+  .p-low { background: var(--fill); color: var(--muted); }
+  .flow { display: flex; align-items: stretch; gap: 0; margin: 10px 0 6px; }
+  .flow .st { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 7px 6px; text-align: center; background: #fff; }
+  .flow .st b { display: block; font-size: 8.4pt; white-space: nowrap; }
+  .flow .st span { display: block; font-size: 7.6pt; color: var(--muted); line-height: 1.3; margin-top: 2px; }
+  .flow .st.llm { border-color: #cfe0f3; background: var(--blue-soft); }
+  .flow .st.code { border-color: #cde8d5; background: var(--green-soft); }
+  .flow .ar { width: 12px; display: flex; align-items: center; justify-content: center; color: var(--faint); font-size: 10pt; }
+  .legend { font-size: 8.4pt; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin: 0 4px 0 10px; }
+  .cover { height: 228mm; display: flex; flex-direction: column; }
+  .cover .kicker { color: var(--accent); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-size: 9pt; margin-top: 30mm; }
+  .cover .meta { margin-top: auto; color: var(--muted); font-size: 9.5pt; border-top: 1px solid var(--line); padding-top: 10px; }
+  .toc { columns: 2; column-gap: 24px; font-size: 10pt; margin-top: 18px; }
+  .toc div { break-inside: avoid; padding: 2px 0; }
+  .toc span { color: var(--accent); font-weight: 600; display: inline-block; width: 22px; }
+  .conv { font-size: 9.2pt; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 6px 0 10px; break-inside: avoid; }
+  .conv div { padding: 3px 10px; display: grid; grid-template-columns: 34px 74px 1fr; gap: 6px; }
+  .conv div:nth-child(even) { background: var(--fill); }
+  .conv .who-crew { color: var(--blue); font-weight: 600; }
+  .conv .who-cust { color: var(--accent); font-weight: 600; }
+  .kv { display: grid; grid-template-columns: 130px 1fr; gap: 3px 10px; font-size: 9.3pt; }
+  .kv b { color: var(--muted); font-weight: 600; }
+  .avoid { break-inside: avoid; }
+  svg text { font-family: -apple-system, "SF Pro Text", Helvetica, sans-serif; }
+</style>
+
+<body>
+
+<!-- ============================================================ COVER -->
+<div class="cover">
+  <div class="kicker">v2.1: how the live service works</div>
+  <h1>Serv Audio-to-Orders: the whole process</h1>
+  <p class="lead">From headset audio in a drive-thru lane to a signed order on Serv's server, a few seconds after the car pulls forward. Every step of the live path, how the sandbox differs from a real HME install, what every part of the code does, the exact webhook, which outcomes are sent, how duplicates are prevented, and how to receive it all on AWS Lambda.</p>
+
+  <div class="grid3" style="margin-top:22px">
+    <div class="stat"><b>27 / 28</b><span>fixtures pass with real Deepgram + Gemini through the live path (74 of 74 conversations found)</span></div>
+    <div class="stat"><b>~3 s</b><span>from the crew's "pull forward" to the order being sent (median; 45 s when no closing cue is heard)</span></div>
+    <div class="stat"><b>4 of 4</b><span>outcomes sent: completed, cancelled, abandoned, undetermined</span></div>
+  </div>
+
+  <div class="toc">
+    <div><span>1</span>The process on one page</div>
+    <div><span>2</span>One car, start to finish</div>
+    <div><span>3</span>Sandbox vs the real setup</div>
+    <div><span>4</span>What part of the code does what</div>
+    <div><span>5</span>The webhook, exactly</div>
+    <div><span>6</span>Outcomes, including abandoned</div>
+    <div><span>7</span>How duplicates are prevented</div>
+    <div><span>8</span>Receiving the webhook on AWS Lambda</div>
+    <div><span>9</span>Testing it yourself</div>
+    <div><span>10</span>Gaps and next steps</div>
+    <div><span>A</span>Commands and glossary</div>
+  </div>
+
+  <div class="meta">
+    Prepared October 6, 2026 from the <code>v2.1</code> branch of <code>serv-audio-to-orders</code> (commit <code>deabaa0</code>, after PR #32). Companion to the October 4 architecture document, which covers v1's batch pipeline and the reasoning behind "the LLM proposes, code decides". Facts here come from the code, the README and the test suite; one behavior (section 6) was checked with a throwaway test on this date.
+  </div>
+</div>
+
+<!-- ============================================================ 1 -->
+<div class="section page">
+<h2><span class="num">1</span>The process on one page</h2>
+<p>v1 took a finished MP3 and turned it into orders. v2 and v2.1 turn the same logic into a <b>live service</b>: an HME base station streams each lane's audio over a WebSocket while cars are ordering, and each finished conversation becomes a webhook within seconds. Files still work: they are replayed into the same lane as if they were live, so there is one path, not two.</p>
+
+<div class="flow">
+  <div class="st"><b>1 Connect</b><span>base station opens a WebSocket, token checked</span></div><div class="ar">&#9656;</div>
+  <div class="st"><b>2 Decode</b><span>any codec to 16 kHz PCM, raw copy kept</span></div><div class="ar">&#9656;</div>
+  <div class="st llm"><b>3 Transcribe</b><span>Deepgram live, utterance by utterance</span></div><div class="ar">&#9656;</div>
+  <div class="st code"><b>4 Track</b><span>state machine: when does a car start and end?</span></div><div class="ar">&#9656;</div>
+  <div class="st llm"><b>5 Extract</b><span>Gemini proposes events with menu IDs</span></div><div class="ar">&#9656;</div>
+  <div class="st code"><b>6 Build</b><span>replay() + post-process decide the order</span></div><div class="ar">&#9656;</div>
+  <div class="st code"><b>7 Deliver</b><span>outbox, signed POST, retries</span></div>
+</div>
+<div class="legend"><i style="background:var(--blue-soft);border:1px solid #cfe0f3"></i>outside AI service <i style="background:var(--green-soft);border:1px solid #cde8d5"></i>plain code, unit-tested <i style="background:#fff;border:1px solid var(--line)"></i>input handling</div>
+
+<h3>The seven steps in plain words</h3>
+<ol>
+<li><b>Connect.</b> The base station opens <code>/hme/v1/stream</code> on our feed service with a per-store bearer token, and names its lane and audio format (codec, sample rate, channels). Bad tokens, unknown lanes and bad formats are refused before the socket opens.</li>
+<li><b>Decode.</b> Binary messages are audio; text messages are JSON events such as <code>vehicle_arrived</code>. Every message is saved raw first (so any session can be replayed byte for byte later), then audio is decoded to 16 kHz PCM and timed by our receive clock.</li>
+<li><b>Transcribe.</b> Each lane has its own Deepgram live connection (Nova-3). Only final results become utterances; interim words go to the screen. Speaker roles come from separate channels if HME provides them, otherwise from diarization and wording.</li>
+<li><b>Track.</b> A per-lane state machine (<code>IDLE &rarr; ACTIVE &rarr; CLOSING &rarr; FINALIZED</code>) decides where one car's conversation starts and ends, using spoken cues ("welcome", "pull forward"), vehicle events and timers. It can reopen an order for 20 s if the customer adds something late.</li>
+<li><b>Extract.</b> One Gemini call per finished conversation. The model returns <i>events</i> (<code>ADD</code>, <code>REPLACE</code>, <code>CHANGE_QTY</code>, <code>CANCEL_ORDER</code>, <code>READBACK</code>...) that point at catalog IDs. It never writes the order itself.</li>
+<li><b>Build.</b> The pure function <code>replay(events)</code> applies the events to produce the order. Post-processing sorts every mention into <i>items</i>, <i>needs review</i> or <i>not ordered</i>, finds combo savings, sets the outcome from evidence, and decides whether a person should check it.</li>
+<li><b>Deliver.</b> The payload is written to an SQLite outbox and POSTed at once to <code>WEBHOOK_URL</code>, signed per the Standard Webhooks spec. Failures retry for about a day before going to a dead letter queue you can resend from.</li>
+</ol>
+
+<div class="why"><b class="tag">The core rule</b>The LLM proposes, code decides. Gemini can be wrong about what it heard, but it cannot invent a menu item, a price or a total: those come from the catalog and from code that is unit-tested. Corrections, cancellations and readbacks are deterministic.</div>
+
+<h3>Where it runs</h3>
+<div class="grid2">
+<div class="box fill"><h4>Feed service: <code>pnpm feed serve</code></h4>
+<p class="small">The live part. Listens on <code>127.0.0.1:8787</code>, runs one lane per store and lane, talks to Deepgram and Gemini, writes orders, and delivers webhooks. Everything it keeps goes under <code>.data/</code>.</p></div>
+<div class="box fill"><h4>Web app: <code>pnpm dev</code></h4>
+<p class="small">Next.js on <code>localhost:3000</code>. Shows runs, orders, Test Lab, the eval, and the mock webhook receiver. Reads the same SQLite database the feed service writes. Also runs file uploads and the slow-phase retry worker.</p></div>
+</div>
+</div>
+
+<!-- ============================================================ 2 -->
+<div class="section">
+<h2><span class="num">2</span>One car, start to finish</h2>
+<p>A simple order on lane 1, with the times you would see on a live feed. The webhook goes out about 3 seconds after the crew's closing line, plus the Gemini call.</p>
+
+<div class="conv">
+  <div><span class="muted">0.0 s</span><span class="muted">event</span><span><code>{"type":"vehicle_arrived"}</code> (if HME sends vehicle events)</span></div>
+  <div><span class="muted">1.1 s</span><span class="who-crew">Crew</span><span>Welcome to Sandbox Burger. What can I get for you today?</span></div>
+  <div><span class="muted">5.6 s</span><span class="who-cust">Customer</span><span>Hi. Can I get a double cheeseburger and a medium fries?</span></div>
+  <div><span class="muted">9.6 s</span><span class="who-crew">Crew</span><span>Sure. A double cheeseburger and a medium fry. Anything else?</span></div>
+  <div><span class="muted">14.6 s</span><span class="who-cust">Customer</span><span>No, that's it.</span></div>
+  <div><span class="muted">16.2 s</span><span class="who-crew">Crew</span><span>Your total is $8.28. Please pull forward.</span></div>
+</div>
+
+<table>
+<tr><th style="width:16%">When</th><th style="width:22%">Who</th><th>What happens</th></tr>
+<tr><td>0.0 s</td><td>Tracker</td><td>The arrival is noted. A conversation opens on the arrival plus the greeting, or on any customer line.</td></tr>
+<tr><td>1.1 s</td><td>Tracker</td><td><code>IDLE &rarr; ACTIVE</code>. A new <code>order_id</code> is minted right now and kept for this car whatever happens later.</td></tr>
+<tr><td>each line</td><td>Deepgram</td><td>Interim words show on screen; the final utterance (with word confidences) goes to the tracker.</td></tr>
+<tr><td>16.2 s</td><td>Tracker</td><td>"Pull forward" is a crew closing cue: <code>ACTIVE &rarr; CLOSING</code>. A 3 s settle timer starts (<code>CLOSE_SETTLE_S</code>).</td></tr>
+<tr><td>~20 s</td><td>Tracker</td><td>No customer speech in 3 s: <code>FINALIZED</code>. The reopen window (20 s) starts.</td></tr>
+<tr><td>~20 s</td><td>Gemini</td><td>One call with the compact menu and the utterances. Returns events: <code>ADD dbl_cheese</code>, <code>ADD fries</code> (size medium), <code>READBACK</code>. The spoken total ($8.28) is read from the crew's line by code.</td></tr>
+<tr><td>~21 s</td><td>Code</td><td><code>replay()</code> builds two lines; post-process puts both in <code>items</code>, computes $8.28, sees it matches the crew's total, sets status <code>completed</code> (evidence: the "pull forward" cue), review not required.</td></tr>
+<tr><td>~21 s</td><td>Deliverer</td><td>Outbox row <code>ord_..._v1</code> written; signed POST sent; Serv answers 2xx; row marked delivered.</td></tr>
+<tr><td>up to 40 s</td><td>Tracker</td><td>If the customer says "oh, and a water" before the window closes, the conversation reopens and the same <code>order_id</code> is sent again as version 2 (<code>order.updated</code>, <code>correction_reason: reopened_late_addition</code>).</td></tr>
+</table>
+
+<h3>When there is no closing cue</h3>
+<p>The tracker never guesses that a car left from a pause alone (plan decision D10). Without a closing cue, a conversation finalizes when the next car starts, after 45 s of silence (<code>IDLE_TIMEOUT_S</code>), when a <code>vehicle_departed</code> event arrives, or at the 6 minute cap. That is why the 95th percentile close time is about 45 s: those orders wait for the idle timer. HME vehicle events would shorten that tail.</p>
+
+<h3>When the connection drops</h3>
+<p>The lane survives reconnects. An open conversation is held for 180 s (<code>RECONNECT_GRACE_S</code>). If the base station comes back, the order continues and is flagged <code>stream_gap</code> (which also asks for review). If not, it is finalized with <code>stream_interrupted</code>. A dropped connection never decides the outcome by itself.</p>
+</div>
+
+<!-- ============================================================ 3 -->
+<div class="section page">
+<h2><span class="num">3</span>Sandbox vs the real setup</h2>
+<p>Everything after the input layer (tracker, extraction, build, delivery) is what production would run. What differs is what feeds it, where it runs, and the values Serv and HME have not given us yet. Every one of those values lives in <code>config/sandbox.ts</code>, shows a yellow Placeholder badge in the UI, and adds the <code>placeholder_values</code> flag to orders.</p>
+
+<table>
+<tr><th style="width:20%">Piece</th><th style="width:38%">Sandbox today</th><th>Real setup</th></tr>
+<tr><td>Audio source</td><td>Browser simulator, Test Lab, file replays, or a fake base station (<code>pnpm feed replay --via ws</code>)</td><td>HME base stations, one stream per lane</td></tr>
+<tr><td>Wire format</td><td><b>Placeholder</b>: <code>/hme/v1/stream?lane=&amp;codec=&amp;rate=&amp;channels=</code>, audio as binary frames, events as JSON text</td><td>Whatever HME documents. Only <code>src/input/hme/</code> changes</td></tr>
+<tr><td>Authentication</td><td>Per-store bearer tokens we issue (<code>pnpm pipeline token create</code>)</td><td>Confirm with HME; add mTLS, an IP allowlist or signed connects, plus rotation</td></tr>
+<tr><td>Hosting</td><td>One laptop, <code>127.0.0.1</code>, no TLS</td><td>A long-running container (ECS Fargate or similar) behind TLS, sized per number of lanes</td></tr>
+<tr><td>Storage</td><td>SQLite + local disk under <code>.data/</code></td><td>Postgres for orders and the outbox; S3 for audio and raw capture, same key layout</td></tr>
+<tr><td>Webhook target</td><td>The app's own mock receiver, <code>/api/mock-webhook</code></td><td>Serv's endpoint (for example API Gateway + Lambda, section 8). Only <code>WEBHOOK_URL</code> and <code>WEBHOOK_SECRET</code> change</td></tr>
+<tr><td>Clock</td><td>Our receive time, NTP offset checked at start</td><td>The same, unless HME sends source timestamps (the parser already keeps them)</td></tr>
+<tr><td>Store and lane IDs</td><td><code>store_demo_001</code>, <code>lane_1</code></td><td>Serv's site and lane IDs (store from the token, lane from the connection)</td></tr>
+<tr><td>Menu</td><td>Invented "Sandbox Burger", 27 items</td><td>The brand's real menu, with regional names and promos</td></tr>
+<tr><td>Tax</td><td><code>TAX_RATE=0</code></td><td>Per site; otherwise <code>total_mismatch</code> fires on most real orders</td></tr>
+<tr><td>Providers</td><td>Deepgram free credit; Gemini free tier with a daily cap</td><td>Paid tiers (free-tier Gemini prompts may be used by Google, not acceptable for real customer audio)</td></tr>
+<tr><td>Monitoring</td><td>UI and logs only</td><td>Alerts on dead letters, failed sessions and provider errors</td></tr>
+</table>
+
+<h3>Your question: do we connect to HME's WebSocket?</h3>
+<p>Possibly, but the code assumes the opposite direction, and that is worth confirming with HME first.</p>
+<div class="grid2">
+<div class="box blue"><h4>What the code assumes now</h4>
+<p class="small"><b>HME connects to us.</b> We run the WebSocket <i>server</i>; each base station dials out to our URL. This matches HME's installation guide, which only asks the installer for a <b>provider URL and port</b>: that is the shape of a device that pushes to a provider, not one that waits to be called. It is also easier for stores: no inbound firewall holes at each restaurant.</p></div>
+<div class="box amber"><h4>If HME exposes a socket instead</h4>
+<p class="small"><b>We connect to HME.</b> Then we add a small WebSocket <i>client</i> per lane in <code>src/input/hme/</code> that dials HME, reconnects with backoff, and feeds the same <code>HmeConnection</code> class. Everything from decoding onward is unchanged. Our server-side token check would be replaced by whatever credentials HME gives us.</p></div>
+</div>
+<p>Either way, the questions for HME are the same:</p>
+<ol class="small">
+<li>Who opens the connection, and to what URL? One connection per lane, or per store with lanes multiplexed?</li>
+<li>Audio format: codec, sample rate, mono or a separate crew and customer channel? (Separate channels make speaker roles nearly free and much more accurate.)</li>
+<li>Does the stream send vehicle-detection events (car at the speaker post, car left)? With what message format and timestamps?</li>
+<li>Does audio stop when no car is present? (The code handles both: a burst after a pause is placed by its own arrival time.)</li>
+<li>Authentication: tokens, client certificates, IP ranges?</li>
+<li>Reconnect behaviour and keepalives. (The simulator assumes HME retries at 2, 4 and 8 s.)</li>
+</ol>
+<p class="small muted">Nothing has been tested against a real base station yet. The raw capture of every message means the first real session can be replayed through the pipeline as often as needed (<code>pnpm feed replay-raw</code>) once we have one.</p>
+</div>
+
+<!-- ============================================================ 4 -->
+<div class="section">
+<h2><span class="num">4</span>What part of the code does what</h2>
+<p>One repository, two programs that share one engine. <code>packages/pipeline</code> holds all the logic and the feed service; <code>apps/web</code> is the UI and imports the same package, so the UI can never drift from real behavior.</p>
+
+<h3>The live path, in the order a message travels</h3>
+<table>
+<tr><th style="width:34%">File or folder</th><th>What it does</th></tr>
+<tr><td><code>server/serve.ts</code></td><td>Starts the feed service: checks the NTP offset, opens the database, wires the ingest server to the lane manager, raw capture and the live view.</td></tr>
+<tr><td><code>server/ingest-server.ts</code></td><td>The WebSocket endpoint. Before accepting: per-IP failure limit, token check, lane allowed, format valid. After: message size limits, one connection per store+lane, ping every 20 s, rate limit, revocation, operator stop.</td></tr>
+<tr><td><code>input/auth/</code></td><td>Ingest tokens: create, hash, check, revoke. The <code>IngestAuth</code> interface is where mTLS or an allowlist would plug in.</td></tr>
+<tr><td><code>input/hme/</code></td><td><b>The only HME-specific code.</b> <code>handshake.ts</code> reads the format from the URL, <code>messages.ts</code> parses JSON events (never throws, keeps unknown messages), <code>connection.ts</code> turns one socket into source messages with timing.</td></tr>
+<tr><td><code>input/decoders.ts</code>, <code>pcm.ts</code>, <code>ogg.ts</code></td><td>Any wire codec (PCM, mu-law, a-law, Opus, or MP3/AAC/WAV/FLAC through ffmpeg) to 16 kHz PCM per channel.</td></tr>
+<tr><td><code>input/file-replay.ts</code>, <code>scenario.ts</code>, <code>ws-replay.ts</code></td><td>Make a file behave like a live feed: pauses, drops, vehicle events, codecs. <code>ws-replay</code> plays a file as a fake base station over the real socket.</td></tr>
+<tr><td><code>data/raw-sink.ts</code>, <code>store/raw-capture.ts</code></td><td>Saves every incoming message before decoding (zstd parts every 60 s or 5 MB).</td></tr>
+<tr><td><code>lane/manager.ts</code></td><td>Routes messages to one <code>LaneSession</code> per store and lane; keeps the lane alive across reconnects.</td></tr>
+<tr><td><code>lane/lane.ts</code></td><td>The heart of the live path: owns the transcriber and tracker for one lane, turns tracker decisions into finalize calls, handles reopen, late evidence, operator stop and the no-speech rules (E1, E2, E9).</td></tr>
+<tr><td><code>lane/deepgram-stream.ts</code></td><td>Deepgram live connection per lane (Nova-3, endpointing 300 ms, utterance end 1 s, menu names as keyterms), closed when idle for 30 s and reopened on resume.</td></tr>
+<tr><td><code>lane/file-transcriber.ts</code>, <code>timed-stream.ts</code>, <code>script-transcriber.ts</code></td><td>For files: transcribe once with Deepgram's prerecorded API (cached) and release each utterance as its audio "arrives". The script transcriber uses the fixture's exact words, free.</td></tr>
+<tr><td><code>lane/tracker.ts</code></td><td>The conversation state machine and all its timers. Pure: given utterances, events and clock ticks, returns decisions with their reasons.</td></tr>
+<tr><td><code>lane/online-roles.ts</code>, <code>transcribe/roles.ts</code></td><td>Who is crew and who is the customer, from channels, diarization or wording.</td></tr>
+<tr><td><code>segment/cues.ts</code>, <code>segment.ts</code></td><td>The phrase lists (greetings, closings, "they left", "that's it") and gap scoring the tracker uses.</td></tr>
+<tr><td><code>orders/finalize.ts</code></td><td>One finished conversation to order versions: extract, <code>replay()</code>, post-process, format the payload, store it, enqueue it.</td></tr>
+<tr><td><code>extract/gemini.ts</code>, <code>prompt.ts</code>, <code>llm-schema.ts</code>, <code>validate.ts</code></td><td>The Gemini call (schema-constrained JSON, one repair retry, daily cap, cache), and validation of every catalog ID. <code>fuzzy-extractor.ts</code> is the no-LLM fallback; <code>oracle.ts</code> replays hand-written events for the eval.</td></tr>
+<tr><td><code>build/replay.ts</code></td><td>Pure <code>replay(events)</code>: applies adds, replacements, quantity changes and cancels in order. Also runs in the browser.</td></tr>
+<tr><td><code>postprocess/postprocess.ts</code>, <code>outcome.ts</code></td><td>Buckets, combos, totals, flags; the outcome from evidence and the review reasons. Pure.</td></tr>
+<tr><td><code>webhook/payload.ts</code>, <code>corrections.ts</code></td><td>Formats schema 2.0, and builds version N+1 from version N.</td></tr>
+<tr><td><code>webhook/deliver.ts</code>, <code>signing.ts</code></td><td>The outbox, retries and ordering between versions; Standard Webhooks signing and verification.</td></tr>
+<tr><td><code>webhook/mock-receiver.ts</code></td><td>The sandbox's stand-in for Serv: verifies, dedupes, keeps the highest version, can fail on purpose. A good model for the real receiver.</td></tr>
+<tr><td><code>store/db.ts</code></td><td>SQLite schema: runs, orders and versions, outbox, attempts, mock inbox, live events, Test Lab results.</td></tr>
+</table>
+
+<h3>Around the live path</h3>
+<table>
+<tr><th style="width:34%">File or folder</th><th>What it does</th></tr>
+<tr><td><code>config/sandbox.ts</code></td><td>Every Serv-dependent setting with its placeholder status.</td></tr>
+<tr><td><code>menu/menu.json</code>, <code>menu/</code> code</td><td>The catalog, aliases and fuzzy matching.</td></tr>
+<tr><td><code>eval/</code></td><td><code>pnpm eval</code>: Layer A (what was said), Layer B (what was rung up, against POS tickets), live-path checks, the 41-row checklist, the webhook self-check.</td></tr>
+<tr><td><code>fixtures/</code>, <code>sim/</code></td><td>24 scripted conversations rendered to audio with noise, plus the simulator's back end (save a session as a fixture).</td></tr>
+<tr><td><code>data/</code></td><td>The blob store and artifact catalog behind <code>pnpm data find / usage / prune</code>.</td></tr>
+<tr><td><code>apps/web/app/</code></td><td>Pages (<code>/</code>, <code>/runs/[id]</code>, <code>/orders</code>, <code>/testlab</code>, <code>/simulator</code>, <code>/eval</code>, <code>/mock-webhook</code>) and API routes.</td></tr>
+<tr><td><code>apps/web/lib/jobs.ts</code>, <code>instrumentation.ts</code></td><td>The in-process run queue for uploads, and the slow-phase webhook retry worker.</td></tr>
+<tr><td><code>apps/web/components/testlab/</code>, <code>testlab/scenarios/</code></td><td>Test Lab: guided scripts, the scorecard, history.</td></tr>
+<tr><td><code>apps/web/e2e/</code></td><td>Playwright tests, including the monkey test (random clicking for minutes, no errors allowed).</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ 5 -->
+<div class="section page">
+<h2><span class="num">5</span>The webhook, exactly</h2>
+<p>One HTTP <code>POST</code> per order version, JSON body, schema 2.0. The body is built once and never changes between retries.</p>
+
+<h3>Headers</h3>
+<table>
+<tr><th style="width:26%">Header</th><th style="width:38%">Example</th><th>Meaning</th></tr>
+<tr><td><code>content-type</code></td><td><code>application/json</code></td><td></td></tr>
+<tr><td><code>user-agent</code></td><td><code>serv-audio-orders/0.1</code></td><td></td></tr>
+<tr><td><code>webhook-id</code></td><td><code>ord_01M47MMRZ1J9P2ACY80ARBSQ2A_v1</code></td><td><code>{order_id}_v{order_version}</code>. Same on every retry; different for each version. <b>The dedupe key.</b></td></tr>
+<tr><td><code>webhook-timestamp</code></td><td><code>1791257896</code></td><td>Unix seconds when this attempt was signed. Reject if more than 5 minutes off (replay protection).</td></tr>
+<tr><td><code>webhook-signature</code></td><td><code>v1,RTg5Y6JZ...DS4=</code></td><td><code>v1,</code> + base64 HMAC-SHA256 of <code>{id}.{timestamp}.{body}</code> with the shared secret (<code>whsec_...</code>). Space-separated list during secret rotation.</td></tr>
+<tr><td><code>x-delivery-attempt</code></td><td><code>1</code></td><td>Attempt number for this version, for logging. Not signed.</td></tr>
+</table>
+
+<h3>Body: every top-level field</h3>
+<table class="small">
+<tr><th style="width:24%">Field</th><th>Type and meaning</th></tr>
+<tr><td><code>schema_version</code></td><td><code>"2.0"</code></td></tr>
+<tr><td><code>event_type</code></td><td><code>order.finalized</code> for version 1, <code>order.updated</code> for every later version</td></tr>
+<tr><td><code>order_id</code></td><td><code>ord_</code> + ULID. Minted when the conversation opens; stable across versions</td></tr>
+<tr><td><code>order_version</code></td><td>1, 2, 3... Keep the highest per order</td></tr>
+<tr><td><code>supersedes_version</code>, <code>correction_reason</code></td><td>null on v1. Later: the previous version, and <code>reopened_late_addition</code>, <code>late_evidence</code> or <code>human_review</code></td></tr>
+<tr><td><code>group_id</code></td><td>Shared by the orders of one car that split the bill ("can we pay separately?"); otherwise null</td></tr>
+<tr><td><code>store_id</code>, <code>lane_id</code>, <code>session_id</code></td><td>Where it came from; <code>session_id</code> is one WebSocket connection</td></tr>
+<tr><td><code>status</code></td><td><code>completed</code>, <code>cancelled</code>, <code>abandoned</code> or <code>undetermined</code> (section 6)</td></tr>
+<tr><td><code>outcome_evidence[]</code></td><td>What decided the status: <code>type</code> (<code>spoken_cue</code>, <code>vehicle_event</code>, <code>stream_event</code>, <code>silence</code>, <code>order_state</code>, <code>human_review</code>), <code>kind</code>, <code>cue</code>, <code>event</code>, <code>utterance_id</code>, <code>at</code>; <code>context_only: true</code> when it was only context</td></tr>
+<tr><td><code>review</code></td><td><code>{required, reasons[]}</code>. Reasons: <code>unclear_items</code>, <code>readback_mismatch</code>, <code>total_mismatch</code>, <code>missing_required_slot</code>, <code>low_audio_quality</code>, <code>stream_gap</code>, <code>transcript_gap</code>, <code>roles_guessed_low_agreement</code>, <code>safety_cap</code>. (<code>outcome_undetermined</code> is still valid in the schema but no longer sent, E11.)</td></tr>
+<tr><td><code>times</code></td><td><code>started_at</code>, <code>ended_at</code> (when it was spoken), <code>time_basis</code> (<code>receive_clock</code> live, <code>recording_metadata</code> for files, <code>source_clock</code> if HME sends one), <code>received_at</code>, <code>finalized_at</code> (when we processed it)</td></tr>
+<tr><td><code>audio_ref</code></td><td><code>session_id</code>, <code>sample_start</code>, <code>sample_end</code> (16 kHz samples), <code>archive_uri</code> of the saved FLAC for this version</td></tr>
+<tr><td><code>source</code></td><td><code>type</code> (<code>hme_ws</code>, <code>file_replay</code>, <code>rtsp</code>), <code>codec_in</code>, <code>channels</code>, <code>channel_roles</code></td></tr>
+<tr><td><code>items[]</code></td><td>Confidently ordered lines: <code>line_id</code>, <code>catalog_id</code>, <code>name</code>, <code>quantity</code>, <code>size</code>, <code>components[]</code> (combo slots), <code>modifiers[]</code> (<code>{id, action}</code>), <code>unit_price</code>, <code>recognition_confidence</code>, <code>commitment_confidence</code>, <code>source_utterance_ids</code></td></tr>
+<tr><td><code>needs_review[]</code></td><td>Ordered but unclear what: <code>catalog_id</code> (may be null), <code>raw_text</code>, <code>quantity</code>, <code>size</code>, top 3 <code>candidates</code>, confidences, source lines</td></tr>
+<tr><td><code>not_ordered[]</code></td><td>Mentioned but not ordered, with <code>reason</code>: <code>cancelled</code>, <code>replaced</code> (and <code>replaced_by</code>), <code>declined_upsell</code>, <code>out_of_stock</code>, <code>inquired</code>, <code>uncommitted</code></td></tr>
+<tr><td><code>combo_opportunities[]</code>, <code>customer_declined_combo</code></td><td>Separate lines that would be cheaper as a meal, with <code>savings</code>. Never converted automatically</td></tr>
+<tr><td><code>flags[]</code></td><td>Facts about the conversation, for example <code>split_order</code>, <code>non_english</code>, <code>truncated_end</code>, <code>stream_gap</code>, <code>no_speech</code>, <code>ended_by_operator</code>, <code>placeholder_values</code> (19 in all)</td></tr>
+<tr><td><code>totals</code></td><td><code>computed</code> (from catalog prices), <code>spoken_by_crew</code> (or null), <code>currency</code></td></tr>
+<tr><td><code>overall_confidence</code></td><td>0 to 1</td></tr>
+<tr><td><code>transcript[]</code></td><td>This conversation's lines: <code>id</code>, <code>speaker</code>, <code>speaker_guessed</code>, <code>start_utc</code>, <code>end_utc</code>, <code>text</code>, <code>confidence</code>, <code>non_customer</code> (crew chatter)</td></tr>
+<tr><td><code>processing</code></td><td><code>stt</code>, <code>extractor</code>, <code>menu_version</code>, <code>pipeline_version</code>, <code>latency_ms</code></td></tr>
+</table>
+
+<h3>A real payload, trimmed</h3>
+<p class="small muted" style="break-after:avoid">From <code>examples/01_simple/webhook-payload.json</code>. The transcript is cut to two lines; the full file has all six.</p>
+<pre style="break-inside:auto;white-space:pre;font-size:7.4pt">{
+  "schema_version": "2.0",
+  "event_type": "order.finalized",
+  "order_id": "ord_01M47MMRZ1J9P2ACY80ARBSQ2A",
+  "order_version": 1, "supersedes_version": null, "correction_reason": null,
+  "group_id": null,
+  "store_id": "store_demo_001", "lane_id": "lane_1",
+  "session_id": "ses_01M47MMRVYRGMRSY1YBNJS2VYN",
+  "status": "completed",
+  "outcome_evidence": [{ "type": "spoken_cue", "kind": "closing", "cue": "pull forward",
+                         "utterance_id": "u6", "at": "2026-10-03T18:40:19.435Z" }],
+  "review": { "required": false, "reasons": [] },
+  "times": { "started_at": "2026-10-03T18:40:01.120Z", "ended_at": "2026-10-03T18:40:20.555Z",
+             "time_basis": "recording_metadata",
+             "received_at": "2026-10-06T03:38:15.811Z", "finalized_at": "2026-10-06T03:38:15.912Z" },
+  "audio_ref": { "session_id": "ses_01M4...", "sample_start": 17920, "sample_end": 328880, "archive_uri": null },
+  "source": { "type": "file_replay", "codec_in": "pcm_s16le", "channels": 1, "channel_roles": ["mixed"] },
+  "items": [
+    { "line_id": "e1", "catalog_id": "dbl_cheese", "name": "Double Cheeseburger", "quantity": 1,
+      "size": null, "modifiers": [], "unit_price": 5.49,
+      "recognition_confidence": 0.99, "commitment_confidence": 1, "source_utterance_ids": ["u2"] },
+    { "line_id": "e2", "catalog_id": "fries", "name": "Fries", "quantity": 1,
+      "size": "medium", "modifiers": [], "unit_price": 2.79,
+      "recognition_confidence": 0.99, "commitment_confidence": 1, "source_utterance_ids": ["u2"] }
+  ],
+  "needs_review": [], "not_ordered": [], "combo_opportunities": [], "customer_declined_combo": false,
+  "flags": ["placeholder_values"],
+  "totals": { "computed": 8.28, "spoken_by_crew": 8.28, "currency": "USD" },
+  "overall_confidence": 0.99,
+  "transcript": [
+    { "id": "u1", "speaker": "crew", "speaker_guessed": true, "start_utc": "2026-10-03T18:40:01.120Z",
+      "end_utc": "2026-10-03T18:40:04.880Z",
+      "text": "Welcome to Sandbox Burger. What can I get for you today?", "confidence": 0.998 },
+    { "id": "u2", "speaker": "customer", "speaker_guessed": true, "start_utc": "2026-10-03T18:40:05.600Z",
+      "end_utc": "2026-10-03T18:40:09.200Z",
+      "text": "Hi. Can I get a double cheeseburger and a medium fries?", "confidence": 0.989 }
+  ],
+  "processing": { "stt": "deepgram/nova-3", "extractor": "gemini/gemini-3.5-flash-lite",
+                  "menu_version": "sandbox-1", "pipeline_version": "0.1.0", "latency_ms": 5 }
+}</pre>
+<p class="small">A version 2 carries the whole order again, not a diff: same <code>order_id</code>, <code>order_version: 2</code>, <code>event_type: "order.updated"</code>, <code>supersedes_version: 1</code>, and a <code>correction_reason</code>. The receiver can simply replace what it holds.</p>
+<p class="small muted">Size: the transcript is the bulk of the body (a few KB for a normal order). If Serv does not want transcripts for size or privacy reasons, it is one field to drop.</p>
+</div>
+
+<!-- ============================================================ 6 -->
+<div class="section">
+<h2><span class="num">6</span>Outcomes, including abandoned</h2>
+<p><b>Yes, abandoned orders are sent</b>, like every other outcome. The status answers one question, "how did this conversation end?", and is set only from evidence. Whether a person should check the order is a separate question, answered by <code>review</code>, which can be true on any status.</p>
+
+<table>
+<tr><th style="width:17%">Status</th><th style="width:43%">Set when</th><th>Example evidence</th></tr>
+<tr><td><span class="pill" style="background:var(--green-soft);color:var(--green)">completed</span></td><td>A crew closing cue ("pull forward", "see you at the window") or the customer's "that's it" acknowledged by the crew, after at least one item</td><td><code>spoken_cue / closing / "pull forward"</code></td></tr>
+<tr><td><span class="pill p-low">cancelled</span></td><td>The customer cancelled the whole order</td><td><code>spoken_cue / cancel</code>, or <code>order_state / all_items_removed</code></td></tr>
+<tr><td><span class="pill p-high">abandoned</span></td><td>The car left before a completion: a <code>vehicle_departed</code> event, the crew saying so ("they drove off"), or the next car's <code>vehicle_arrived</code></td><td><code>vehicle_event / vehicle_departed</code></td></tr>
+<tr><td><span class="pill p-med">undetermined</span></td><td>No evidence either way (for example, the audio stops with no cue and no vehicle event)</td><td>Only <code>context_only</code> entries</td></tr>
+</table>
+
+<div class="why"><b class="tag">Why pauses do not decide</b>A pause, silence or a dropped connection is recorded as <code>context_only</code> evidence and never sets completed or abandoned by itself (plan decision D10). A crew member can step away mid-order; a connection can drop while the car is still there. Guessing would send confident but wrong outcomes.</div>
+
+<h3>Exactly what is sent in each abandoned-style case</h3>
+<table>
+<tr><th style="width:52%">What happened in the lane</th><th style="width:16%">Sent?</th><th>As</th></tr>
+<tr><td>Customer ordered some items, then the car left (departure event or the crew says so)</td><td><b>Yes</b></td><td><code>abandoned</code>, with whatever items were heard</td></tr>
+<tr><td>Car arrived and left, <b>nobody spoke at all</b> (E1)</td><td><b>Yes</b></td><td><code>abandoned</code>, no items, flag <code>no_speech</code>, no review, no Gemini call</td></tr>
+<tr><td>Customer spoke, then the next car arrived (vehicle event)</td><td><b>Yes</b></td><td><code>abandoned</code>, with the next car's arrival as evidence</td></tr>
+<tr><td>Customer spoke, then audio stopped with no cue and no vehicle event</td><td><b>Yes</b></td><td><code>undetermined</code> (E11: not flagged for review on that alone)</td></tr>
+<tr><td>Car arrived, nobody spoke, then a pause, a lost connection or End session (E9)</td><td>No</td><td>Without a departure the status would be <code>undetermined</code> with nothing in it</td></tr>
+<tr><td>No vehicle event and no speech (E2)</td><td>No</td><td>Nothing opened</td></tr>
+<tr style="background:var(--amber-soft)"><td><b>Car arrived, the crew greeted it, the customer never spoke, the car left</b></td><td><b>No</b></td><td><b>Gap, see below</b></td></tr>
+</table>
+
+<div class="box amber">
+<h4>Gap found while writing this: a greeted car that drives off silently is not sent</h4>
+<p class="small">Checked on October 6 with a throwaway lane test: <code>vehicle_arrived</code>, the crew's "Welcome, what can I get for you?", <code>vehicle_departed</code> gives <b>no order</b>. A car that left without anyone speaking <i>is</i> sent (E1). The cause is in <code>lane/lane.ts</code> (<code>runFinalize</code>): a conversation with no customer speech is dropped, and the E1 exception only applies when there was no speech at all. From Serv's point of view the greeted car is the more interesting abandoned visit (someone was at the post and left), so it should be sent like E1: <code>abandoned</code>, no items, <code>no_speech</code> (or a new <code>no_customer_speech</code> flag), no review, no Gemini call.</p>
+<p class="small" style="margin:0">This is a small change plus a lane test, and it needs your decision (call it E13) since it changes what Serv receives. Without vehicle events, nothing changes: a greeting with no customer and no departure still sends nothing.</p>
+</div>
+
+<h3>Without vehicle events</h3>
+<p class="small">If HME does not send vehicle events, abandonment can only come from what is said ("they left", or the crew greeting a new car mid-order together with an arrival). Otherwise the visit ends <code>undetermined</code>: still sent, with items and times, so Serv can match it to the POS. Vehicle events are the single biggest improvement for outcomes, which is why they are on the list of questions for HME.</p>
+</div>
+
+<!-- ============================================================ 7 -->
+<div class="section">
+<h2><span class="num">7</span>How duplicates are prevented</h2>
+<p>Webhooks are <b>at least once</b> by nature: if Serv processes an order but its response is lost (a timeout, a dropped connection), we cannot tell the difference from a failure and must retry. So the guarantee is built in two halves: we never create a second identity for the same order version, and the receiver ignores a version it has already seen.</p>
+
+<h3>Our side (the sender)</h3>
+<table>
+<tr><th style="width:30%">Mechanism</th><th>What it prevents</th></tr>
+<tr><td>One <code>order_id</code> per car, minted when the conversation opens</td><td>A reopen, late evidence or a human correction becomes <b>version 2 of the same order</b>, never a new order.</td></tr>
+<tr><td><code>webhook-id = {order_id}_v{version}</code></td><td>Retries of one version carry the same ID; each version has its own. The receiver needs no other key.</td></tr>
+<tr><td>Outbox primary key on <code>webhook_id</code>, insert-or-ignore</td><td>Enqueueing the same version twice (a restart, a double finalize) is a no-op.</td></tr>
+<tr><td>Orders table primary key <code>(order_id, version)</code></td><td>A version is stored once.</td></tr>
+<tr><td>Atomic claim (<code>status pending &rarr; delivering</code>)</td><td>The inline sender and the retry worker can never send the same row at the same moment.</td></tr>
+<tr><td>Frozen body</td><td>Every retry sends byte-identical JSON; only the timestamp and signature headers are new.</td></tr>
+<tr><td>Version ordering</td><td>Version N waits until N-1 is delivered, failed or dead, so <code>order.updated</code> never arrives before the <code>order.finalized</code> it corrects.</td></tr>
+<tr><td>Stuck-row recovery</td><td>When the worker starts after a crash, rows left <code>delivering</code> for over 2 minutes go back to pending. They may be sent again, which is exactly what receiver dedupe absorbs.</td></tr>
+<tr><td>Eval check</td><td><code>pnpm eval</code> counts duplicate versions and premature reopens on every fixture; checklist rows 27 and 28 run a signed delivery and a duplicate against the mock receiver.</td></tr>
+</table>
+
+<h3>Serv's side (the receiver): two rules</h3>
+<div class="grid2">
+<div class="box green"><h4>1. Dedupe on <code>webhook-id</code></h4><p class="small">If you have already accepted this ID, answer <b>200</b> and do nothing. Never answer 4xx or 5xx to a duplicate, or we will keep retrying.</p></div>
+<div class="box green"><h4>2. Keep the highest version</h4><p class="small">Store per <code>order_id</code>. Accept a version only if it is higher than the one held; an older or equal one is a duplicate. One conditional write does both rules (section 8).</p></div>
+</div>
+<p class="small">The sandbox's mock receiver (<code>webhook/mock-receiver.ts</code>) does exactly this, and you can watch it on <code>/mock-webhook</code>: send an order, use Resend, and the second arrival shows as <i>duplicate</i>.</p>
+
+<h3>What can still produce a second order for the same car</h3>
+<table>
+<tr><th style="width:36%">Case</th><th>What to do</th></tr>
+<tr><td>The tracker splits one car into two conversations (a long pause mid-order read as a new car)</td><td>A segmentation error, not a delivery bug: two <code>order_id</code>s. Measured by the eval (74 of 74 fixture conversations found, none extra). Real audio may differ.</td></tr>
+<tr><td>Someone replays a captured session or re-runs a file into the same webhook</td><td>Mints new <code>order_id</code>s by design (it is a new run). Point replays at the mock, not at Serv. If needed, Serv can add a soft check on <code>store_id + lane_id + times.started_at</code>.</td></tr>
+<tr><td>A split bill (<code>group_id</code> set)</td><td>Not a duplicate: two real orders from one car, linked by <code>group_id</code>.</td></tr>
+<tr><td>The feed service restarts mid-conversation</td><td>The open conversation is lost, not duplicated (lane state is in memory). Already-built orders are safe in the outbox. In production, run one owner per lane and drain on deploy.</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ 8 -->
+<div class="section page">
+<h2><span class="num">8</span>Receiving the webhook on AWS Lambda</h2>
+<p>Nothing changes on our side except two settings: <code>WEBHOOK_URL</code> (the Lambda's URL) and <code>WEBHOOK_SECRET</code> (a <code>whsec_...</code> secret both sides share). The work is on the receiving side.</p>
+
+<svg viewBox="0 0 700 130" width="100%" style="margin:4px 0 8px">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a8a8e"/></marker></defs>
+  <rect x="5" y="35" width="120" height="56" rx="8" fill="#e8f5ec" stroke="#cde8d5"/>
+  <text x="65" y="58" text-anchor="middle" font-size="12" font-weight="600">Feed service</text>
+  <text x="65" y="74" text-anchor="middle" font-size="9.5" fill="#5f5f66">outbox + retries</text>
+  <rect x="160" y="35" width="130" height="56" rx="8" fill="#fff" stroke="#c9c9cf"/>
+  <text x="225" y="58" text-anchor="middle" font-size="12" font-weight="600">Function URL</text>
+  <text x="225" y="74" text-anchor="middle" font-size="9.5" fill="#5f5f66">or API Gateway HTTP API</text>
+  <rect x="325" y="35" width="120" height="56" rx="8" fill="#fff4dc" stroke="#f3dfb0"/>
+  <text x="385" y="58" text-anchor="middle" font-size="12" font-weight="600">Lambda</text>
+  <text x="385" y="74" text-anchor="middle" font-size="9.5" fill="#5f5f66">verify, write, 200</text>
+  <rect x="480" y="10" width="120" height="46" rx="8" fill="#eaf2fb" stroke="#cfe0f3"/>
+  <text x="540" y="31" text-anchor="middle" font-size="12" font-weight="600">DynamoDB</text>
+  <text x="540" y="46" text-anchor="middle" font-size="9.5" fill="#5f5f66">orders, by order_id</text>
+  <rect x="480" y="72" width="120" height="46" rx="8" fill="#f5f5f7" stroke="#e3e3e8"/>
+  <text x="540" y="93" text-anchor="middle" font-size="12" font-weight="600">Secrets Manager</text>
+  <text x="540" y="108" text-anchor="middle" font-size="9.5" fill="#5f5f66">WEBHOOK_SECRET</text>
+  <rect x="625" y="10" width="70" height="46" rx="8" fill="#fdecee" stroke="#f7ccd2"/>
+  <text x="660" y="31" text-anchor="middle" font-size="11" font-weight="600">Stream</text>
+  <text x="660" y="46" text-anchor="middle" font-size="9" fill="#5f5f66">to Serv's apps</text>
+  <line x1="125" y1="63" x2="158" y2="63" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="290" y1="63" x2="323" y2="63" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="445" y1="55" x2="478" y2="38" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="445" y1="72" x2="478" y2="90" stroke="#8a8a8e" marker-end="url(#a)"/>
+  <line x1="600" y1="33" x2="623" y2="33" stroke="#8a8a8e" marker-end="url(#a)"/>
+</svg>
+
+<h3>Steps</h3>
+<ol>
+<li><b>Generate a secret</b> in the <code>whsec_&lt;base64&gt;</code> form (our <code>generateSecret()</code> makes one) and store it in Secrets Manager. Give the same value to the feed service as <code>WEBHOOK_SECRET</code>.</li>
+<li><b>Create a DynamoDB table</b> <code>orders</code> with partition key <code>order_id</code> (string). On-demand billing is fine.</li>
+<li><b>Create the Lambda</b> (Node.js 22, 256 MB, 10 s timeout) with the handler below and the <code>standardwebhooks</code> npm package. Give its role <code>dynamodb:PutItem</code> on the table and read access to the secret.</li>
+<li><b>Expose it</b> with a Lambda Function URL (auth type NONE: the signature is the authentication) or an API Gateway HTTP API route <code>POST /serv/orders</code>, if Serv wants WAF, throttling or a custom domain.</li>
+<li><b>Point the feed service at it</b>: <code>WEBHOOK_URL=https://...</code>. Check with <code>pnpm pipeline settings</code>, then send a fixture: <code>pnpm pipeline run fixtures/audio/... </code> and watch the deliveries panel on the run page.</li>
+<li><b>Test failure paths</b>: Resend an order (expect 200 and no new row), and make the Lambda return 500 once (we retry with backoff, then the order lands).</li>
+</ol>
+
+<h3>The handler</h3>
+<pre style="break-inside:auto;white-space:pre;font-size:7.4pt">// index.mjs  (Node.js 22, ESM). npm i standardwebhooks @aws-sdk/client-dynamodb
+import { Webhook } from "standardwebhooks";
+import { DynamoDBClient, PutItemCommand, ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
+
+const db = new DynamoDBClient({});
+const wh = new Webhook(process.env.WEBHOOK_SECRET);   // whsec_... (load from Secrets Manager in prod)
+
+export const handler = async (event) => {
+  // Verify against the exact bytes we sent; never re-serialize the JSON first.
+  const body = event.isBase64Encoded ? Buffer.from(event.body, "base64").toString("utf8") : event.body;
+  let order;
+  try {
+    order = wh.verify(body, event.headers);            // checks signature + 5 min timestamp window
+  } catch {
+    return { statusCode: 401, body: "bad signature" };  // 4xx: we will not retry
+  }
+
+  try {
+    // One conditional write = dedupe on webhook-id AND keep the highest version.
+    await db.send(new PutItemCommand({
+      TableName: "orders",
+      Item: {
+        order_id:      { S: order.order_id },
+        order_version: { N: String(order.order_version) },
+        webhook_id:    { S: event.headers["webhook-id"] },
+        status:        { S: order.status },
+        store_id:      { S: order.store_id },
+        lane_id:       { S: order.lane_id },
+        payload:       { S: body },
+      },
+      ConditionExpression: "attribute_not_exists(order_id) OR order_version &lt; :v",
+      ExpressionAttributeValues: { ":v": { N: String(order.order_version) } },
+    }));
+  } catch (e) {
+    if (e instanceof ConditionalCheckFailedException) {
+      return { statusCode: 200, body: '{"duplicate":true}' };   // same or older version: already have it
+    }
+    throw e;  // an unhandled error gives a 5xx: we retry
+  }
+  return { statusCode: 200, body: '{"received":true}' };
+};</pre>
+
+<h3>Rules that matter</h3>
+<ul class="small">
+<li><b>Answer fast.</b> We time out after 10 s and retry. Store the payload and return 200; do POS matching or anything slow downstream (DynamoDB Streams, or SQS FIFO with <code>MessageDeduplicationId</code> = <code>webhook-id</code>).</li>
+<li><b>Status codes steer our retries.</b> Any 2xx is success. 408, 429 and 5xx (and timeouts) are retried, honoring <code>Retry-After</code>: about 1, 2, 4, 8, 16, 32 s, then 5 min, 30 min, 2 h, 5 h, 10 h, 10 h, then dead letter. Any other 4xx is treated as permanent: return 401 only for a bad signature, and 400 only for a body you can never accept.</li>
+<li><b>Verify the raw body.</b> API Gateway and Function URLs pass the body through as a string; parsing and re-stringifying it before verifying will break the signature.</li>
+<li><b>Lowercase headers.</b> Both Function URLs and HTTP APIs deliver them lowercased, which is what the library expects.</li>
+<li><b>Secret rotation.</b> The signature header may hold two signatures (space-separated) while a new secret rolls out; the library accepts either.</li>
+<li><b>Could the feed service itself run on Lambda?</b> No: it holds long-lived WebSockets and per-lane state for hours. It belongs on a container (ECS Fargate) with the outbox in Postgres. Only the receiver fits Lambda well.</li>
+</ul>
+</div>
+
+<!-- ============================================================ 9 -->
+<div class="section">
+<h2><span class="num">9</span>Testing it yourself</h2>
+<p>A local copy is running for you on the <code>v2.1</code> branch:</p>
+<div class="kv" style="margin:8px 0 14px">
+  <b>Web app</b><span><code>http://localhost:3000</code> (started with <code>ENABLE_DEV_ROUTES=true pnpm dev</code>)</span>
+  <b>Feed service</b><span><code>127.0.0.1:8787</code> (<code>ENABLE_DEV_ROUTES=true pnpm feed serve</code>)</span>
+  <b>Test Lab</b><span><code>http://localhost:3000/testlab</code></span>
+  <b>Mock webhook</b><span><code>http://localhost:3000/mock-webhook</code>: every payload received, signature check, duplicates, failure toggles</span>
+</div>
+
+<div class="box accent"><h4>Cost</h4><p class="small" style="margin:0">Microphone tests stream to Deepgram live and spend real Deepgram credit, billed per minute. Text mode ("type instead of speaking", under Advanced) is free. Gemini stays on the free tier with its daily cap.</p></div>
+
+<h3>Suggested order</h3>
+<table>
+<tr><th style="width:30%">Test</th><th>What it proves</th></tr>
+<tr><td>Test Lab scenario 1, typed</td><td>The tracker, extraction and webhook end to end, free</td></tr>
+<tr><td>Scenarios 1, 4 and 6 with your voice</td><td>Deepgram live, speaker roles, a late add-on (version 2), a drive-off (abandoned). This is the remaining hand test for the v2.1 release.</td></tr>
+<tr><td>Free play</td><td>Anything you like; afterwards you pick what was really ordered and get a scorecard</td></tr>
+<tr><td><code>/mock-webhook</code>, set "fail 500" for 2 requests, then run a test</td><td>Retries: the deliveries panel on the run shows each attempt, then success</td></tr>
+<tr><td>Resend an order from its run page</td><td>Dedupe: the mock shows the second arrival as duplicate, and keeps one order</td></tr>
+<tr><td><code>/orders</code>, filter Review: Flagged</td><td>Which orders the system would ask a person to check</td></tr>
+</table>
+<p class="small">The scorecard says where each mistake came from: <b>heard wrong</b> (transcription), <b>understood wrong</b> (extraction), or <b>timing</b> (the tracker split, merged or failed to reopen a conversation). It finds out by replaying your session with the script's exact words through the same tracker and extractor.</p>
+</div>
+
+<!-- ============================================================ 10 -->
+<div class="section">
+<h2><span class="num">10</span>Gaps and next steps</h2>
+<table>
+<tr><th style="width:9%">Priority</th><th style="width:36%">Gap</th><th>Next step</th></tr>
+<tr><td><span class="pill p-high">High</span></td><td>HME interface unknown (direction, format, events, auth)</td><td>The questions in section 3. Then replace <code>src/input/hme/</code> and replay the first real session from raw capture.</td></tr>
+<tr><td><span class="pill p-high">High</span></td><td>Greeted car that drives off silently is not sent</td><td>Decide E13; then a small change in <code>lane.ts</code> and a lane test (section 6).</td></tr>
+<tr><td><span class="pill p-high">High</span></td><td>Only synthetic audio so far; thresholds uncalibrated</td><td>Record the held-out set (8 to 12 real voices), then real HME audio with POS tickets.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Serv has not reviewed the schema</td><td>Send them section 5 and an example; ask about the transcript field and tax.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Sandbox infrastructure (SQLite, one machine, no auth, no alerts)</td><td>Container + Postgres + S3; alerts on dead letters; sign-in on the web app.</td></tr>
+<tr><td><span class="pill p-med">Medium</span></td><td>Close latency tail of about 45 s without a closing cue</td><td>Vehicle events from HME, or tune <code>IDLE_TIMEOUT_S</code> on real traffic.</td></tr>
+<tr><td><span class="pill p-low">Low</span></td><td>Live speech barely exercised; stereo never sent to Deepgram</td><td>Test Lab with voices; one <code>pnpm eval --layout stereo</code> run.</td></tr>
+<tr><td><span class="pill p-low">Low</span></td><td>Live and Review pages disabled (E12)</td><td>Code kept; re-enable when there is real traffic to watch and review.</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ A -->
+<div class="section">
+<h2><span class="num">A</span>Commands and glossary</h2>
+<h3>Commands</h3>
+<pre style="white-space:pre;font-size:7.6pt">pnpm dev                                    # web app + mock webhook, localhost:3000
+pnpm feed serve                             # live service, 127.0.0.1:8787
+pnpm pipeline token create --store s1 --lanes lane_1,lane_2   # ingest token for a base station
+pnpm feed replay lane_stream_a --speed 1    # a recording as a live feed
+pnpm feed replay 01_simple --via ws         # ...as a fake base station over the real socket
+pnpm feed sim-check                         # the five acted scenarios, typed, over the real endpoint
+pnpm pipeline run path/to/file.mp3          # one file through the lane, delivered to WEBHOOK_URL
+pnpm pipeline resend &lt;order_id&gt;             # resend a failed or dead-lettered delivery
+pnpm pipeline settings                      # which values are still placeholders
+pnpm eval                                   # accuracy on every fixture (asks before spending Deepgram)
+pnpm data find --order &lt;order_id&gt;           # everything kept for one order
+pnpm test &amp;&amp; pnpm test:e2e                  # unit and route tests; Playwright</pre>
+
+<h3>Glossary</h3>
+<div class="kv">
+  <b>Base station</b><span>HME's box at the restaurant that carries the headset audio. It would stream to us.</span>
+  <b>Lane</b><span>One drive-thru lane; one audio stream, one tracker, one order at a time.</span>
+  <b>Session</b><span>One WebSocket connection. A lane outlives its sessions (reconnects).</span>
+  <b>Conversation</b><span>One car's exchange at the speaker post; becomes one order (or several, for a split bill).</span>
+  <b>Tracker</b><span>The per-lane state machine that decides when a conversation starts and ends.</span>
+  <b>Event</b><span>What the LLM returns: <code>ADD</code>, <code>REPLACE</code>, <code>CANCEL_ORDER</code> and 12 more, with catalog IDs. Code turns events into the order.</span>
+  <b>Version</b><span>Each send of one order. v1 is <code>order.finalized</code>; corrections are <code>order.updated</code>.</span>
+  <b>Outbox</b><span>The table every webhook is written to before sending, so nothing is lost on a crash.</span>
+  <b>Dead letter</b><span>A delivery that failed every retry (about a day). Resend from the UI or CLI.</span>
+  <b>Review</b><span>The flag that says a person should check this order, with reasons. Independent of status.</span>
+  <b>Placeholder</b><span>A value we invented until Serv or HME provides the real one; flagged on every order.</span>
+  <b>Fixture</b><span>A scripted test conversation with a known right answer.</span>
+  <b>E1 to E12</b><span>The v2.1 decisions, listed in the README.</span>
+</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+{
+  "id": "11_declined_upsell_out_of_stock",
+  "title": "Out of stock and declined meal",
+  "covers": [
+    10,
+    13
+  ],
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Can I get a Big Sandbox, a large fries, and a chocolate shake?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Sorry, we're out of shakes right now. Would you like to make the Big Sandbox a meal?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "No, not the meal. Just the burger and fries. And a medium sweet tea.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Big Sandbox, large fries and a medium sweet tea. Your total is $11.27. Please pull around.",
+      "pause_after_s": 0.6
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "big_sandbox"
+      },
+      {
+        "event_id": "e2",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "fries",
+        "size": "large"
+      },
+      {
+        "event_id": "e3",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "shake_choc"
+      },
+      {
+        "event_id": "e4",
+        "type": "OUT_OF_STOCK",
+        "source_utterance_ids": [
+          "u3"
+        ],
+        "target_line_ref": "e3",
+        "catalog_id": "shake_choc"
+      },
+      {
+        "event_id": "e5",
+        "type": "DECLINE_UPSELL",
+        "source_utterance_ids": [
+          "u3",
+          "u4"
+        ],
+        "catalog_id": "combo_1"
+      },
+      {
+        "event_id": "e6",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u4"
+        ],
+        "catalog_id": "sweet_tea",
+        "size": "medium"
+      },
+      {
+        "event_id": "e7",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u5"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "big_sandbox"
+          },
+          {
+            "catalog_id": "fries",
+            "size": "large"
+          },
+          {
+            "catalog_id": "sweet_tea",
+            "size": "medium"
+          }
+        ],
+        "amount": 11.27
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "big_sandbox",
+            "quantity": 1
+          },
+          {
+            "catalog_id": "fries",
+            "quantity": 1,
+            "size": "large"
+          },
+          {
+            "catalog_id": "sweet_tea",
+            "quantity": 1,
+            "size": "medium"
+          }
+        ],
+        "not_ordered": [
+          {
+            "catalog_id": "shake_choc",
+            "reason": "out_of_stock"
+          },
+          {
+            "catalog_id": "combo_1",
+            "reason": "declined_upsell"
+          }
+        ],
+        "needs_review": [],
+        "flags": [
+          "combo_opportunity"
+        ],
+        "group": null,
+        "customer_declined_combo": true,
+        "review": []
+      }
+    ]
+  }
+}

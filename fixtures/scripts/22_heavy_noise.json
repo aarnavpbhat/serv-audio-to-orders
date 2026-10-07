@@ -1,0 +1,109 @@
+{
+  "id": "22_heavy_noise",
+  "title": "Heavy engine and wind noise",
+  "covers": [
+    26
+  ],
+  "turns": [
+    {
+      "speaker": "crew",
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "Can I get a spicy chicken sandwich and a large Dr Pepper?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Spicy chicken sandwich and a large Dr Pepper. Anything else?",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "customer",
+      "text": "No, that's all.",
+      "pause_after_s": 0.6
+    },
+    {
+      "speaker": "crew",
+      "text": "Your total is $7.88. Pull forward please.",
+      "pause_after_s": 0.6
+    }
+  ],
+  "events": [
+    [
+      {
+        "event_id": "e1",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "spicy_chicken"
+      },
+      {
+        "event_id": "e2",
+        "type": "ADD",
+        "source_utterance_ids": [
+          "u2"
+        ],
+        "catalog_id": "dr_pepper",
+        "size": "large"
+      },
+      {
+        "event_id": "e3",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u3"
+        ],
+        "readback_items": [
+          {
+            "catalog_id": "spicy_chicken"
+          },
+          {
+            "catalog_id": "dr_pepper",
+            "size": "large"
+          }
+        ]
+      },
+      {
+        "event_id": "e4",
+        "type": "READBACK",
+        "source_utterance_ids": [
+          "u5"
+        ],
+        "amount": 7.88
+      }
+    ]
+  ],
+  "expected": {
+    "orders": [
+      {
+        "status": "completed",
+        "items": [
+          {
+            "catalog_id": "spicy_chicken",
+            "quantity": 1
+          },
+          {
+            "catalog_id": "dr_pepper",
+            "quantity": 1,
+            "size": "large"
+          }
+        ],
+        "not_ordered": [],
+        "needs_review": [],
+        "flags": [
+          "low_audio_quality"
+        ],
+        "group": null,
+        "review": [
+          "low_audio_quality"
+        ]
+      }
+    ]
+  },
+  "render": {
+    "noise": "heavy"
+  }
+}

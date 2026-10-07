@@ -1,0 +1,100 @@
+{
+  "fixture_ids": [
+    "23_late_addition"
+  ],
+  "file": "23_late_addition",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 39.068,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "23_late_addition",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "23_late_addition",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a cheeseburger and a large lemonade?",
+      "start_s": 5.502,
+      "end_s": 8.583
+    },
+    {
+      "id": "u3",
+      "fixture_id": "23_late_addition",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "A cheeseburger and a large lemonade. Anything else?",
+      "start_s": 9.183,
+      "end_s": 13.07
+    },
+    {
+      "id": "u4",
+      "fixture_id": "23_late_addition",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "No, that's it.",
+      "start_s": 13.67,
+      "end_s": 15.108
+    },
+    {
+      "id": "u5",
+      "fixture_id": "23_late_addition",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Your total is $5.78. Please pull forward.",
+      "start_s": 15.708,
+      "end_s": 20.634
+    },
+    {
+      "id": "u6",
+      "fixture_id": "23_late_addition",
+      "turn_index": 5,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Oh wait, sorry, can I also add a small fries?",
+      "start_s": 25.134,
+      "end_s": 28.861
+    },
+    {
+      "id": "u7",
+      "fixture_id": "23_late_addition",
+      "turn_index": 6,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Sure, a small fries. Your new total is $8.07. Please pull forward.",
+      "start_s": 29.461,
+      "end_s": 36.068
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "23_late_addition",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 36.068
+    }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 38.068
+    }
+  ]
+}

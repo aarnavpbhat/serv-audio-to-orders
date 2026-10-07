@@ -1,0 +1,1 @@
+{ "description": "HME's paused-when-no-vehicle mode: audio only while a car is present, with vehicle events.", "audio_mode": "paused_when_no_vehicle", "vehicle_events": "on" }

@@ -1,0 +1,179 @@
+{
+  "schema_version": "2.0",
+  "event_type": "order.finalized",
+  "order_id": "ord_01M47MMSY576B8DPC59G3T3JJ3",
+  "order_version": 1,
+  "supersedes_version": null,
+  "correction_reason": null,
+  "group_id": null,
+  "store_id": "store_demo_001",
+  "lane_id": "lane_1",
+  "session_id": "ses_01M47MMSVDEF1YQVNRP3B8XC0B",
+  "status": "completed",
+  "outcome_evidence": [
+    {
+      "type": "spoken_cue",
+      "kind": "closing",
+      "cue": "pull forward",
+      "utterance_id": "u7",
+      "at": "2026-10-03T18:40:18.005Z"
+    }
+  ],
+  "review": {
+    "required": true,
+    "reasons": [
+      "unclear_items"
+    ]
+  },
+  "times": {
+    "started_at": "2026-10-03T18:40:01.120Z",
+    "ended_at": "2026-10-03T18:40:19.205Z",
+    "time_basis": "recording_metadata",
+    "received_at": "2026-10-06T03:38:16.814Z",
+    "finalized_at": "2026-10-06T03:38:16.910Z"
+  },
+  "audio_ref": {
+    "session_id": "ses_01M47MMSVDEF1YQVNRP3B8XC0B",
+    "sample_start": 17920,
+    "sample_end": 307280,
+    "archive_uri": null
+  },
+  "source": {
+    "type": "file_replay",
+    "codec_in": "pcm_s16le",
+    "channels": 1,
+    "channel_roles": [
+      "mixed"
+    ]
+  },
+  "items": [
+    {
+      "line_id": "e1",
+      "catalog_id": "cheeseburger",
+      "name": "Cheeseburger",
+      "quantity": 1,
+      "size": null,
+      "modifiers": [],
+      "unit_price": 2.99,
+      "recognition_confidence": 0.91,
+      "commitment_confidence": 0.95,
+      "source_utterance_ids": [
+        "u2"
+      ]
+    }
+  ],
+  "needs_review": [
+    {
+      "line_id": "e2",
+      "catalog_id": "shake_straw",
+      "raw_text": "medium, uh, flourblberry shake",
+      "quantity": 1,
+      "size": "medium",
+      "candidates": [
+        {
+          "catalog_id": "shake_straw",
+          "score": 0.79
+        },
+        {
+          "catalog_id": "shake_choc",
+          "score": 0.79
+        },
+        {
+          "catalog_id": "shake_van",
+          "score": 0.79
+        }
+      ],
+      "recognition_confidence": 0.4,
+      "commitment_confidence": 0.9,
+      "source_utterance_ids": [
+        "u2",
+        "u3",
+        "u5"
+      ]
+    }
+  ],
+  "not_ordered": [],
+  "combo_opportunities": [],
+  "customer_declined_combo": false,
+  "flags": [
+    "placeholder_values"
+  ],
+  "totals": {
+    "computed": 2.99,
+    "spoken_by_crew": null,
+    "currency": "USD"
+  },
+  "overall_confidence": 0.66,
+  "transcript": [
+    {
+      "id": "u1",
+      "speaker": "crew",
+      "speaker_guessed": true,
+      "start_utc": "2026-10-03T18:40:01.120Z",
+      "end_utc": "2026-10-03T18:40:04.880Z",
+      "text": "Welcome to Sandbox Burger. What can I get for you today?",
+      "confidence": 0.998
+    },
+    {
+      "id": "u2",
+      "speaker": "customer",
+      "speaker_guessed": true,
+      "start_utc": "2026-10-03T18:40:05.520Z",
+      "end_utc": "2026-10-03T18:40:09.120Z",
+      "text": "Can I get a cheeseburger and a medium, uh, flourblberry",
+      "confidence": 0.914
+    },
+    {
+      "id": "u3",
+      "speaker": "customer",
+      "speaker_guessed": true,
+      "start_utc": "2026-10-03T18:40:09.120Z",
+      "end_utc": "2026-10-03T18:40:09.920Z",
+      "text": "shake?",
+      "confidence": 0.996
+    },
+    {
+      "id": "u4",
+      "speaker": "crew",
+      "speaker_guessed": true,
+      "start_utc": "2026-10-03T18:40:10.480Z",
+      "end_utc": "2026-10-03T18:40:12.880Z",
+      "text": "Sorry. What kind of shake was that?",
+      "confidence": 0.999
+    },
+    {
+      "id": "u5",
+      "speaker": "customer",
+      "speaker_guessed": true,
+      "start_utc": "2026-10-03T18:40:13.845Z",
+      "end_utc": "2026-10-03T18:40:16.245Z",
+      "text": "Yeah. That one. Thanks.",
+      "confidence": 0.961
+    },
+    {
+      "id": "u6",
+      "speaker": "crew",
+      "speaker_guessed": true,
+      "start_utc": "2026-10-03T18:40:16.805Z",
+      "end_utc": "2026-10-03T18:40:17.765Z",
+      "text": "Okay.",
+      "confidence": 1
+    },
+    {
+      "id": "u7",
+      "speaker": "crew",
+      "speaker_guessed": true,
+      "start_utc": "2026-10-03T18:40:18.005Z",
+      "end_utc": "2026-10-03T18:40:19.205Z",
+      "text": "Pull forward, please.",
+      "confidence": 0.999
+    }
+  ],
+  "processing": {
+    "stt": "deepgram/nova-3",
+    "extractor": "gemini/gemini-3.5-flash-lite",
+    "menu_version": "sandbox-1",
+    "pipeline_version": "0.1.0",
+    "latency_ms": 8
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "fixture_ids": [
+    "07_abandoned"
+  ],
+  "file": "07_abandoned",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 29.502,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "07_abandoned",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "07_abandoned",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Yeah, can I get a ten piece nuggets with ranch and a large lemonade?",
+      "start_s": 5.502,
+      "end_s": 9.997
+    },
+    {
+      "id": "u3",
+      "fixture_id": "07_abandoned",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Ten piece nuggets with ranch and a large lemonade. Anything else for you?",
+      "start_s": 10.597,
+      "end_s": 15.502
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "07_abandoned",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 15.502
+    }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 16.502
+    }
+  ]
+}

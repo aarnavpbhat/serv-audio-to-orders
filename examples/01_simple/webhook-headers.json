@@ -1,0 +1,11 @@
+{
+  "note": "Signed with a throwaway example secret, not the dev secret",
+  "headers": {
+    "content-type": "application/json",
+    "user-agent": "serv-audio-orders/0.1",
+    "x-delivery-attempt": "1",
+    "webhook-id": "ord_01M47MMRZ1J9P2ACY80ARBSQ2A_v1",
+    "webhook-timestamp": "1791257896",
+    "webhook-signature": "v1,RTg5Y6JZkoRdo/i87cYkNy+R/IjLQpt5v9X/wdV/DS4="
+  }
+}

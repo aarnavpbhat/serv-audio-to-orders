@@ -1,0 +1,216 @@
+{
+  "segmentation": {
+    "segments": [
+      {
+        "segment_id": "seg_1",
+        "index": 0,
+        "start_s": 1.12,
+        "end_s": 25.175,
+        "utterance_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6"
+        ],
+        "non_customer_ids": [
+          "u3"
+        ],
+        "has_greeting": true,
+        "has_closing": true,
+        "truncated_start": false,
+        "truncated_end": false,
+        "trailing_silence_s": 3,
+        "language": "en",
+        "non_english": false,
+        "mean_word_conf": 0.971,
+        "crosstalk_suspected": false
+      }
+    ],
+    "boundaries": [],
+    "llm_calls": 0
+  },
+  "orders": [
+    {
+      "order": {
+        "order_id": "ord_01M47MMTCA8EA5VZEJVXETJ5Y2",
+        "group_id": null,
+        "segment_id": "seg_1",
+        "status": "completed",
+        "outcome_evidence": [
+          {
+            "type": "spoken_cue",
+            "kind": "closing",
+            "cue": "your total is",
+            "utterance_id": "u5",
+            "at": "2026-10-03T18:40:19.735Z"
+          }
+        ],
+        "review": {
+          "required": false,
+          "reasons": []
+        },
+        "started_s": 1.12,
+        "ended_s": 25.175,
+        "items": [
+          {
+            "line_id": "e1",
+            "catalog_id": "crispy_chicken",
+            "name": "Crispy Chicken Sandwich",
+            "quantity": 1,
+            "size": null,
+            "modifiers": [],
+            "unit_price": 5.29,
+            "recognition_confidence": 0.99,
+            "commitment_confidence": 1,
+            "source_utterance_ids": [
+              "u2"
+            ]
+          },
+          {
+            "line_id": "e2",
+            "catalog_id": "onion_rings",
+            "name": "Onion Rings",
+            "quantity": 1,
+            "size": "medium",
+            "modifiers": [],
+            "unit_price": 3.29,
+            "recognition_confidence": 0.99,
+            "commitment_confidence": 1,
+            "source_utterance_ids": [
+              "u2"
+            ]
+          }
+        ],
+        "needs_review": [],
+        "not_ordered": [],
+        "combo_opportunities": [],
+        "customer_declined_combo": false,
+        "flags": [
+          "placeholder_values"
+        ],
+        "totals": {
+          "computed": 8.58,
+          "spoken_by_crew": 8.58,
+          "currency": "USD"
+        },
+        "overall_confidence": 0.99,
+        "readback_diffs": [],
+        "utterance_ids": [
+          "u1",
+          "u2",
+          "u3",
+          "u4",
+          "u5",
+          "u6"
+        ]
+      },
+      "events": [
+        {
+          "event_id": "e1",
+          "type": "ADD",
+          "target_line_ref": null,
+          "catalog_id": "crispy_chicken",
+          "raw_text": "crispy chicken sandwich",
+          "quantity": 1,
+          "size": null,
+          "modifiers": [],
+          "slot": null,
+          "readback_items": null,
+          "amount": null,
+          "source_utterance_ids": [
+            "u2"
+          ],
+          "recognition_confidence": 0.99,
+          "commitment_confidence": 1,
+          "candidates": [],
+          "t_s": 5.52
+        },
+        {
+          "event_id": "e2",
+          "type": "ADD",
+          "target_line_ref": null,
+          "catalog_id": "onion_rings",
+          "raw_text": "onion rings",
+          "quantity": 1,
+          "size": "medium",
+          "modifiers": [],
+          "slot": null,
+          "readback_items": null,
+          "amount": null,
+          "source_utterance_ids": [
+            "u2"
+          ],
+          "recognition_confidence": 0.99,
+          "commitment_confidence": 1,
+          "candidates": [],
+          "t_s": 5.52
+        },
+        {
+          "event_id": "e3",
+          "type": "READBACK",
+          "target_line_ref": null,
+          "catalog_id": null,
+          "raw_text": null,
+          "quantity": null,
+          "size": null,
+          "modifiers": [],
+          "slot": null,
+          "readback_items": [
+            {
+              "catalog_id": "crispy_chicken",
+              "quantity": 1,
+              "size": null
+            },
+            {
+              "catalog_id": "onion_rings",
+              "quantity": 1,
+              "size": "medium"
+            }
+          ],
+          "amount": 8.58,
+          "source_utterance_ids": [
+            "u4",
+            "u5"
+          ],
+          "recognition_confidence": 0.99,
+          "commitment_confidence": 1,
+          "candidates": [],
+          "t_s": 19.735
+        }
+      ],
+      "build_log": [
+        {
+          "event_id": "e1",
+          "type": "ADD",
+          "t_s": 5.52,
+          "applied": true,
+          "note": "added Crispy Chicken Sandwich x1",
+          "line_ids": [
+            "e1"
+          ]
+        },
+        {
+          "event_id": "e2",
+          "type": "ADD",
+          "t_s": 5.52,
+          "applied": true,
+          "note": "added Onion Rings x1",
+          "line_ids": [
+            "e2"
+          ]
+        },
+        {
+          "event_id": "e3",
+          "type": "READBACK",
+          "t_s": 19.735,
+          "applied": true,
+          "note": "readback matches",
+          "line_ids": []
+        }
+      ],
+      "warnings": []
+    }
+  ]
+}

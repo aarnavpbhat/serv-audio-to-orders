@@ -1,0 +1,2 @@
+# Fake webhook secret used only by unit tests (base64 of "test-secret-12345678"), not a credential.
+887b664e51ccb01500ede7896593a5cd3707551d:packages/pipeline/src/test-helpers.ts:generic-api-key:82

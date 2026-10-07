@@ -1,0 +1,80 @@
+{
+  "fixture_ids": [
+    "14_garbled"
+  ],
+  "file": "14_garbled",
+  "layout": "stereo",
+  "noise": "clean",
+  "duration_s": 22.483,
+  "utterances": [
+    {
+      "id": "u1",
+      "fixture_id": "14_garbled",
+      "turn_index": 0,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Welcome to Sandbox Burger, what can I get for you today?",
+      "start_s": 1,
+      "end_s": 4.902
+    },
+    {
+      "id": "u2",
+      "fixture_id": "14_garbled",
+      "turn_index": 1,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Can I get a cheeseburger and a medium, uh, flurbleberry shake?",
+      "start_s": 5.502,
+      "end_s": 9.895
+    },
+    {
+      "id": "u3",
+      "fixture_id": "14_garbled",
+      "turn_index": 2,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Sorry, what kind of shake was that?",
+      "start_s": 10.495,
+      "end_s": 13.166
+    },
+    {
+      "id": "u4",
+      "fixture_id": "14_garbled",
+      "turn_index": 3,
+      "speaker": "customer",
+      "crew_chatter": false,
+      "text": "Yeah, that one. Thanks.",
+      "start_s": 13.766,
+      "end_s": 16.26
+    },
+    {
+      "id": "u5",
+      "fixture_id": "14_garbled",
+      "turn_index": 4,
+      "speaker": "crew",
+      "crew_chatter": false,
+      "text": "Okay. Pull forward please.",
+      "start_s": 16.86,
+      "end_s": 19.483
+    }
+  ],
+  "orders": [
+    {
+      "fixture_id": "14_garbled",
+      "order_index": 0,
+      "start_s": 1,
+      "end_s": 19.483
+    }
+  ],
+  "recording_start_utc": "2026-10-03T18:40:00.000Z",
+  "vehicle_events": [
+    {
+      "type": "vehicle_arrived",
+      "at_s": 0
+    },
+    {
+      "type": "vehicle_departed",
+      "at_s": 21.483
+    }
+  ]
+}

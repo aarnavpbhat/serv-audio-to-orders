@@ -1,0 +1,256 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * Serv's palette (docs/brand.md has the source of every value): taken from
+ * servtech.co's stylesheet, never approximated. Dark is the default, as on
+ * the site (its landing colors); light uses Serv's own :root tokens. Values
+ * marked "derived" are tints of a Serv value, for surfaces Serv does not define.
+ * The --c-* palette is the source of truth; shadcn's semantic tokens below map
+ * onto it. Status colors (badges) stay separate from the brand accent.
+ */
+:root,
+[data-theme="dark"] {
+  --c-window: #0a0a0c; /* landing-bg */
+  --c-ink: #e8e8e8; /* landing-fg */
+  --c-muted: rgb(232 232 232 / 0.62); /* derived: landing-fg */
+  --c-faint: rgb(232 232 232 / 0.34); /* derived: landing-fg */
+  --c-line: #ffffff26; /* hairline */
+  --c-stripe: rgb(255 255 255 / 0.03); /* derived */
+  --c-fill: rgb(255 255 255 / 0.08); /* derived */
+  --c-fill-strong: rgb(255 255 255 / 0.14); /* derived */
+  --c-raised: color-mix(in oklab, #0a0a0c, #ffffff 3.5%); /* derived: landing-bg (keeps accent-bright text at 4.5:1) */
+  --c-sidebar: rgb(10 10 12 / 0.8); /* bg-landing-bg/80 (the site's nav) */
+  --c-toolbar: rgb(10 10 12 / 0.8); /* bg-landing-bg/80 */
+  --c-accent: #5a7fae; /* accent-bright */
+  --c-accent-soft: rgb(90 127 174 / 0.18); /* derived: accent-bright */
+  --c-primary: #132a49; /* landing-accent */
+  --c-primary-hover: #1e3f6b; /* landing-accent-hover */
+  --c-primary-ink: #e8e8e8; /* landing-fg */
+  --c-destructive: oklch(70.4% 0.191 22.216); /* .dark --destructive */
+  --c-crew: #a5a3ff;
+  --c-customer: #5ef0dc;
+  --c-lcd: rgb(255 255 255 / 0.05); /* derived */
+  /* Role dots on cover art (always dark, so the same in both themes). */
+  --c-crew-art: #a5a3ff;
+  --c-customer-art: #5ef0dc;
+  --c-logo-filter: none; /* the white logo as is */
+  --shadow-art: 0 10px 30px -12px rgb(0 0 0 / 0.8);
+  /* Cover art: two-tone gradients from Serv's own colors only. */
+  --art-0a: #132a49;
+  --art-0b: #5a7fae;
+  --art-1a: #0a0a0c;
+  --art-1b: #1e3f6b;
+  --art-2a: oklch(24% 0.07 260);
+  --art-2b: oklch(55% 0.16 250);
+  --art-3a: #1e3f6b;
+  --art-3b: #5a7fae;
+  --art-4a: oklch(32% 0.07 260);
+  --art-4b: oklch(55% 0.16 250);
+  --art-5a: #132a49;
+  --art-5b: #1e3f6b;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --c-window: oklch(96.8% 0.006 250); /* :root --background */
+  --c-ink: oklch(18% 0.03 260); /* --foreground */
+  --c-muted: oklch(50% 0.03 258); /* --muted-foreground */
+  --c-faint: oklch(50% 0.03 258 / 0.5); /* derived: --muted-foreground */
+  --c-line: oklch(92% 0.01 255); /* --border */
+  --c-stripe: oklch(18% 0.03 260 / 0.03); /* derived: --foreground */
+  --c-fill: oklch(18% 0.03 260 / 0.06); /* derived: --foreground */
+  --c-fill-strong: oklch(18% 0.03 260 / 0.1); /* derived: --foreground */
+  --c-raised: oklch(100% 0 0); /* --card */
+  --c-sidebar: oklch(98.4% 0.003 247.858); /* --sidebar */
+  --c-toolbar: oklch(98.4% 0.003 247.858 / 0.85); /* derived: --sidebar */
+  --c-accent: oklch(51% 0.16 250); /* derived: --ljs-blue (55%) darkened to 51% for 4.5:1 text contrast */
+  --c-accent-soft: oklch(55% 0.16 250 / 0.1); /* bg-[var(--ljs-blue)]/10 */
+  --c-primary: oklch(24% 0.07 260); /* --serv-navy (--primary) */
+  --c-primary-hover: oklch(32% 0.07 260); /* --serv-navy-soft */
+  --c-primary-ink: oklch(99% 0.003 250); /* --primary-foreground */
+  --c-destructive: oklch(55% 0.22 27); /* derived: --destructive (58%) darkened to 55% for 4.5:1 text contrast */
+  --c-crew: #5e5ce6;
+  --c-customer: #0a9b8a;
+  --c-lcd: oklch(18% 0.03 260 / 0.035); /* derived */
+  --c-logo-filter: brightness(0); /* the white logo in black, for light backgrounds */
+  --shadow-art: 0 10px 30px -12px rgb(0 0 0 / 0.35);
+  color-scheme: light;
+}
+
+/* shadcn/ui semantic tokens, mapped onto the palette above. */
+:root {
+  --background: var(--c-window);
+  --foreground: var(--c-ink);
+  --card: var(--c-raised);
+  --card-foreground: var(--c-ink);
+  --popover: var(--c-raised);
+  --popover-foreground: var(--c-ink);
+  --primary: var(--c-primary);
+  --primary-foreground: var(--c-primary-ink);
+  --secondary: var(--c-fill);
+  --secondary-foreground: var(--c-ink);
+  --muted: var(--c-fill);
+  --muted-foreground: var(--c-muted);
+  --accent: var(--c-fill);
+  --accent-foreground: var(--c-ink);
+  --destructive: var(--c-destructive);
+  --border: var(--c-line);
+  --input: var(--c-fill-strong);
+  --ring: var(--c-accent);
+  --radius: 0.25rem; /* Serv --radius */
+  --sidebar: var(--c-sidebar);
+  --sidebar-foreground: var(--c-ink);
+  --sidebar-primary: var(--c-primary);
+  --sidebar-primary-foreground: var(--c-primary-ink);
+  --sidebar-accent: var(--c-fill);
+  --sidebar-accent-foreground: var(--c-ink);
+  --sidebar-border: var(--c-line);
+  --sidebar-ring: var(--c-accent);
+}
+
+@theme inline {
+  /* Serv's default family (Inter), self-hosted by next/font; its fallbacks as on servtech.co. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Headings: General Sans, servtech.co's landing face (.landing-font), self-hosted by next/font/local. */
+  --font-heading: var(--font-general-sans), var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Extras that have no shadcn equivalent. */
+  --color-window: var(--c-window);
+  --color-toolbar: var(--c-toolbar);
+  --color-ink: var(--c-ink);
+  --color-faint: var(--c-faint);
+  --color-line: var(--c-line);
+  --color-stripe: var(--c-stripe);
+  --color-fill: var(--c-fill);
+  --color-fill-strong: var(--c-fill-strong);
+  --color-raised: var(--c-raised);
+  --color-brand: var(--c-accent);
+  --color-primary-hover: var(--c-primary-hover);
+  --color-brand-soft: var(--c-accent-soft);
+  --color-crew: var(--c-crew);
+  --color-customer: var(--c-customer);
+  --color-crew-art: var(--c-crew-art);
+  --color-customer-art: var(--c-customer-art);
+  --color-lcd: var(--c-lcd);
+  --shadow-art: var(--shadow-art);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 13px;
+    letter-spacing: -0.003em;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+  }
+  ::selection {
+    background: var(--c-accent-soft);
+  }
+}
+
+/* Large title, as on Apple Music's Listen Now / Library pages. */
+.title-xl {
+  @apply text-[28px] leading-tight font-bold tracking-[-0.02em] text-foreground;
+}
+
+.section-title {
+  @apply text-[19px] font-bold tracking-[-0.01em] text-foreground;
+}
+
+.label {
+  @apply text-[11px] font-semibold uppercase tracking-[0.04em] text-muted-foreground;
+}
+
+/* Track list: hairline-free rows with zebra striping and rounded hover. */
+.tracks > * {
+  @apply rounded-md;
+}
+.tracks > *:nth-child(odd) {
+  background: var(--c-stripe);
+}
+.tracks > *:hover {
+  background: var(--c-fill);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* wavesurfer region labels */
+[part~="region-content"] {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 4px;
+  color: var(--c-muted);
+}
+
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+[class*="animate-[eq"] {
+  transform-origin: bottom;
+}

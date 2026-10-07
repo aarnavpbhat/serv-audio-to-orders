@@ -1,0 +1,19 @@
+{
+  "name": "@serv/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./sandbox.ts",
+  "types": "./sandbox.ts",
+  "exports": {
+    ".": "./sandbox.ts"
+  },
+  "scripts": {
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^6.0.3"
+  }
+}

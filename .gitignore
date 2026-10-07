@@ -1,0 +1,21 @@
+node_modules/
+.cache/
+.data/
+.next/
+# Environment files: ignore every .env at any depth, keep the templates
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+*.tsbuildinfo
+fixtures/audio/*.aiff
+fixtures/audio/tmp/
+.DS_Store
+next-env.d.ts
+.playwright-mcp/
+.claude/
+playwright-report/
+test-results/
+.e2e-logs/
